@@ -1,4 +1,5 @@
 #include "TLogger.h"
+#include "THooks.h"
 
 extern "C" void setup(ModInfo &info) {
     info.id = "Tracks";
@@ -6,4 +7,7 @@ extern "C" void setup(ModInfo &info) {
     TLogger::modInfo = info;
 }
 
-extern "C" void load() {}
+extern "C" void load() {
+    Logger &logger = TLogger::GetLogger();
+    Hooks::InstallHooks(logger);
+}
