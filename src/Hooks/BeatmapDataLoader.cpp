@@ -80,6 +80,8 @@ MAKE_HOOK_MATCH(GetBeatmapDataFromBeatmapSaveData,
             }
         }
     }
+
+    return result;
 }
 
 void InstallBeatmapDataLoaderHooks(Logger &logger) {
