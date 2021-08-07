@@ -4,7 +4,7 @@
   "info": {
     "name": "Tracks",
     "id": "tracks",
-    "version": "0.1.0",
+    "version": "0.0.0",
     "url": null,
     "additionalData": {
       "overrideSoName": "libtracks.so"
