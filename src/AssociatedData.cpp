@@ -5,21 +5,6 @@
 
 using namespace TracksAD;
 
-namespace {
-
-PointDefinition *TryGetPointData(BeatmapAssociatedData &beatmapAD,
-                                 const rapidjson::Value &animation, const char *name) {
-    PointDefinition *anonPointDef;
-    PointDefinition *pointDef =
-        Animation::TryGetPointData(beatmapAD, anonPointDef, animation, name);
-    if (anonPointDef) {
-        beatmapAD.anonPointDefinitions.push_back(anonPointDef);
-    }
-    return pointDef;
-}
-
-} // namespace
-
 namespace TracksAD {
 
 BeatmapAssociatedData::~BeatmapAssociatedData() {

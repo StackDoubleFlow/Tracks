@@ -173,7 +173,6 @@ void CustomEventCallback(CustomJSONData::CustomEventData *customEventData) {
 
 void Events::AddEventCallbacks(Logger& logger) {
     CustomJSONData::CustomEventCallbacks::AddCustomEventCallback(&CustomEventCallback);
-    custom_types::Register::AutoRegister();
 
     INSTALL_HOOK(logger, BeatmapObjectSpawnController_Start);
 }
