@@ -3,21 +3,15 @@
 #include "Animation/Track.h"
 
 namespace GlobalNamespace {
-    class BeatmapObjectCallbackController;
+class BeatmapObjectCallbackController;
 }
-
-// BeatmapObjectCallbackController.cpp
-extern GlobalNamespace::BeatmapObjectCallbackController *callbackController;
 
 namespace Events {
 
-void AddEventCallbacks(Logger& logger);
-void UpdateCoroutines();
+void AddEventCallbacks(Logger &logger);
+void UpdateCoroutines(GlobalNamespace::BeatmapObjectCallbackController *callbackController);
 
-enum class EventType {
-    animateTrack,
-    assignPathAnimation
-};
+enum class EventType { animateTrack, assignPathAnimation };
 
 struct AnimateTrackContext {
     PointDefinition *points;

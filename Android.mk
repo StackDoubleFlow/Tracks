@@ -37,7 +37,7 @@ LOCAL_MODULE := beatsaber-hook_2_2_4
 LOCAL_EXPORT_C_INCLUDES := extern/beatsaber-hook
 LOCAL_SRC_FILES := extern/libbeatsaber-hook_2_2_4.so
 include $(PREBUILT_SHARED_LIBRARY)
-# Creating prebuilt for dependency: custom-json-data - version: 0.11.3
+# Creating prebuilt for dependency: custom-json-data - version: 0.11.4
 include $(CLEAR_VARS)
 LOCAL_MODULE := custom-json-data
 LOCAL_EXPORT_C_INCLUDES := extern/custom-json-data

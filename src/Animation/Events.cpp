@@ -42,7 +42,7 @@ MAKE_HOOK_MATCH(BeatmapObjectSpawnController_Start, &BeatmapObjectSpawnControlle
     BeatmapObjectSpawnController_Start(self);
 }
 
-bool UpdateCoroutine(AnimateTrackContext& context) {
+bool UpdateCoroutine(BeatmapObjectCallbackController *callbackController, AnimateTrackContext& context) {
     float elapsedTime = TimeSourceHelper::getSongTime(callbackController->audioTimeSource) - context.startTime;
     float time = Easings::Interpolate(std::min(elapsedTime / context.duration, 1.0f), context.easing);
     if (!context.property->value.has_value()) {
@@ -66,25 +66,25 @@ bool UpdateCoroutine(AnimateTrackContext& context) {
     return elapsedTime < context.duration;
 }
 
-bool UpdatePathCoroutine(AssignPathAnimationContext& context) {
+bool UpdatePathCoroutine(BeatmapObjectCallbackController *callbackController, AssignPathAnimationContext& context) {
     float elapsedTime = TimeSourceHelper::getSongTime(callbackController->audioTimeSource) - context.startTime;
     context.property->value->time = Easings::Interpolate(std::min(elapsedTime / context.duration, 1.0f), context.easing);
 
     return elapsedTime < context.duration;
 }
 
-void Events::UpdateCoroutines() {
+void Events::UpdateCoroutines(BeatmapObjectCallbackController *callbackController) {
     for (auto it = coroutines.begin(); it != coroutines.end();) {
-        if (UpdateCoroutine(*it)) {
+        if (UpdateCoroutine(callbackController, *it)) {
             it++;
         } else {
-            // delete it->anonPointDef;
+            delete it->anonPointDef;
             coroutines.erase(it);
         }
     }
 
     for (auto it = pathCoroutines.begin(); it != pathCoroutines.end();) {
-        if (UpdatePathCoroutine(*it)) {
+        if (UpdatePathCoroutine(callbackController, *it)) {
             it++;
         } else {
             it->property->value->Finish();
@@ -93,7 +93,7 @@ void Events::UpdateCoroutines() {
     }
 }
 
-void CustomEventCallback(CustomJSONData::CustomEventData *customEventData) {
+void CustomEventCallback(BeatmapObjectCallbackController *callbackController, CustomJSONData::CustomEventData *customEventData) {
     auto *customBeatmapData = reinterpret_cast<CustomJSONData::CustomBeatmapData *>(callbackController->beatmapData);
     BeatmapAssociatedData& ad = getBeatmapAD(customBeatmapData->customData);
     rapidjson::Value& eventData = *customEventData->data;

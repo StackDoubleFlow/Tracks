@@ -2,7 +2,7 @@
 #include <map>
 #include <string>
 #include "PointDefinitionInterpolation.h"
-#include "Vector.h"
+#include "../Vector.h"
 
 namespace Events {
     struct AnimateTrackContext;

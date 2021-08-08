@@ -1,6 +1,6 @@
 #pragma once
-#include "Animation/PointDefinition.h"
-#include "AssociatedData.h"
+#include "PointDefinition.h"
+#include "../AssociatedData.h"
 
 namespace GlobalNamespace {
 class BeatmapData;
