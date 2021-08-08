@@ -11,6 +11,7 @@ BeatmapObjectCallbackController *callbackController;
 MAKE_HOOK_MATCH(BeatmapObjectCallbackController_LateUpdate, &BeatmapObjectCallbackController::LateUpdate, void, BeatmapObjectCallbackController *self) {
     callbackController = self;
     Events::UpdateCoroutines();
+    BeatmapObjectCallbackController_LateUpdate(self);
 }
 
 void InstallBeatmapObjectCallbackControllerHooks(Logger& logger) {
