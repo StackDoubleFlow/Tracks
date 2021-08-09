@@ -26,7 +26,7 @@ MAKE_HOOK_MATCH(GetBeatmapDataFromBeatmapSaveData,
             evironmentSpecialEventFilterData, startBpm, shuffle, shufflePeriod));
     
     static auto *customObstacleDataClass = classof(CustomJSONData::CustomObstacleData *);
-    static auto *customNoteDataClass = classof(CustomJSONData::CustomObstacleData *);
+    static auto *customNoteDataClass = classof(CustomJSONData::CustomNoteData *);
 
     BeatmapAssociatedData &beatmapAD = getBeatmapAD(result->customData);
 
