@@ -68,7 +68,7 @@ PathProperty *PathProperties::FindProperty(std::string_view name) {
             case PropertyName::rotation: return &rotation;
             case PropertyName::scale: return &scale;
             case PropertyName::localRotation: return &localRotation;
-            case PropertyName::localPosition: return &localRotation;
+            case PropertyName::localPosition: return &localPosition;
             case PropertyName::definitePosition: return &definitePosition;
             case PropertyName::dissolve: return &dissolve;
             case PropertyName::dissolveArrow: return &dissolveArrow;
