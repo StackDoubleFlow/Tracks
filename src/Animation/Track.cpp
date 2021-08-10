@@ -5,6 +5,7 @@ enum class PropertyName {
     rotation,
     scale,
     localRotation,
+    localPosition,
     definitePosition,
     dissolve,
     dissolveArrow,
@@ -15,16 +16,16 @@ enum class PropertyName {
 
 Property *Properties::FindProperty(std::string name) {
     static std::unordered_map<std::string, PropertyName> const functions = {
-        { "_position", PropertyName::position },
-        { "_rotation", PropertyName::rotation },
-        { "_scale", PropertyName::scale },
-        { "_localRotation", PropertyName::localRotation },
-        { "_dissolve", PropertyName::dissolve },
-        { "_dissolveArrow", PropertyName::dissolveArrow },
-        { "_time", PropertyName::time },
-        { "_cuttable", PropertyName::cuttable },
-        { "_color", PropertyName::color }
-    };
+        {"_position", PropertyName::position},
+        {"_rotation", PropertyName::rotation},
+        {"_scale", PropertyName::scale},
+        {"_localRotation", PropertyName::localRotation},
+        {"_localPosition", PropertyName::localPosition},
+        {"_dissolve", PropertyName::dissolve},
+        {"_dissolveArrow", PropertyName::dissolveArrow},
+        {"_time", PropertyName::time},
+        {"_cuttable", PropertyName::cuttable},
+        {"_color", PropertyName::color}};
 
     auto itr = functions.find(name);
     if (itr != functions.end()) {
@@ -33,6 +34,7 @@ Property *Properties::FindProperty(std::string name) {
             case PropertyName::rotation: return &rotation;
             case PropertyName::scale: return &scale;
             case PropertyName::localRotation: return &localRotation;
+            case PropertyName::localPosition: return &localRotation;
             case PropertyName::dissolve: return &dissolve;
             case PropertyName::dissolveArrow: return &dissolveArrow;
             case PropertyName::time: return &time;
@@ -51,6 +53,7 @@ PathProperty *PathProperties::FindProperty(std::string_view name) {
         { "_rotation", PropertyName::rotation },
         { "_scale", PropertyName::scale },
         { "_localRotation", PropertyName::localRotation },
+        { "_localPosition", PropertyName::localPosition },
         { "_definitePosition", PropertyName::definitePosition },
         { "_dissolve", PropertyName::dissolve },
         { "_dissolveArrow", PropertyName::dissolveArrow },
@@ -65,6 +68,7 @@ PathProperty *PathProperties::FindProperty(std::string_view name) {
             case PropertyName::rotation: return &rotation;
             case PropertyName::scale: return &scale;
             case PropertyName::localRotation: return &localRotation;
+            case PropertyName::localPosition: return &localRotation;
             case PropertyName::definitePosition: return &definitePosition;
             case PropertyName::dissolve: return &dissolve;
             case PropertyName::dissolveArrow: return &dissolveArrow;
