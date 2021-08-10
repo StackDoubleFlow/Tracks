@@ -78,7 +78,7 @@ public:
     PathProperty rotation;
     PathProperty scale;
     PathProperty localRotation;
-    PropertyType localPosition;
+    PathProperty localPosition;
     PathProperty definitePosition;
     PathProperty dissolve;
     PathProperty dissolveArrow;
