@@ -66,7 +66,7 @@ public:
                        rotation{PropertyType::quaternion},
                        scale{PropertyType::vector3},
                        localRotation{PropertyType::quaternion},
-                       localPosition{Property(PropertyType::vector3)},
+                       localPosition{PropertyType(PropertyType::vector3)},
                        definitePosition{PropertyType::linear},
                        dissolve{PropertyType::linear},
                        dissolveArrow{PropertyType::linear},
@@ -78,7 +78,7 @@ public:
     PathProperty rotation;
     PathProperty scale;
     PathProperty localRotation;
-    Property localPosition;
+    PropertyType localPosition;
     PathProperty definitePosition;
     PathProperty dissolve;
     PathProperty dissolveArrow;
