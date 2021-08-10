@@ -66,7 +66,7 @@ public:
                        rotation{PropertyType::quaternion},
                        scale{PropertyType::vector3},
                        localRotation{PropertyType::quaternion},
-                       localPosition{PropertyType::vector3)},
+                       localPosition{PropertyType::vector3},
                        definitePosition{PropertyType::linear},
                        dissolve{PropertyType::linear},
                        dissolveArrow{PropertyType::linear},
