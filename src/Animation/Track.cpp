@@ -34,7 +34,7 @@ Property *Properties::FindProperty(std::string name) {
             case PropertyName::rotation: return &rotation;
             case PropertyName::scale: return &scale;
             case PropertyName::localRotation: return &localRotation;
-            case PropertyName::localPosition: return &localRotation;
+            case PropertyName::localPosition: return &localPosition;
             case PropertyName::dissolve: return &dissolve;
             case PropertyName::dissolveArrow: return &dissolveArrow;
             case PropertyName::time: return &time;
