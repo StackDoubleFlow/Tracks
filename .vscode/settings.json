@@ -99,6 +99,7 @@
         "any": "cpp",
         "coroutine": "cpp",
         "semaphore": "cpp",
-        "numbers": "cpp"
+        "numbers": "cpp",
+        "*.def": "cpp"
     }
 }

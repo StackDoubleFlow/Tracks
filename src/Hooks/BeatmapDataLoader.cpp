@@ -12,26 +12,18 @@
 using namespace GlobalNamespace;
 using namespace TracksAD;
 
-MAKE_HOOK_MATCH(GetBeatmapDataFromBeatmapSaveData,
-                &BeatmapDataLoader::GetBeatmapDataFromBeatmapSaveData, BeatmapData *,
-                BeatmapDataLoader *self, List<BeatmapSaveData::NoteData *> *notesSaveData,
-                List<BeatmapSaveData::WaypointData *> *waypointsSaveData,
-                List<BeatmapSaveData::ObstacleData *> *obstaclesSaveData,
-                List<BeatmapSaveData::EventData *> *eventsSaveData,
-                BeatmapSaveData::SpecialEventKeywordFiltersData *evironmentSpecialEventFilterData,
-                float startBpm, float shuffle, float shufflePeriod) {
-    auto *result =
-        reinterpret_cast<CustomJSONData::CustomBeatmapData *>(GetBeatmapDataFromBeatmapSaveData(
-            self, notesSaveData, waypointsSaveData, obstaclesSaveData, eventsSaveData,
-            evironmentSpecialEventFilterData, startBpm, shuffle, shufflePeriod));
-    
+void TracksAD::readBeatmapDataAD(CustomJSONData::CustomBeatmapData *beatmapData) {
     static auto *customObstacleDataClass = classof(CustomJSONData::CustomObstacleData *);
     static auto *customNoteDataClass = classof(CustomJSONData::CustomNoteData *);
 
-    BeatmapAssociatedData &beatmapAD = getBeatmapAD(result->customData);
+    BeatmapAssociatedData &beatmapAD = getBeatmapAD(beatmapData->customData);
 
-    if (result->customData->value) {
-        rapidjson::Value &customData = *result->customData->value;
+    if (beatmapAD.valid) {
+        return;
+    }
+
+    if (beatmapData->customData->value) {
+        rapidjson::Value &customData = *beatmapData->customData->value;
 
         PointDefinitionManager pointDataManager;
         if (customData.HasMember("_pointDefinitions")) {
@@ -45,13 +37,14 @@ MAKE_HOOK_MATCH(GetBeatmapDataFromBeatmapSaveData,
                 pointDataManager.AddPoint(pointName, pointData);
             }
         }
+        TLogger::GetLogger().debug("Setting point definitions");
         beatmapAD.pointDefinitions = pointDataManager.pointData;
     }
 
     auto &tracks = beatmapAD.tracks;
 
-    for (int i = 0; i < result->beatmapLinesData->Length(); i++) {
-        BeatmapLineData *beatmapLineData = result->beatmapLinesData->values[i];
+    for (int i = 0; i < beatmapData->beatmapLinesData->Length(); i++) {
+        BeatmapLineData *beatmapLineData = beatmapData->beatmapLinesData->values[i];
         for (int j = 0; j < beatmapLineData->beatmapObjectsData->size; j++) {
             BeatmapObjectData *beatmapObjectData =
                 beatmapLineData->beatmapObjectsData->items->values[j];
@@ -80,6 +73,24 @@ MAKE_HOOK_MATCH(GetBeatmapDataFromBeatmapSaveData,
             }
         }
     }
+
+    beatmapAD.valid = true;
+}
+
+MAKE_HOOK_MATCH(GetBeatmapDataFromBeatmapSaveData,
+                &BeatmapDataLoader::GetBeatmapDataFromBeatmapSaveData, BeatmapData *,
+                BeatmapDataLoader *self, List<BeatmapSaveData::NoteData *> *notesSaveData,
+                List<BeatmapSaveData::WaypointData *> *waypointsSaveData,
+                List<BeatmapSaveData::ObstacleData *> *obstaclesSaveData,
+                List<BeatmapSaveData::EventData *> *eventsSaveData,
+                BeatmapSaveData::SpecialEventKeywordFiltersData *evironmentSpecialEventFilterData,
+                float startBpm, float shuffle, float shufflePeriod) {
+    auto *result =
+        reinterpret_cast<CustomJSONData::CustomBeatmapData *>(GetBeatmapDataFromBeatmapSaveData(
+            self, notesSaveData, waypointsSaveData, obstaclesSaveData, eventsSaveData,
+            evironmentSpecialEventFilterData, startBpm, shuffle, shufflePeriod));
+    
+    TracksAD::readBeatmapDataAD(result);
 
     return result;
 }

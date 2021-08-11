@@ -78,5 +78,25 @@ PathProperty *PathProperties::FindProperty(std::string_view name) {
 }
 
 void Track::ResetVariables() {
-    *this = Track();
+    // properties.position.value = std::nullopt;
+    // properties.rotation.value = std::nullopt;
+    // properties.scale.value = std::nullopt;
+    // properties.localRotation.value = std::nullopt;
+    // properties.dissolve.value = std::nullopt;
+    // properties.dissolveArrow.value = std::nullopt;
+    // properties.time.value = std::nullopt;
+    // properties.cuttable.value = std::nullopt;
+    // properties.color.value = std::nullopt;
+
+    // pathProperties.position.value = std::nullopt;
+    // pathProperties.rotation.value = std::nullopt;
+    // pathProperties.scale.value = std::nullopt;
+    // pathProperties.localRotation.value = std::nullopt;
+    // pathProperties.definitePosition.value = std::nullopt;
+    // pathProperties.dissolve.value = std::nullopt;
+    // pathProperties.dissolveArrow.value = std::nullopt;
+    // pathProperties.cuttable.value = std::nullopt;
+    // pathProperties.color.value = std::nullopt;
+    properties = Properties();
+    pathProperties = PathProperties();
 }

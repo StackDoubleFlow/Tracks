@@ -1,4 +1,5 @@
 #include "Animation/Animation.h"
+#include "TLogger.h"
 
 using namespace TracksAD;
 
@@ -20,6 +21,9 @@ PointDefinition *TryGetPointData(BeatmapAssociatedData &beatmapAD, PointDefiniti
         auto itr = ad.pointDefinitions.find(pointString.GetString());
         if (itr != ad.pointDefinitions.end()) {
             pointData = &itr->second;
+        } else {
+            TLogger::GetLogger().warning("Could not find point definition %s",
+                                         pointString.GetString());
         }
         break;
     }
