@@ -40,6 +40,7 @@ public:
                    rotation{Property(PropertyType::quaternion)},
                    scale{Property(PropertyType::vector3)},
                    localRotation{Property(PropertyType::quaternion)},
+                   localPosition{Property(PropertyType::vector3)},
                    dissolve{Property(PropertyType::linear)},
                    dissolveArrow{Property(PropertyType::linear)},
                    time{Property(PropertyType::linear)},
@@ -51,6 +52,7 @@ public:
     Property rotation;
     Property scale;
     Property localRotation;
+    Property localPosition;
     Property dissolve;
     Property dissolveArrow;
     Property time;
@@ -64,6 +66,7 @@ public:
                        rotation{PropertyType::quaternion},
                        scale{PropertyType::vector3},
                        localRotation{PropertyType::quaternion},
+                       localPosition{PropertyType::vector3},
                        definitePosition{PropertyType::linear},
                        dissolve{PropertyType::linear},
                        dissolveArrow{PropertyType::linear},
@@ -75,6 +78,7 @@ public:
     PathProperty rotation;
     PathProperty scale;
     PathProperty localRotation;
+    PathProperty localPosition;
     PathProperty definitePosition;
     PathProperty dissolve;
     PathProperty dissolveArrow;
