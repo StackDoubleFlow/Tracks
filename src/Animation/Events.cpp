@@ -136,6 +136,8 @@ void CustomEventCallback(BeatmapObjectCallbackController *callbackController, Cu
                     auto *pointData = Animation::TryGetPointData(ad, anonPointDef, eventData, name);
                     if (pointData) {
                         coroutines.push_back(AnimateTrackContext { pointData, property, duration, customEventData->time, easing, anonPointDef });
+                    } else {
+                        property->value = std::nullopt;
                     }
                 } else {
                     TLogger::GetLogger().warning("Could not find track property with name %s", name);
@@ -162,6 +164,8 @@ void CustomEventCallback(BeatmapObjectCallbackController *callbackController, Cu
                         if (!property->value.has_value()) property->value = PointDefinitionInterpolation();
                         property->value->Init(pointData);
                         pathCoroutines.push_back(AssignPathAnimationContext { property, duration, customEventData->time, easing });
+                    } else {
+                        property->value = std::nullopt;
                     }
                 } else {
                     TLogger::GetLogger().warning("Could not find track path property with name %s", name);
