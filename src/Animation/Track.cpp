@@ -24,7 +24,7 @@ Property *Properties::FindProperty(std::string name) {
         {"_dissolve", PropertyName::dissolve},
         {"_dissolveArrow", PropertyName::dissolveArrow},
         {"_time", PropertyName::time},
-        {"_cuttable", PropertyName::cuttable},
+        {"_interactable", PropertyName::cuttable},
         {"_color", PropertyName::color}};
 
     auto itr = functions.find(name);
@@ -57,7 +57,7 @@ PathProperty *PathProperties::FindProperty(std::string_view name) {
         { "_definitePosition", PropertyName::definitePosition },
         { "_dissolve", PropertyName::dissolve },
         { "_dissolveArrow", PropertyName::dissolveArrow },
-        { "_cuttable", PropertyName::cuttable },
+        { "_interactable", PropertyName::cuttable },
         { "_color", PropertyName::color }
     };
 
