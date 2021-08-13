@@ -7,7 +7,10 @@
     "version": "0.1.5",
     "url": "https://github.com/StackDoubleFlow/Tracks",
     "additionalData": {
-      "overrideSoName": "libtracks.so"
+      "overrideSoName": "libtracks.so",
+      "branchName": "version-v0.1.5",
+      "soLink": "https://github.com/StackDoubleFlow/Tracks/releases/download/v0.1.5/libtracks.so",
+      "debugSoLink": "https://github.com/StackDoubleFlow/Tracks/releases/download/v0.1.5/debug_libtracks.so"
     }
   },
   "dependencies": [
