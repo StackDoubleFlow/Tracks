@@ -41,4 +41,4 @@ namespace Easings {
 float Interpolate(float p, Functions function);
 }
 
-Functions FunctionFromStr(std::string str);
+Functions FunctionFromStr(std::string_view str);

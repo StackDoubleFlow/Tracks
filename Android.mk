@@ -18,11 +18,11 @@ TARGET_ARCH_ABI := $(APP_ABI)
 
 rwildcard=$(wildcard $1$2) $(foreach d,$(wildcard $1*),$(call rwildcard,$d/,$2))
 
-# Creating prebuilt for dependency: codegen - version: 0.13.0
+# Creating prebuilt for dependency: codegen - version: 0.13.1
 include $(CLEAR_VARS)
-LOCAL_MODULE := codegen_0_13_0
+LOCAL_MODULE := codegen_0_13_1
 LOCAL_EXPORT_C_INCLUDES := extern/codegen
-LOCAL_SRC_FILES := extern/libcodegen_0_13_0.so
+LOCAL_SRC_FILES := extern/libcodegen_0_13_1.so
 LOCAL_CPP_FEATURES += exceptions
 include $(PREBUILT_SHARED_LIBRARY)
 # Creating prebuilt for dependency: modloader - version: 1.2.3
@@ -66,7 +66,7 @@ LOCAL_SRC_FILES += $(call rwildcard,extern/beatsaber-hook/src/inline-hook,*.cpp)
 LOCAL_SRC_FILES += $(call rwildcard,extern/beatsaber-hook/src/inline-hook,*.c)
 LOCAL_SHARED_LIBRARIES += modloader
 LOCAL_SHARED_LIBRARIES += beatsaber-hook_2_3_0
-LOCAL_SHARED_LIBRARIES += codegen_0_13_0
+LOCAL_SHARED_LIBRARIES += codegen_0_13_1
 LOCAL_SHARED_LIBRARIES += custom-json-data
 LOCAL_SHARED_LIBRARIES += custom-types
 LOCAL_SHARED_LIBRARIES += questui

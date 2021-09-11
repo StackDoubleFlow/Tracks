@@ -9,6 +9,6 @@ class BeatmapData;
 namespace Animation {
 
 PointDefinition *TryGetPointData(TracksAD::BeatmapAssociatedData &beatmapAD, PointDefinition *&anon,
-                                 const rapidjson::Value &customData, std::string pointName);
+                                 const rapidjson::Value &customData, std::string_view pointName);
 
 }

@@ -46,7 +46,7 @@ public:
                    time{Property(PropertyType::linear)},
                    cuttable{Property(PropertyType::linear)},
                    color{Property(PropertyType::vector4)} {};
-    Property *FindProperty(std::string name);
+    Property *FindProperty(std::string_view name);
     
     Property position;
     Property rotation;

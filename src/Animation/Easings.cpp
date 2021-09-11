@@ -229,8 +229,8 @@ float Easings::Interpolate(float p, Functions function) {
     }
 }
 
-Functions FunctionFromStr(std::string str) {
-    static std::unordered_map<std::string, Functions> const functions = {
+Functions FunctionFromStr(std::string_view str) {
+    static std::unordered_map<std::string_view, Functions> const functions = {
         { "easeLinear", Functions::easeLinear },
         { "easeStep", Functions::easeStep },
         { "easeInQuad", Functions::easeInQuad },
@@ -269,7 +269,7 @@ Functions FunctionFromStr(std::string str) {
     if (itr != functions.end()) {
         return itr->second;
     } else {
-        TLogger::GetLogger().error("Invalid function with name %s", str.c_str());
+        TLogger::GetLogger().error("Invalid function with name %s", str.data());
         // Use linear by default
         return Functions::easeLinear;
     }

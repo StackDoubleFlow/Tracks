@@ -6,12 +6,13 @@ using namespace TracksAD;
 namespace Animation {
 
 PointDefinition *TryGetPointData(BeatmapAssociatedData &beatmapAD, PointDefinition *&anon,
-                                 const rapidjson::Value &customData, std::string pointName) {
+                                 const rapidjson::Value &customData, std::string_view pointName) {
     PointDefinition *pointData = nullptr;
 
-    if (!customData.HasMember(pointName.c_str()))
+    auto customDataItr = customData.FindMember(pointName.data());
+    if (customDataItr == customData.MemberEnd())
         return pointData;
-    const rapidjson::Value &pointString = customData[pointName.c_str()];
+    const rapidjson::Value &pointString = customDataItr->value;
 
     switch (pointString.GetType()) {
     case rapidjson::kNullType:

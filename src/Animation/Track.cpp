@@ -14,8 +14,8 @@ enum class PropertyName {
     color
 };
 
-Property *Properties::FindProperty(std::string name) {
-    static std::unordered_map<std::string, PropertyName> const functions = {
+Property *Properties::FindProperty(std::string_view name) {
+    static std::unordered_map<std::string_view, PropertyName> const functions = {
         {"_position", PropertyName::position},
         {"_rotation", PropertyName::rotation},
         {"_scale", PropertyName::scale},
