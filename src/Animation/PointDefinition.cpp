@@ -72,21 +72,21 @@ PointDefinition::PointDefinition(const rapidjson::Value& value) {
             const rapidjson::Value& rawPointItem = rawPoint[j];
 
             switch (rawPointItem.GetType()) {
-            case rapidjson::kNumberType:
-                copiedList.push_back(rawPointItem.GetFloat());
-                break;
-            case rapidjson::kStringType: {
-                std::string flag(rawPointItem.GetString());
-                if (flag.starts_with("ease")) {
-                    easing = FunctionFromStr(flag);
-                } else if (flag == "splineCatmullRom") {
-                    spline = true;
+                case rapidjson::kNumberType:
+                    copiedList.push_back(rawPointItem.GetFloat());
+                    break;
+                case rapidjson::kStringType: {
+                    std::string flag(rawPointItem.GetString());
+                    if (flag.starts_with("ease")) {
+                        easing = FunctionFromStr(flag);
+                    } else if (flag == "splineCatmullRom") {
+                        spline = true;
+                    }
+                    break;
                 }
-                break;
-            }
-            default: 
-                // TODO: Handle wrong types
-                break;
+                default: 
+                    // TODO: Handle wrong types
+                    break;
             }
         }
 
@@ -145,7 +145,7 @@ Quaternion PointDefinition::InterpolateQuaternion(float time) {
 
     int l;
     int r;
-    SearchIndex(time, PropertyType::vector3, l, r);
+    SearchIndex(time, PropertyType::quaternion, l, r);
 
     Quaternion quaternionOne = Quaternion::Euler(points[l].point);
     Quaternion quaternionTwo = Quaternion::Euler(points[r].point);
@@ -181,17 +181,17 @@ Vector4 PointDefinition::InterpolateVector4(float time) {
         return Vector4::get_zero();
     }
 
-    if (points[0].vector4Point.w >= time) {
+    if (points[0].vector4Point.v >= time) {
         return points[0].vector4Point;
     }
 
-    if (points[points.size() - 1].vector4Point.w <= time) {
+    if (points[points.size() - 1].vector4Point.v <= time) {
         return points[points.size() - 1].vector4Point;
     }
 
     int l;
     int r;
-    SearchIndex(time, PropertyType::linear, l, r);
+    SearchIndex(time, PropertyType::vector4, l, r);
 
     float normalTime = (time - points[l].vector4Point.v) / (points[r].vector4Point.v - points[l].vector4Point.v);
     normalTime = Easings::Interpolate(normalTime, points[r].easing);
