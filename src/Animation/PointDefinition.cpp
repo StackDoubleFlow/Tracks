@@ -72,21 +72,21 @@ PointDefinition::PointDefinition(const rapidjson::Value& value) {
             const rapidjson::Value& rawPointItem = rawPoint[j];
 
             switch (rawPointItem.GetType()) {
-                case rapidjson::kNumberType:
-                    copiedList.push_back(rawPointItem.GetFloat());
-                    break;
-                case rapidjson::kStringType: {
-                    std::string flag(rawPointItem.GetString());
-                    if (flag.starts_with("ease")) {
-                        easing = FunctionFromStr(flag);
-                    } else if (flag == "splineCatmullRom") {
-                        spline = true;
-                    }
-                    break;
+            case rapidjson::kNumberType:
+                copiedList.push_back(rawPointItem.GetFloat());
+                break;
+            case rapidjson::kStringType: {
+                std::string flag(rawPointItem.GetString());
+                if (flag.starts_with("ease")) {
+                    easing = FunctionFromStr(flag);
+                } else if (flag == "splineCatmullRom") {
+                    spline = true;
                 }
-                default: 
-                    // TODO: Handle wrong types
-                    break;
+                break;
+            }
+            default:
+                // TODO: Handle wrong types
+                break;
             }
         }
 
