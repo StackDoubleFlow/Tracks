@@ -35,6 +35,16 @@ struct Vector3 : public UnityEngine::Vector3 {
         return Vector3(x * rhs, y * rhs, z * rhs);
     }
 
+    bool operator==(const Vector3 &rhs)
+    {
+        return rhs.x == x && rhs.y == y && rhs.z == z;
+    }
+
+    inline bool operator!=(const Vector3 &rhs)
+    {
+        return rhs.x != x || rhs.y != y || rhs.z != z;
+    }
+
     static Vector3 LerpUnclamped(const Vector3 &a, const Vector3 &b, float t) {
         return Vector3(a.x + (b.x - a.x) * t, a.y + (b.y - a.y) * t,
                        a.z + (b.z - a.z) * t);
@@ -63,6 +73,14 @@ struct Quaternion : public UnityEngine::Quaternion {
     }
 
     static Quaternion get_identity() { return Quaternion(0, 0, 0, 1); }
+
+    bool operator==(const Quaternion &rhs) {
+        return rhs.x == x && rhs.y == y && rhs.z == z && rhs.w == w;
+    }
+
+    bool operator!=(const Quaternion &rhs) {
+        return rhs.x != x || rhs.y != y || rhs.z != z || rhs.w != w;
+    }
 
     // static float Dot(const Quaternion &a, const Quaternion &b) {
     //     return a.x * b.x + a.y * b.y + a.z * b.z + a.w * b.w;
