@@ -74,13 +74,11 @@ struct Quaternion : public UnityEngine::Quaternion {
 
     static Quaternion get_identity() { return Quaternion(0, 0, 0, 1); }
 
-    bool operator==(const Quaternion &rhs)
-    {
+    bool operator==(const Quaternion &rhs) {
         return rhs.x == x && rhs.y == y && rhs.z == z && rhs.w == w;
     }
 
-    inline bool operator!=(const Quaternion &rhs)
-    {
+    bool operator!=(const Quaternion &rhs) {
         return rhs.x != x || rhs.y != y || rhs.z != z || rhs.w != w;
     }
 
