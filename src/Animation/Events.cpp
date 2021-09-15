@@ -126,13 +126,13 @@ void CustomEventCallback(BeatmapObjectCallbackController *callbackController, Cu
                 if (property) {
                     for (auto it = coroutines.begin(); it != coroutines.end();) {
                         if (it->property == property) {
-                            coroutines.erase(it);
+                            it = coroutines.erase(it);
                         } else {
                             it++;
                         }
                     }
 
-                    PointDefinition *anonPointDef = nullptr;;
+                    PointDefinition *anonPointDef = nullptr;
                     auto *pointData = Animation::TryGetPointData(ad, anonPointDef, eventData, name);
                     if (pointData) {
                         coroutines.push_back(AnimateTrackContext { pointData, property, duration, customEventData->time, easing, anonPointDef });
@@ -149,7 +149,7 @@ void CustomEventCallback(BeatmapObjectCallbackController *callbackController, Cu
                 if (property) {
                     for (auto it = pathCoroutines.begin(); it != pathCoroutines.end();) {
                         if (it->property == property) {
-                            pathCoroutines.erase(it);
+                            it = pathCoroutines.erase(it);
                         } else {
                             it++;
                         }
