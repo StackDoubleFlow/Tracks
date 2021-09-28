@@ -26,7 +26,8 @@ public:
 };
 
 struct BeatmapObjectAssociatedData {
-    Track *track;
+    // Should this be an optional? - Fern
+    std::vector<Track*> tracks;
 };
 
 void readBeatmapDataAD(CustomJSONData::CustomBeatmapData *beatmapData);

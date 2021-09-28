@@ -65,11 +65,40 @@ void TracksAD::readBeatmapDataAD(CustomJSONData::CustomBeatmapData *beatmapData)
             if (customDataWrapper->value) {
                 rapidjson::Value &customData = *customDataWrapper->value;
                 BeatmapObjectAssociatedData &ad = getAD(customDataWrapper);
-                if (customData.HasMember("_track")) {
-                    std::string trackName = customData["_track"].GetString();
-                    Track *track = &tracks[trackName];
-                    ad.track = track;
+                std::vector<Track *> tracksAD;
+
+                auto trackIt = customData.FindMember("_track");
+                if (trackIt != customData.MemberEnd()) {
+                    rapidjson::Value& tracksObject = trackIt->value;
+
+
+                    switch (tracksObject.GetType()) {
+                        case rapidjson::Type::kArrayType: {
+                            if (tracksObject.Empty())
+                                break;
+
+                            for (auto &trackElement : tracksObject.GetArray())
+                            {
+                                Track *track = &tracks[trackElement.GetString()];
+                                tracksAD.emplace_back(track);
+                            }
+                            break;
+                        }
+                        case rapidjson::Type::kStringType:
+                        {
+                            Track *track = &tracks[tracksObject.GetString()];
+                            tracksAD.emplace_back(track);
+                            break;
+                        }
+
+                        default: {
+                            TLogger::GetLogger().error("Tracks object is not an array or a string, what? Why?");
+                            break;
+                        }
+                    }
                 }
+
+                ad.tracks = tracksAD;
             }
         }
     }
