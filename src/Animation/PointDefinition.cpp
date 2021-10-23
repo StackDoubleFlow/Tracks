@@ -132,7 +132,7 @@ Vector3 PointDefinition::Interpolate(float time) {
 
 Quaternion PointDefinition::InterpolateQuaternion(float time) {
     if (points.size() == 0) {
-        return Quaternion::get_identity();
+        return Quaternion::identity();
     }
 
     if (points[0].point.w >= time) {
