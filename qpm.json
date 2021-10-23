@@ -29,6 +29,11 @@
       "id": "custom-json-data",
       "versionRange": "^0.14.0",
       "additionalData": {}
+    },
+    {
+      "id": "sombrero",
+      "versionRange": "<0.1.26",
+      "additionalData": {}
     }
   ],
   "additionalData": {}
