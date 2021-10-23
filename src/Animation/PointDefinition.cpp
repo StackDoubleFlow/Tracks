@@ -106,7 +106,7 @@ PointDefinition::PointDefinition(const rapidjson::Value& value) {
 
 Vector3 PointDefinition::Interpolate(float time) {
     if (points.size() == 0) {
-        return Vector3::get_zero();
+        return Vector3::zero();
     }
 
     if (points[0].point.w >= time) {
@@ -178,7 +178,7 @@ float PointDefinition::InterpolateLinear(float time) {
 
 Vector4 PointDefinition::InterpolateVector4(float time) {
     if (points.size() == 0) {
-        return Vector4::get_zero();
+        return Vector4{0,0,0,0};
     }
 
     if (points[0].vector4Point.v >= time) {
