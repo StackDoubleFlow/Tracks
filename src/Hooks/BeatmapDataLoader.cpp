@@ -43,6 +43,43 @@ void TracksAD::readBeatmapDataAD(CustomJSONData::CustomBeatmapData *beatmapData)
 
     auto &tracks = beatmapAD.tracks;
 
+    for (auto const& customEventData : *beatmapData->customEventsData) {
+        rapidjson::Value& eventData = *customEventData.data;
+        auto &eventAD = getEventAD(&customEventData);
+
+        
+        if (customEventData.type == "AnimateTrack") {
+            eventAD.type = EventType::animateTrack;
+        } else if (customEventData.type == "AssignPathAnimation") {
+            eventAD.type = EventType::assignPathAnimation;
+        } else {
+            eventAD.type = EventType::unknown;
+            continue;
+        }
+
+
+        eventAD.track = &beatmapAD.tracks[eventData["_track"].GetString()];
+        eventAD.duration = eventData.HasMember("_duration") ? eventData["_duration"].GetFloat() : 0;
+        eventAD.easing = eventData.HasMember("_easing") ? FunctionFromStr(eventData["_easing"].GetString()) : Functions::easeLinear;
+
+        auto& properties = eventAD.track->properties;
+        auto &pathProperties = eventAD.track->pathProperties;
+
+        switch (eventAD.type) {
+            case EventType::animateTrack:{
+                eventAD.animateTrackData = AnimateTrackData(beatmapAD, eventData, properties);
+                break;
+            }
+            case EventType::assignPathAnimation:{
+                eventAD.assignPathAnimation = AssignPathAnimationData(beatmapAD, eventData, pathProperties);
+                break;
+            }
+            default:
+                break;
+        }
+        
+    }
+
     for (int i = 0; i < beatmapData->beatmapLinesData->Length(); i++) {
         BeatmapLineData *beatmapLineData = beatmapData->beatmapLinesData->values[i];
         for (int j = 0; j < beatmapLineData->beatmapObjectsData->size; j++) {

@@ -94,84 +94,81 @@ void Events::UpdateCoroutines(BeatmapObjectCallbackController *callbackControlle
 }
 
 void CustomEventCallback(BeatmapObjectCallbackController *callbackController, CustomJSONData::CustomEventData *customEventData) {
-    auto *customBeatmapData = reinterpret_cast<CustomJSONData::CustomBeatmapData *>(callbackController->beatmapData);
-    BeatmapAssociatedData& ad = getBeatmapAD(customBeatmapData->customData);
-    rapidjson::Value& eventData = *customEventData->data;
+    CustomEventAssociatedData const &eventAD = getEventAD(customEventData);
 
-    EventType type;
-    if (customEventData->type == "AnimateTrack") {
-        type = EventType::animateTrack;
-    } else if (customEventData->type == "AssignPathAnimation") {
-        type = EventType::assignPathAnimation;
-    } else {
-        return;
-    }
-
-    Track *track = &ad.tracks[eventData["_track"].GetString()];
-    float duration = customEventData->data->HasMember("_duration") ? eventData["_duration"].GetFloat() : 0;
-    Functions easing = customEventData->data->HasMember("_easing") ? FunctionFromStr(eventData["_easing"].GetString()) : Functions::easeLinear;
+    auto duration = eventAD.duration;
 
     duration = 60 * duration / spawnController->get_currentBpm();
 
-    auto& properties = track->properties;
-    auto& pathProperties = track->pathProperties;
+    auto easing = eventAD.easing;
+    auto track = eventAD.track;
 
-    rapidjson::Value::ConstMemberIterator itr;
-    for (itr = eventData.MemberBegin(); itr < eventData.MemberEnd(); itr++) {
-        const char *name = (*itr).name.GetString();
-        if (strcmp(name, "_track") && strcmp(name, "_duration") && strcmp(name, "_easing")) {
-            switch (type) {
-            case EventType::animateTrack: {
-                Property *property = properties.FindProperty(name);
-                if (property) {
-                    for (auto it = coroutines.begin(); it != coroutines.end();) {
-                        if (it->property == property) {
-                            it = coroutines.erase(it);
-                        } else {
-                            it++;
-                        }
-                    }
+    switch (eventAD.type)
+    {
+    case EventType::animateTrack: { 
+        AnimateTrackData animateTrackData = *eventAD.animateTrackData;
 
-                    PointDefinition *anonPointDef = nullptr;
-                    auto *pointData = Animation::TryGetPointData(ad, anonPointDef, eventData, name);
-                    if (pointData) {
-                        coroutines.push_back(AnimateTrackContext { pointData, property, duration, customEventData->time, easing, anonPointDef });
-                    } else {
-                        property->value = std::nullopt;
-                    }
+        for (auto const& property : animateTrackData.properties) {
+            for (auto it = coroutines.begin(); it != coroutines.end();) {
+                if (it->property == property) {
+                    it = coroutines.erase(it);
                 } else {
-                    TLogger::GetLogger().warning("Could not find track property with name %s", name);
+                    it++;
                 }
-                break;
             }
-            case EventType::assignPathAnimation:
-                PathProperty *property = pathProperties.FindProperty(name);
-                if (property) {
-                    for (auto it = pathCoroutines.begin(); it != pathCoroutines.end();) {
-                        if (it->property == property) {
-                            it = pathCoroutines.erase(it);
-                        } else {
-                            it++;
-                        }
-                    }
 
-                    PointDefinition *anonPointDef = nullptr;
-                    auto *pointData = Animation::TryGetPointData(ad, anonPointDef, eventData, name);
-                    if (pointData) {
-                        if (anonPointDef) {
-                            anonPointDefinitions.push_back(anonPointDef);
-                        }
-                        if (!property->value.has_value()) property->value = PointDefinitionInterpolation();
-                        property->value->Init(pointData);
-                        pathCoroutines.push_back(AssignPathAnimationContext { property, duration, customEventData->time, easing });
-                    } else {
-                        property->value = std::nullopt;
-                    }
-                } else {
-                    TLogger::GetLogger().warning("Could not find track path property with name %s", name);
-                }
+            auto anonPointDef = animateTrackData.anonPointDef[property];
+            auto pointData = animateTrackData.pointData[property];
+
+            if (pointData)
+            {
+                coroutines.push_back(AnimateTrackContext{pointData, property, duration, customEventData->time, easing, anonPointDef});
+            }
+            else
+            {
+                property->value = std::nullopt;
             }
         }
+        break;
+    }
+    case EventType::assignPathAnimation: {
+        AssignPathAnimationData assignPathAnimationData = *eventAD.assignPathAnimation;
+
+        for (auto const& property : assignPathAnimationData.pathProperties) {
+            for (auto it = pathCoroutines.begin(); it != pathCoroutines.end();)
+            {
+                if (it->property == property)
+                {
+                    it = pathCoroutines.erase(it);
+                }
+                else
+                {
+                    it++;
+                }
+            }
+
+            PointDefinition *anonPointDef = assignPathAnimationData.anonPointDef[property];
+            auto *pointData = assignPathAnimationData.pointData[property];
+            if (pointData)
+            {
+                if (anonPointDef)
+                {
+                    anonPointDefinitions.push_back(anonPointDef);
+                }
+                if (!property->value.has_value())
+                    property->value = PointDefinitionInterpolation();
+                property->value->Init(pointData);
+                pathCoroutines.push_back(AssignPathAnimationContext{property, duration, customEventData->time, easing});
+            }
+            else
+            {
+                property->value = std::nullopt;
+            }
+        }
+        break;
+    }
+    default:
+        break;
     }
 }
 

@@ -11,7 +11,7 @@ namespace Events {
 void AddEventCallbacks(Logger &logger);
 void UpdateCoroutines(GlobalNamespace::BeatmapObjectCallbackController *callbackController);
 
-enum class EventType { animateTrack, assignPathAnimation };
+
 
 struct AnimateTrackContext {
     PointDefinition *points;
