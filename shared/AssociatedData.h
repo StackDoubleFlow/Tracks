@@ -31,7 +31,8 @@ public:
 };
 
 struct BeatmapObjectAssociatedData {
-    Track *track;
+    // Should this be an optional? - Fern
+    std::vector<Track*> tracks;
 };
 
 struct AnimateTrackData {

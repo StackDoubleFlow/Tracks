@@ -3,6 +3,9 @@
 #include <string>
 #include "PointDefinitionInterpolation.h"
 #include "../Vector.h"
+#include "UnityEngine/GameObject.hpp"
+
+#include "beatsaber-hook/shared/utils/typedefs-wrappers.hpp"
 
 namespace Events {
     struct AnimateTrackContext;
@@ -89,5 +92,28 @@ public:
 struct Track {
     Properties properties;
     PathProperties pathProperties;
+    std::vector<UnityEngine::GameObject*> gameObjects;
+    // bool is true if removed
+    EventCallback<Track *, UnityEngine::GameObject *, bool> gameObjectModificationEvent;
+
+    void
+    AddGameObject(UnityEngine::GameObject *go)
+    {
+        gameObjects.push_back(go);
+
+        gameObjectModificationEvent.invoke(this, go, false);
+    }
+
+    void RemoveGameObject(UnityEngine::GameObject *go)
+    {
+        auto it = std::find(gameObjects.begin(), gameObjects.end(), go);
+
+        if (it != gameObjects.end())
+        {
+            gameObjects.erase(it);
+            gameObjectModificationEvent.invoke(this, go, true);
+        }
+    }
+
     void ResetVariables();
 };
