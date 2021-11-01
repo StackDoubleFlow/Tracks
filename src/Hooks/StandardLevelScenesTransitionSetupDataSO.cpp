@@ -18,6 +18,7 @@ MAKE_HOOK_MATCH(StandardLevelScenesTransitionSetupDataSO_Init, &StandardLevelSce
     for (auto& pair : ad.tracks) {
         pair.second.ResetVariables();
     }
+    clearEventADs();
 }
 
 void InstallStandardLevelScenesTransitionSetupDataSOHooks(Logger& logger) {

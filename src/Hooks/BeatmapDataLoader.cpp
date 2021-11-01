@@ -40,7 +40,6 @@ void TracksAD::readBeatmapDataAD(CustomJSONData::CustomBeatmapData *beatmapData)
         TLogger::GetLogger().debug("Setting point definitions");
         beatmapAD.pointDefinitions = pointDataManager.pointData;
     }
-
     auto &tracks = beatmapAD.tracks;
 
     for (int i = 0; i < beatmapData->beatmapLinesData->Length(); i++) {
