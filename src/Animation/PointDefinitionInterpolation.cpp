@@ -7,14 +7,14 @@ UnityEngine::Vector3 PointDefinitionInterpolation::Interpolate(float time) {
     if (!previousPointData) {
         return basePointData->Interpolate(time);
     }
-    return Vector3::LerpUnclamped(previousPointData->Interpolate(time), basePointData->Interpolate(time), this->time);
+    return NEVector::Vector3::LerpUnclamped(previousPointData->Interpolate(time), basePointData->Interpolate(time), this->time);
 }
 
 UnityEngine::Quaternion PointDefinitionInterpolation::InterpolateQuaternion(float time) {
     if (!previousPointData) {
         return basePointData->InterpolateQuaternion(time);
     }
-    return Quaternion::SlerpUnclamped(previousPointData->InterpolateQuaternion(time), basePointData->InterpolateQuaternion(time), this->time);
+    return NEVector::Quaternion::SlerpUnclamped(previousPointData->InterpolateQuaternion(time), basePointData->InterpolateQuaternion(time), this->time);
 }
 
 float PointDefinitionInterpolation::InterpolateLinear(float time) {
