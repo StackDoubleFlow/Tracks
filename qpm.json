@@ -32,7 +32,7 @@
     },
     {
       "id": "sombrero",
-      "versionRange": "<0.1.26",
+      "versionRange": "*",
       "additionalData": {}
     }
   ],
