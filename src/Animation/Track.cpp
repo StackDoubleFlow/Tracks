@@ -103,4 +103,6 @@ void Track::ResetVariables() {
     // pathProperties.color.value = std::nullopt;
     properties = Properties();
     pathProperties = PathProperties();
+    gameObjects.clear();
+    gameObjectModificationEvent.clear();
 }
