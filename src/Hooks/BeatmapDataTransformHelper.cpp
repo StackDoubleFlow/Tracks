@@ -12,6 +12,73 @@
 using namespace TracksAD;
 using namespace GlobalNamespace;
 
+void LoadTrackEvent(CustomJSONData::CustomEventData const* customEventData, TracksAD::BeatmapAssociatedData& beatmapAD) {
+    EventType type;
+    if (customEventData->type == "AnimateTrack") {
+        type = EventType::animateTrack;
+    } else if (customEventData->type == "AssignPathAnimation") {
+        type = EventType::assignPathAnimation;
+    } else {
+        return;
+    }
+
+    auto &eventAD = getEventAD(customEventData);
+
+    if (eventAD.parsed)
+        return;
+
+    rapidjson::Value& eventData = *customEventData->data;
+
+    eventAD.type = type;
+    auto const& trackJSON = eventData["_track"];
+    unsigned int trackSize = trackJSON.IsArray() ? trackJSON.Size() : 1;
+
+
+    std::vector<Track*> tracks;
+    tracks.reserve(trackSize);
+
+    if (trackJSON.IsArray()) {
+        for (auto const& track : trackJSON.GetArray()) {
+            if (!track.IsString()) {
+                TLogger::GetLogger().debug("Track in array is not a string, why?");
+                continue;
+            }
+
+            tracks.emplace_back(&beatmapAD.tracks[track.GetString()]);
+        }
+    } else if (trackJSON.IsString()) {
+        tracks.emplace_back(&beatmapAD.tracks[trackJSON.GetString()]);
+    } else {
+        TLogger::GetLogger().debug("Track object is not a string or array, why?");
+        eventAD.type = EventType::unknown;
+        return;
+    }
+
+    eventAD.tracks = std::move(tracks);
+    eventAD.duration = eventData.HasMember("_duration") ? eventData["_duration"].GetFloat() : 0;
+    eventAD.easing = eventData.HasMember("_easing") ? FunctionFromStr(eventData["_easing"].GetString()) : Functions::easeLinear;
+
+    for (auto const& track : eventAD.tracks) {
+        auto &properties = track->properties;
+        auto &pathProperties = track->pathProperties;
+
+        switch (eventAD.type) {
+            case EventType::animateTrack: {
+                eventAD.animateTrackData.emplace_back(beatmapAD, eventData, properties);
+                break;
+            }
+            case EventType::assignPathAnimation: {
+                eventAD.assignPathAnimation.emplace_back(beatmapAD, eventData, pathProperties);
+                break;
+            }
+            default:
+                break;
+        }
+    }
+
+    eventAD.parsed = true;
+}
+
 MAKE_HOOK_MATCH(BeatmapDataTransformHelper_CreateTransformedBeatmapData,&BeatmapDataTransformHelper::CreateTransformedBeatmapData, GlobalNamespace::IReadonlyBeatmapData*,
                 IReadonlyBeatmapData* beatmapData, GlobalNamespace::IPreviewBeatmapLevel* beatmapLevel,
                 GlobalNamespace::GameplayModifiers* gameplayModifiers, GlobalNamespace::PracticeSettings* practiceSettings,
@@ -27,43 +94,8 @@ MAKE_HOOK_MATCH(BeatmapDataTransformHelper_CreateTransformedBeatmapData,&Beatmap
     }
 
 
-    auto &tracks = beatmapAD.tracks;
-
     for (auto const& customEventData : *result->customEventsData) {
-
-        EventType type;
-        if (customEventData.type == "AnimateTrack") {
-            type = EventType::animateTrack;
-        } else if (customEventData.type == "AssignPathAnimation") {
-            type = EventType::assignPathAnimation;
-        } else {
-            continue;
-        }
-
-        auto &eventAD = getEventAD(&customEventData);
-        rapidjson::Value& eventData = *customEventData.data;
-
-        eventAD.type = type;
-        eventAD.track = &beatmapAD.tracks[eventData["_track"].GetString()];
-        eventAD.duration = eventData.HasMember("_duration") ? eventData["_duration"].GetFloat() : 0;
-        eventAD.easing = eventData.HasMember("_easing") ? FunctionFromStr(eventData["_easing"].GetString()) : Functions::easeLinear;
-
-        auto& properties = eventAD.track->properties;
-        auto &pathProperties = eventAD.track->pathProperties;
-
-        switch (eventAD.type) {
-            case EventType::animateTrack:{
-                eventAD.animateTrackData = AnimateTrackData(beatmapAD, eventData, properties);
-                break;
-            }
-            case EventType::assignPathAnimation:{
-                eventAD.assignPathAnimation = AssignPathAnimationData(beatmapAD, eventData, pathProperties);
-                break;
-            }
-            default:
-                break;
-        }
-
+        LoadTrackEvent(&customEventData, beatmapAD);
     }
 
     return reinterpret_cast<IReadonlyBeatmapData *>(result);

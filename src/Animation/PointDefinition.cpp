@@ -93,19 +93,19 @@ PointDefinition::PointDefinition(const rapidjson::Value& value) {
         int numNums = copiedList.size();
         if (numNums == 2) {
             Vector2 vec = Vector2(copiedList[0], copiedList[1]);
-            points.push_back(PointData(vec, easing));
+            points.emplace_back(vec, easing);
         } else if (numNums == 4) {
             Vector4 vec = Vector4(copiedList[0], copiedList[1], copiedList[2], copiedList[3]);
-            points.push_back(PointData(vec, easing, spline));
+            points.emplace_back(vec, easing, spline);
         } else {
             Vector5 vec = Vector5(copiedList[0], copiedList[1], copiedList[2], copiedList[3], copiedList[4]);
-            points.push_back(PointData(vec, easing));
+            points.emplace_back(vec, easing);
         }
     }
 }
 
 Vector3 PointDefinition::Interpolate(float time) {
-    if (points.size() == 0) {
+    if (points.empty()) {
         return Vector3::zero();
     }
 
@@ -131,7 +131,7 @@ Vector3 PointDefinition::Interpolate(float time) {
 }
 
 Quaternion PointDefinition::InterpolateQuaternion(float time) {
-    if (points.size() == 0) {
+    if (points.empty()) {
         return Quaternion::identity();
     }
 
@@ -155,7 +155,7 @@ Quaternion PointDefinition::InterpolateQuaternion(float time) {
 }
 
 float PointDefinition::InterpolateLinear(float time) {
-    if (points.size() == 0) {
+    if (points.empty()) {
         return 0;
     }
 
@@ -177,7 +177,7 @@ float PointDefinition::InterpolateLinear(float time) {
 }
 
 Vector4 PointDefinition::InterpolateVector4(float time) {
-    if (points.size() == 0) {
+    if (points.empty()) {
         return Vector4{0,0,0,0};
     }
 
@@ -199,7 +199,7 @@ Vector4 PointDefinition::InterpolateVector4(float time) {
 }
 
 void PointDefinitionManager::AddPoint(std::string pointDataName, PointDefinition pointData) {
-    if (this->pointData.find(pointDataName) != this->pointData.end()) {
+    if (this->pointData.contains(pointDataName)) {
         TLogger::GetLogger().error("Duplicate point defintion name, %s could not be registered!", pointDataName.c_str());
     } else {
         this->pointData.emplace(pointDataName, pointData);

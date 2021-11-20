@@ -79,7 +79,7 @@ void Events::UpdateCoroutines(BeatmapObjectCallbackController *callbackControlle
             it++;
         } else {
             delete it->anonPointDef;
-            coroutines.erase(it);
+            it = coroutines.erase(it);
         }
     }
 
@@ -88,10 +88,13 @@ void Events::UpdateCoroutines(BeatmapObjectCallbackController *callbackControlle
             it++;
         } else {
             it->property->value->Finish();
-            pathCoroutines.erase(it);
+            it = pathCoroutines.erase(it);
         }
     }
 }
+
+// BeatmapDataTransformHelper.cpp
+void LoadTrackEvent(CustomJSONData::CustomEventData const* customEventData, TracksAD::BeatmapAssociatedData& beatmapAD);
 
 void CustomEventCallback(BeatmapObjectCallbackController *callbackController, CustomJSONData::CustomEventData *customEventData) {
     if (customEventData->type != "AnimateTrack" && customEventData->type != "AssignPathAnimation") {
@@ -100,73 +103,76 @@ void CustomEventCallback(BeatmapObjectCallbackController *callbackController, Cu
 
     CustomEventAssociatedData const &eventAD = getEventAD(customEventData);
 
+    // fail safe, idek why this needs to be done smh
+    // CJD you bugger
+    if (!eventAD.parsed) {
+        auto *customBeatmapData = (CustomJSONData::CustomBeatmapData *)callbackController->beatmapData;
+        TracksAD::BeatmapAssociatedData &beatmapAD = TracksAD::getBeatmapAD(customBeatmapData->customData);
+
+        LoadTrackEvent(customEventData, beatmapAD);
+    }
+
     auto duration = eventAD.duration;
 
     duration = 60 * duration / spawnController->get_currentBpm();
 
     auto easing = eventAD.easing;
-    auto track = eventAD.track;
 
     switch (eventAD.type)
     {
         case EventType::animateTrack: {
-            AnimateTrackData animateTrackData = *eventAD.animateTrackData;
+            auto const& animateTrackDataList = eventAD.animateTrackData;
 
-            for (auto const& property : animateTrackData.properties) {
-                for (auto it = coroutines.begin(); it != coroutines.end();) {
-                    if (it->property == property) {
-                        it = coroutines.erase(it);
-                    } else {
-                        it++;
+            for (auto const& animateTrackData : animateTrackDataList) {
+
+                for (auto const &property: animateTrackData.properties) {
+                    for (auto it = coroutines.begin(); it != coroutines.end();) {
+                        if (it->property == property) {
+                            it = coroutines.erase(it);
+                        } else {
+                            it++;
+                        }
                     }
-                }
 
-                auto anonPointDef = animateTrackData.anonPointDef[property];
-                auto pointData = animateTrackData.pointData[property];
+                    auto anonPointDef = animateTrackData.anonPointDef.at(property);
+                    auto pointData = animateTrackData.pointData.at(property);
 
-                if (pointData)
-                {
-                    coroutines.emplace_back(pointData, property, duration, customEventData->time, easing, anonPointDef);
-                }
-                else
-                {
-                    property->value = std::nullopt;
+                    if (pointData) {
+                        coroutines.emplace_back(pointData, property, duration, customEventData->time, easing,
+                                                anonPointDef);
+                    } else {
+                        property->value = std::nullopt;
+                    }
                 }
             }
             break;
         }
         case EventType::assignPathAnimation: {
-            AssignPathAnimationData assignPathAnimationData = *eventAD.assignPathAnimation;
+            auto& assignPathAnimationDataList = eventAD.assignPathAnimation;
 
-            for (auto const& property : assignPathAnimationData.pathProperties) {
-                for (auto it = pathCoroutines.begin(); it != pathCoroutines.end();)
-                {
-                    if (it->property == property)
-                    {
-                        it = pathCoroutines.erase(it);
+            for (auto const& assignPathAnimationData : assignPathAnimationDataList) {
+                for (auto const& property: assignPathAnimationData.pathProperties) {
+                    for (auto it = pathCoroutines.begin(); it != pathCoroutines.end();) {
+                        if (it->property == property) {
+                            it = pathCoroutines.erase(it);
+                        } else {
+                            it++;
+                        }
                     }
-                    else
-                    {
-                        it++;
-                    }
-                }
 
-                PointDefinition *anonPointDef = assignPathAnimationData.anonPointDef[property];
-                auto *pointData = assignPathAnimationData.pointData[property];
-                if (pointData)
-                {
-                    if (anonPointDef)
-                    {
-                        anonPointDefinitions.push_back(anonPointDef);
+                    PointDefinition *anonPointDef = assignPathAnimationData.anonPointDef.at(property);
+                    auto *pointData = assignPathAnimationData.pointData.at(property);
+                    if (pointData) {
+                        if (anonPointDef) {
+                            anonPointDefinitions.push_back(anonPointDef);
+                        }
+                        if (!property->value.has_value())
+                            property->value = PointDefinitionInterpolation();
+                        property->value->Init(pointData);
+                        pathCoroutines.emplace_back(property, duration, customEventData->time, easing);
+                    } else {
+                        property->value = std::nullopt;
                     }
-                    if (!property->value.has_value())
-                        property->value = PointDefinitionInterpolation();
-                    property->value->Init(pointData);
-                    pathCoroutines.emplace_back(property, duration, customEventData->time, easing);
-                }
-                else
-                {
-                    property->value = std::nullopt;
                 }
             }
             break;
