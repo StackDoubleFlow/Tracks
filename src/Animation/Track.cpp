@@ -1,78 +1,39 @@
 #include "Animation/Track.h"
 
-// TODO: Deprecate
-enum class PropertyName {
-    position,
-    rotation,
-    scale,
-    localRotation,
-    localPosition,
-    definitePosition,
-    dissolve,
-    dissolveArrow,
-    time,
-    cuttable,
-    color
-};
+#define PROP_GET(jsonName, varName) if (name == (jsonName)) return &varName;
 
 Property *Properties::FindProperty(std::string_view name) {
-    static std::unordered_map<std::string_view, Property*> const functions = {
-        {"_position", &position},
-        {"_rotation", &rotation},
-        {"_scale", &scale},
-        {"_localRotation", &localRotation},
-        {"_localPosition", &localPosition},
-        {"_dissolve", &dissolve},
-        {"_dissolveArrow", &dissolveArrow},
-        {"_time", &time},
-        {"_interactable", &cuttable},
-        {"_color", &color},
-        {"_attenuation", &attentuation},
-        {"_offset", &fogOffset},
-        {"_startY", &heightFogStartY},
-        {"_height", &heightFogHeight}
-    };
+    PROP_GET("_position", position)
+    PROP_GET("_rotation", rotation)
+    PROP_GET("_scale", scale)
+    PROP_GET("_localRotation", localRotation)
+    PROP_GET("_localPosition", localPosition)
+    PROP_GET("_dissolve", dissolve)
+    PROP_GET("_dissolveArrow", dissolveArrow)
+    PROP_GET("_time", time)
+    PROP_GET("_interactable", cuttable)
+    PROP_GET("_color", color)
+    PROP_GET("_attenuation", attentuation)
+    PROP_GET("_offset", fogOffset)
+    PROP_GET("_startY", heightFogStartY)
+    PROP_GET("_height", heightFogHeight)
 
-    auto itr = functions.find(name);
-    if (itr != functions.end()) {
-        return itr->second;
-    } else {
-        return nullptr;
-    }
+    return nullptr;
 }
 
 PathProperty *PathProperties::FindProperty(std::string_view name) {
-    static std::unordered_map<std::string_view, PropertyName> const functions = {
-        { "_position", PropertyName::position },
-        { "_rotation", PropertyName::rotation },
-        { "_scale", PropertyName::scale },
-        { "_localRotation", PropertyName::localRotation },
-        { "_localPosition", PropertyName::localPosition },
-        { "_definitePosition", PropertyName::definitePosition },
-        { "_dissolve", PropertyName::dissolve },
-        { "_dissolveArrow", PropertyName::dissolveArrow },
-        { "_interactable", PropertyName::cuttable },
-        { "_color", PropertyName::color }
-    };
+    PROP_GET("_position", position)
+    PROP_GET("_rotation", rotation)
+    PROP_GET("_scale", scale)
+    PROP_GET("_localRotation", localRotation)
+    PROP_GET("_localPosition", localPosition)
+    PROP_GET("_definitePosition", definitePosition)
+    PROP_GET("_dissolve", dissolve)
+    PROP_GET("_dissolveArrow", dissolveArrow)
+    PROP_GET("_interactable", cuttable)
+    PROP_GET("_color", color)
 
-    auto itr = functions.find(name);
-    if (itr != functions.end()) {
-        switch (itr->second) {
-            case PropertyName::position: return &position;
-            case PropertyName::rotation: return &rotation;
-            case PropertyName::scale: return &scale;
-            case PropertyName::localRotation: return &localRotation;
-            case PropertyName::localPosition: return &localPosition;
-            case PropertyName::definitePosition: return &definitePosition;
-            case PropertyName::dissolve: return &dissolve;
-            case PropertyName::dissolveArrow: return &dissolveArrow;
-            case PropertyName::cuttable: return &cuttable;
-            case PropertyName::color: return &color;
-            default: return nullptr;
-        }
-    } else {
-        return nullptr;
-    }
+    return nullptr;
 }
 
 void Track::ResetVariables() {
