@@ -50,7 +50,8 @@ public:
                    cuttable{Property(PropertyType::linear)},
                    color{Property(PropertyType::vector4)} {};
     Property *FindProperty(std::string_view name);
-    
+
+    // Noodle
     Property position;
     Property rotation;
     Property scale;
@@ -60,7 +61,13 @@ public:
     Property dissolveArrow;
     Property time;
     Property cuttable;
+
+    // Chroma
     Property color;
+    Property attentuation{PropertyType::linear};
+    Property fogOffset{PropertyType::linear};
+    Property heightFogStartY{PropertyType::linear};
+    Property heightFogHeight{PropertyType::linear};
 };
 
 class PathProperties {

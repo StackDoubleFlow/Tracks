@@ -1,5 +1,6 @@
 #include "Animation/Track.h"
 
+// TODO: Deprecate
 enum class PropertyName {
     position,
     rotation,
@@ -15,33 +16,26 @@ enum class PropertyName {
 };
 
 Property *Properties::FindProperty(std::string_view name) {
-    static std::unordered_map<std::string_view, PropertyName> const functions = {
-        {"_position", PropertyName::position},
-        {"_rotation", PropertyName::rotation},
-        {"_scale", PropertyName::scale},
-        {"_localRotation", PropertyName::localRotation},
-        {"_localPosition", PropertyName::localPosition},
-        {"_dissolve", PropertyName::dissolve},
-        {"_dissolveArrow", PropertyName::dissolveArrow},
-        {"_time", PropertyName::time},
-        {"_interactable", PropertyName::cuttable},
-        {"_color", PropertyName::color}};
+    static std::unordered_map<std::string_view, Property*> const functions = {
+        {"_position", &position},
+        {"_rotation", &rotation},
+        {"_scale", &scale},
+        {"_localRotation", &localRotation},
+        {"_localPosition", &localPosition},
+        {"_dissolve", &dissolve},
+        {"_dissolveArrow", &dissolveArrow},
+        {"_time", &time},
+        {"_interactable", &cuttable},
+        {"_color", &color},
+        {"_attenuation", &attentuation},
+        {"_offset", &fogOffset},
+        {"_startY", &heightFogStartY},
+        {"_height", &heightFogHeight}
+    };
 
     auto itr = functions.find(name);
     if (itr != functions.end()) {
-        switch (itr->second) {
-            case PropertyName::position: return &position;
-            case PropertyName::rotation: return &rotation;
-            case PropertyName::scale: return &scale;
-            case PropertyName::localRotation: return &localRotation;
-            case PropertyName::localPosition: return &localPosition;
-            case PropertyName::dissolve: return &dissolve;
-            case PropertyName::dissolveArrow: return &dissolveArrow;
-            case PropertyName::time: return &time;
-            case PropertyName::cuttable: return &cuttable;
-            case PropertyName::color: return &color;
-            default: return nullptr;
-        }
+        return itr->second;
     } else {
         return nullptr;
     }
