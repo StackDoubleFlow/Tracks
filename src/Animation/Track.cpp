@@ -1,8 +1,16 @@
 #include "Animation/Track.h"
 
-#define PROP_GET(jsonName, varName) if (name == (jsonName)) return &varName;
+#include <functional>
+
+#define PROP_GET(jsonName, varName)                                \
+    static auto jsonNameHash_##varName = stringViewHash(jsonName); \
+    if (nameHash == (jsonNameHash_##varName))                      \
+        return &varName;
 
 Property *Properties::FindProperty(std::string_view name) {
+    static std::hash<std::string_view> stringViewHash;
+    auto nameHash = stringViewHash(name);
+
     PROP_GET("_position", position)
     PROP_GET("_rotation", rotation)
     PROP_GET("_scale", scale)
@@ -22,6 +30,9 @@ Property *Properties::FindProperty(std::string_view name) {
 }
 
 PathProperty *PathProperties::FindProperty(std::string_view name) {
+    static std::hash<std::string_view> stringViewHash;
+    auto nameHash = stringViewHash(name);
+
     PROP_GET("_position", position)
     PROP_GET("_rotation", rotation)
     PROP_GET("_scale", scale)
