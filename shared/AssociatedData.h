@@ -54,13 +54,17 @@ struct AssignPathAnimationData {
 
 struct CustomEventAssociatedData
 {
-    Track *track;
+    // This can probably be omitted or a set
+    std::vector<Track *> tracks;
     float duration;
     Functions easing;
     EventType type;
 
-    std::optional<AnimateTrackData> animateTrackData;
-    std::optional<AssignPathAnimationData> assignPathAnimation;
+    // probably not a set, this might be ordered. Oh how much I hate tracks
+    std::vector<AnimateTrackData> animateTrackData;
+    std::vector<AssignPathAnimationData> assignPathAnimation;
+
+    bool parsed = false;
 };
 
 void

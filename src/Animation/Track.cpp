@@ -1,84 +1,50 @@
 #include "Animation/Track.h"
 
-enum class PropertyName {
-    position,
-    rotation,
-    scale,
-    localRotation,
-    localPosition,
-    definitePosition,
-    dissolve,
-    dissolveArrow,
-    time,
-    cuttable,
-    color
-};
+#include <functional>
+
+#define PROP_GET(jsonName, varName)                                \
+    static auto jsonNameHash_##varName = stringViewHash(jsonName); \
+    if (nameHash == (jsonNameHash_##varName))                      \
+        return &varName;
 
 Property *Properties::FindProperty(std::string_view name) {
-    static std::unordered_map<std::string_view, PropertyName> const functions = {
-        {"_position", PropertyName::position},
-        {"_rotation", PropertyName::rotation},
-        {"_scale", PropertyName::scale},
-        {"_localRotation", PropertyName::localRotation},
-        {"_localPosition", PropertyName::localPosition},
-        {"_dissolve", PropertyName::dissolve},
-        {"_dissolveArrow", PropertyName::dissolveArrow},
-        {"_time", PropertyName::time},
-        {"_interactable", PropertyName::cuttable},
-        {"_color", PropertyName::color}};
+    static std::hash<std::string_view> stringViewHash;
+    auto nameHash = stringViewHash(name);
 
-    auto itr = functions.find(name);
-    if (itr != functions.end()) {
-        switch (itr->second) {
-            case PropertyName::position: return &position;
-            case PropertyName::rotation: return &rotation;
-            case PropertyName::scale: return &scale;
-            case PropertyName::localRotation: return &localRotation;
-            case PropertyName::localPosition: return &localPosition;
-            case PropertyName::dissolve: return &dissolve;
-            case PropertyName::dissolveArrow: return &dissolveArrow;
-            case PropertyName::time: return &time;
-            case PropertyName::cuttable: return &cuttable;
-            case PropertyName::color: return &color;
-            default: return nullptr;
-        }
-    } else {
-        return nullptr;
-    }
+    PROP_GET("_position", position)
+    PROP_GET("_rotation", rotation)
+    PROP_GET("_scale", scale)
+    PROP_GET("_localRotation", localRotation)
+    PROP_GET("_localPosition", localPosition)
+    PROP_GET("_dissolve", dissolve)
+    PROP_GET("_dissolveArrow", dissolveArrow)
+    PROP_GET("_time", time)
+    PROP_GET("_interactable", cuttable)
+    PROP_GET("_color", color)
+    PROP_GET("_attenuation", attentuation)
+    PROP_GET("_offset", fogOffset)
+    PROP_GET("_startY", heightFogStartY)
+    PROP_GET("_height", heightFogHeight)
+
+    return nullptr;
 }
 
 PathProperty *PathProperties::FindProperty(std::string_view name) {
-    static std::unordered_map<std::string_view, PropertyName> const functions = {
-        { "_position", PropertyName::position },
-        { "_rotation", PropertyName::rotation },
-        { "_scale", PropertyName::scale },
-        { "_localRotation", PropertyName::localRotation },
-        { "_localPosition", PropertyName::localPosition },
-        { "_definitePosition", PropertyName::definitePosition },
-        { "_dissolve", PropertyName::dissolve },
-        { "_dissolveArrow", PropertyName::dissolveArrow },
-        { "_interactable", PropertyName::cuttable },
-        { "_color", PropertyName::color }
-    };
+    static std::hash<std::string_view> stringViewHash;
+    auto nameHash = stringViewHash(name);
 
-    auto itr = functions.find(name);
-    if (itr != functions.end()) {
-        switch (itr->second) {
-            case PropertyName::position: return &position;
-            case PropertyName::rotation: return &rotation;
-            case PropertyName::scale: return &scale;
-            case PropertyName::localRotation: return &localRotation;
-            case PropertyName::localPosition: return &localPosition;
-            case PropertyName::definitePosition: return &definitePosition;
-            case PropertyName::dissolve: return &dissolve;
-            case PropertyName::dissolveArrow: return &dissolveArrow;
-            case PropertyName::cuttable: return &cuttable;
-            case PropertyName::color: return &color;
-            default: return nullptr;
-        }
-    } else {
-        return nullptr;
-    }
+    PROP_GET("_position", position)
+    PROP_GET("_rotation", rotation)
+    PROP_GET("_scale", scale)
+    PROP_GET("_localRotation", localRotation)
+    PROP_GET("_localPosition", localPosition)
+    PROP_GET("_definitePosition", definitePosition)
+    PROP_GET("_dissolve", dissolve)
+    PROP_GET("_dissolveArrow", dissolveArrow)
+    PROP_GET("_interactable", cuttable)
+    PROP_GET("_color", color)
+
+    return nullptr;
 }
 
 void Track::ResetVariables() {
