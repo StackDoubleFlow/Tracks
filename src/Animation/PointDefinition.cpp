@@ -1,4 +1,6 @@
 #include "Animation/PointDefinition.h"
+
+#include <utility>
 #include "Animation/Track.h"
 #include "Animation/Easings.h"
 #include "TLogger.h"
@@ -60,35 +62,77 @@ void PointDefinition::SearchIndex(float time, PropertyType propertyType, int& l,
     }
 }
 
+struct TempPointData {
+    std::vector<float> copiedList;
+    Functions easing = Functions::easeLinear;
+    bool spline = false;
+
+    TempPointData(std::vector<float> copiedList, Functions easing, bool spline) : copiedList(std::move(copiedList)),
+                                                                                         easing(easing),
+                                                                                         spline(spline)
+                                                                                         {}
+
+    TempPointData(std::vector<float> copiedList) : copiedList(std::move(copiedList)) {}
+};
+
 PointDefinition::PointDefinition(const rapidjson::Value& value) {
+    std::vector<TempPointData> tempPointDatas;
+    std::vector<float> alternateList;
+
     for (int i = 0; i < value.Size(); i++) {
         const rapidjson::Value& rawPoint = value[i];
+        if (rawPoint.IsNull()) continue;
 
-        std::vector<float> copiedList;
-        bool spline = false;
-        Functions easing = Functions::easeLinear;
+        // if [[...]]
+        if (rawPoint.IsArray()) {
+            std::vector<float> copiedList;
+            bool spline = false;
+            Functions easing = Functions::easeLinear;
 
-        for (int j = 0; j < rawPoint.Size(); j++) {
-            const rapidjson::Value& rawPointItem = rawPoint[j];
+            for (int j = 0; j < rawPoint.Size(); j++) {
+                const rapidjson::Value &rawPointItem = rawPoint[j];
 
-            switch (rawPointItem.GetType()) {
-            case rapidjson::kNumberType:
-                copiedList.push_back(rawPointItem.GetFloat());
-                break;
-            case rapidjson::kStringType: {
-                std::string flag(rawPointItem.GetString());
-                if (flag.starts_with("ease")) {
-                    easing = FunctionFromStr(flag);
-                } else if (flag == "splineCatmullRom") {
-                    spline = true;
+                if (rawPointItem.IsNull())
+                    continue;
+
+                switch (rawPointItem.GetType()) {
+                    case rapidjson::kNumberType:
+                        copiedList.push_back(rawPointItem.GetFloat());
+                        break;
+                    case rapidjson::kStringType: {
+                        std::string flag(rawPointItem.GetString());
+                        if (flag.starts_with("ease")) {
+                            easing = FunctionFromStr(flag);
+                        } else if (flag == "splineCatmullRom") {
+                            spline = true;
+                        }
+                        break;
+                    }
+                    default:
+                        // TODO: Handle wrong types
+                        break;
                 }
-                break;
             }
-            default:
-                // TODO: Handle wrong types
-                break;
-            }
+
+            tempPointDatas.emplace_back(std::move(copiedList), easing, spline);
         }
+        // if [...]
+        else if (rawPoint.IsFloat()) {
+            alternateList.push_back(rawPoint.GetFloat());
+        }
+    }
+
+
+    // if [...], also add 0 to end
+    if (!alternateList.empty()) {
+        alternateList.push_back(0);
+        tempPointDatas.emplace_back(std::move(alternateList));
+    }
+
+    for (auto const& pointData : tempPointDatas) {
+        std::vector<float> const& copiedList = pointData.copiedList;
+        Functions easing = pointData.easing;
+        bool spline = pointData.spline;
 
         int numNums = copiedList.size();
         if (numNums == 2) {
@@ -97,9 +141,11 @@ PointDefinition::PointDefinition(const rapidjson::Value& value) {
         } else if (numNums == 4) {
             Vector4 vec = Vector4(copiedList[0], copiedList[1], copiedList[2], copiedList[3]);
             points.emplace_back(vec, easing, spline);
-        } else {
+        } else if (numNums >= 5){
             Vector5 vec = Vector5(copiedList[0], copiedList[1], copiedList[2], copiedList[3], copiedList[4]);
             points.emplace_back(vec, easing);
+        } else {
+            TLogger::GetLogger().debug("Point def with count %i failed", numNums);
         }
     }
 }
