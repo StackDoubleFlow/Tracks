@@ -72,7 +72,7 @@ struct TempPointData {
                                                                                          spline(spline)
                                                                                          {}
 
-    TempPointData(std::vector<float> copiedList) : copiedList(std::move(copiedList)) {}
+    explicit TempPointData(std::vector<float> copiedList) : copiedList(std::move(copiedList)) {}
 };
 
 PointDefinition::PointDefinition(const rapidjson::Value& value) {
@@ -117,15 +117,17 @@ PointDefinition::PointDefinition(const rapidjson::Value& value) {
             tempPointDatas.emplace_back(std::move(copiedList), easing, spline);
         }
         // if [...]
-        else if (rawPoint.IsFloat()) {
+        else if (rawPoint.IsFloat() || rawPoint.IsNumber()) {
             alternateList.push_back(rawPoint.GetFloat());
+        } else {
+            TLogger::GetLogger().warning("Unknown point type: %i", rawPoint.GetType());
         }
     }
 
 
     // if [...], also add 0 to end
     if (!alternateList.empty()) {
-        alternateList.push_back(0);
+        alternateList.emplace_back(0);
         tempPointDatas.emplace_back(std::move(alternateList));
     }
 
@@ -145,8 +147,25 @@ PointDefinition::PointDefinition(const rapidjson::Value& value) {
             Vector5 vec = Vector5(copiedList[0], copiedList[1], copiedList[2], copiedList[3], copiedList[4]);
             points.emplace_back(vec, easing);
         } else {
-            TLogger::GetLogger().debug("Point def with count %i failed", numNums);
+            using namespace rapidjson;
+
+            StringBuffer sb;
+            PrettyWriter<StringBuffer> writer(sb);
+            value.Accept(writer);
+            auto str = sb.GetString();
+            TLogger::GetLogger().error("Point def with count %i failed: %s", numNums, str);
         }
+    }
+
+    if (tempPointDatas.empty()) {
+        using namespace rapidjson;
+
+        StringBuffer sb;
+        PrettyWriter<StringBuffer> writer(sb);
+        value.Accept(writer);
+        auto str = sb.GetString();
+
+        TLogger::GetLogger().warning("Empty point data: %s", str);
     }
 }
 
