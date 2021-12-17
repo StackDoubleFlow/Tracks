@@ -7,7 +7,13 @@
   "packageId": "com.beatgames.beatsaber",
   "packageVersion": "1.17.1",
   "description": "Animation for Noodle and Chroma. Requires CustomJSONData. Don't delete",
-  "dependencies": [],
+  "dependencies": [
+    {
+      "versionRange": ">=0.14.1",
+      "id": "custom-json-data",
+      "modLink": "https://github.com/StackDoubleFlow/CustomJSONData/releases/download/v0.14.1/custom-json-data.qmod"
+    }
+  ],
   "modFiles": [
     "libtracks.so"
   ],
