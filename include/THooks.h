@@ -3,19 +3,19 @@
 
 class Hooks {
 private:
-    static std::vector<void (*)(Logger& logger)> installFuncs;
+    static inline std::vector<void (*)(Logger& logger)> installFuncs;
 public:
-    static void AddInstallFunc(void (*installFunc)(Logger& logger)) {
+    static inline void AddInstallFunc(void (*installFunc)(Logger& logger)) {
         installFuncs.push_back(installFunc);
     }
 
-    static void InstallHooks(Logger& logger) {
+    static inline void InstallHooks(Logger& logger) {
         for (auto installFunc : installFuncs) {
             installFunc(logger);
         }
     }
 };
-
+ 
 #define TInstallHooks(func) \
 struct __TRegister##func { \
     __TRegister##func() { \
