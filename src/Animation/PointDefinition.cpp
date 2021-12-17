@@ -117,7 +117,7 @@ PointDefinition::PointDefinition(const rapidjson::Value& value) {
             tempPointDatas.emplace_back(std::move(copiedList), easing, spline);
         }
         // if [...]
-        else if (rawPoint.IsFloat() || rawPoint.IsNumber()) {
+        else if (rawPoint.IsNumber()) {
             alternateList.push_back(rawPoint.GetFloat());
         } else {
             TLogger::GetLogger().warning("Unknown point type: %i", rawPoint.GetType());
