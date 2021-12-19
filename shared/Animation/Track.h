@@ -77,7 +77,7 @@ public:
                        scale{PropertyType::vector3},
                        localRotation{PropertyType::quaternion},
                        localPosition{PropertyType::vector3},
-                       definitePosition{PropertyType::linear},
+                       definitePosition{PropertyType::vector3},
                        dissolve{PropertyType::linear},
                        dissolveArrow{PropertyType::linear},
                        cuttable{PropertyType::linear},
