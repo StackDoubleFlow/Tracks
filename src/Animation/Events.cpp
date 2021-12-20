@@ -42,8 +42,8 @@ MAKE_HOOK_MATCH(BeatmapObjectSpawnController_Start, &BeatmapObjectSpawnControlle
     BeatmapObjectSpawnController_Start(self);
 }
 
-bool UpdateCoroutine(BeatmapObjectCallbackController *callbackController, AnimateTrackContext& context) {
-    float elapsedTime = TimeSourceHelper::getSongTime(callbackController->audioTimeSource) - context.startTime;
+bool UpdateCoroutine(AnimateTrackContext const& context, float songTime) {
+    float elapsedTime = songTime - context.startTime;
     float time = Easings::Interpolate(std::min(elapsedTime / context.duration, 1.0f), context.easing);
     if (!context.property->value.has_value()) {
         context.property->value = { 0 };
@@ -66,16 +66,17 @@ bool UpdateCoroutine(BeatmapObjectCallbackController *callbackController, Animat
     return elapsedTime < context.duration;
 }
 
-bool UpdatePathCoroutine(BeatmapObjectCallbackController *callbackController, AssignPathAnimationContext& context) {
-    float elapsedTime = TimeSourceHelper::getSongTime(callbackController->audioTimeSource) - context.startTime;
+bool UpdatePathCoroutine(AssignPathAnimationContext const& context, float songTime) {
+    float elapsedTime = songTime - context.startTime;
     context.property->value->time = Easings::Interpolate(std::min(elapsedTime / context.duration, 1.0f), context.easing);
 
     return elapsedTime < context.duration;
 }
 
 void Events::UpdateCoroutines(BeatmapObjectCallbackController *callbackController) {
+    auto songTime = TimeSourceHelper::getSongTime(callbackController->audioTimeSource);
     for (auto it = coroutines.begin(); it != coroutines.end();) {
-        if (UpdateCoroutine(callbackController, *it)) {
+        if (UpdateCoroutine(*it, songTime)) {
             it++;
         } else {
             delete it->anonPointDef;
@@ -84,7 +85,7 @@ void Events::UpdateCoroutines(BeatmapObjectCallbackController *callbackControlle
     }
 
     for (auto it = pathCoroutines.begin(); it != pathCoroutines.end();) {
-        if (UpdatePathCoroutine(callbackController, *it)) {
+        if (UpdatePathCoroutine(*it, songTime)) {
             it++;
         } else {
             it->property->value->Finish();
@@ -148,7 +149,7 @@ void CustomEventCallback(BeatmapObjectCallbackController *callbackController, Cu
             break;
         }
         case EventType::assignPathAnimation: {
-            auto& assignPathAnimationDataList = eventAD.assignPathAnimation;
+            auto const& assignPathAnimationDataList = eventAD.assignPathAnimation;
 
             for (auto const& assignPathAnimationData : assignPathAnimationDataList) {
                 for (auto const& property: assignPathAnimationData.pathProperties) {
