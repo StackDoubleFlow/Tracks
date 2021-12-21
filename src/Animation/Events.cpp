@@ -1,6 +1,7 @@
 #include "GlobalNamespace/BeatmapObjectCallbackController.hpp"
 #include "GlobalNamespace/BeatmapData.hpp"
 #include "GlobalNamespace/BeatmapObjectSpawnController.hpp"
+#include "GlobalNamespace/VariableBpmProcessor.hpp"
 
 #include "beatsaber-hook/shared/utils/hooking.hpp"
 #include "custom-json-data/shared/CustomEventData.h"
@@ -123,12 +124,19 @@ void CustomEventCallback(BeatmapObjectCallbackController *callbackController, Cu
         auto *customBeatmapData = (CustomJSONData::CustomBeatmapData *)callbackController->beatmapData;
         TracksAD::BeatmapAssociatedData &beatmapAD = TracksAD::getBeatmapAD(customBeatmapData->customData);
 
+        if (!beatmapAD.valid) {
+            TLogger::GetLogger().debug("Beatmap wasn't parsed when event is invoked, what?");
+            TracksAD::readBeatmapDataAD(customBeatmapData);
+        }
+
         LoadTrackEvent(customEventData, beatmapAD);
     }
 
     auto duration = eventAD.duration;
 
-    duration = 60 * duration / spawnController->get_currentBpm();
+    auto bpm = spawnController->variableBpmProcessor->currentBpm; // spawnController->get_currentBpm()
+
+    duration = 60 * duration / bpm;
 
     auto easing = eventAD.easing;
 

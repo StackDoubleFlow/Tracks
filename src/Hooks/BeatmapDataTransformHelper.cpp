@@ -12,7 +12,20 @@
 using namespace TracksAD;
 using namespace GlobalNamespace;
 
+constexpr static float getFloat(rapidjson::Value& value) {
+    switch (value.GetType()) {
+        case rapidjson::kStringType:
+            return std::stof(value.GetString());
+        case rapidjson::kNumberType:
+            return value.GetFloat();
+        default:
+            throw std::runtime_error(&"Not valid type in JSON doc " [ value.GetType()]);
+    }
+}
+
 void LoadTrackEvent(CustomJSONData::CustomEventData const* customEventData, TracksAD::BeatmapAssociatedData& beatmapAD) {
+    CRASH_UNLESS(beatmapAD.valid);
+
     static std::hash<std::string_view> stringViewHash;
     auto typeHash = stringViewHash(customEventData->type);
 
@@ -64,8 +77,11 @@ void LoadTrackEvent(CustomJSONData::CustomEventData const* customEventData, Trac
     }
 
     eventAD.tracks = std::move(tracks);
-    eventAD.duration = eventData.HasMember("_duration") ? eventData["_duration"].GetFloat() : 0;
-    eventAD.easing = eventData.HasMember("_easing") ? FunctionFromStr(eventData["_easing"].GetString()) : Functions::easeLinear;
+    auto durationIt = eventData.FindMember("_duration");
+    auto easingIt = eventData.FindMember("_easing");
+
+    eventAD.duration = durationIt != eventData.MemberEnd() ? getFloat(durationIt->value) : 0;
+    eventAD.easing = easingIt != eventData.MemberEnd() ? FunctionFromStr(easingIt->value.GetString()) : Functions::easeLinear;
 
     for (auto const& track : eventAD.tracks) {
         auto &properties = track->properties;

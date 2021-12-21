@@ -26,12 +26,11 @@ void TracksAD::readBeatmapDataAD(CustomJSONData::CustomBeatmapData *beatmapData)
         rapidjson::Value &customData = *beatmapData->customData->value;
 
         PointDefinitionManager pointDataManager;
-        if (customData.HasMember("_pointDefinitions")) {
-            const rapidjson::Value &pointDefinitions =
-                customData["_pointDefinitions"];
-            for (rapidjson::Value::ConstValueIterator itr =
-                     pointDefinitions.Begin();
-                 itr != pointDefinitions.End(); itr++) {
+        auto pointDefinitionsIt = customData.FindMember("_pointDefinitions");
+
+        if (pointDefinitionsIt != customData.MemberEnd()) {
+            const rapidjson::Value &pointDefinitions = pointDefinitionsIt->value;
+            for (rapidjson::Value::ConstValueIterator itr = pointDefinitions.Begin(); itr != pointDefinitions.End(); itr++) {
                 std::string pointName = (*itr)["_name"].GetString();
                 PointDefinition pointData((*itr)["_points"]);
                 pointDataManager.AddPoint(pointName, pointData);
