@@ -19,12 +19,10 @@ struct AnimateTrackContext {
     float duration;
     float startTime;
     Functions easing;
-    PointDefinition *anonPointDef;
 
-    AnimateTrackContext(PointDefinition *points, Property *aProperty, float duration, float startTime, Functions easing,
-                        PointDefinition *anonPointDef) : points(points), property(aProperty), duration(duration),
-                                                         startTime(startTime), easing(easing),
-                                                         anonPointDef(anonPointDef) {}
+    AnimateTrackContext(PointDefinition *points, Property *aProperty, float duration, float startTime, Functions easing)
+    : points(points), property(aProperty), duration(duration), startTime(startTime), easing(easing)
+                                                         {}
 
     AnimateTrackContext() = default;
 };

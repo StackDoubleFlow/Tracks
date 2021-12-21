@@ -38,7 +38,8 @@ struct BeatmapObjectAssociatedData {
 struct AnimateTrackData {
     std::vector<Property *> properties;
 
-    std::unordered_map<Property const*, PointDefinition *> anonPointDef;
+    // anon point defs are just for owning the point definition and freeing them
+    std::unordered_map<Property const*, std::unique_ptr<PointDefinition>> anonPointDef;
     std::unordered_map<Property const*, PointDefinition *> pointData;
 
     AnimateTrackData(BeatmapAssociatedData &beatmapAD, rapidjson::Value const &customData, Properties& trackProperties);
@@ -46,7 +47,8 @@ struct AnimateTrackData {
 
 struct AssignPathAnimationData {
     std::vector<PathProperty *> pathProperties;
-    std::unordered_map<PathProperty const*, PointDefinition *> anonPointDef;
+    // anon point defs are just for owning the point definition and freeing them
+    std::unordered_map<PathProperty const*, std::unique_ptr<PointDefinition>> anonPointDef;
     std::unordered_map<PathProperty const*, PointDefinition *> pointData;
 
     AssignPathAnimationData(BeatmapAssociatedData &beatmapAD, rapidjson::Value const &customData, PathProperties &trackPathProperties);

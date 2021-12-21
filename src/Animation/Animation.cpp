@@ -5,7 +5,7 @@ using namespace TracksAD;
 
 namespace Animation {
 
-PointDefinition *TryGetPointData(BeatmapAssociatedData &beatmapAD, PointDefinition *&anon,
+PointDefinition *TryGetPointData(BeatmapAssociatedData &beatmapAD, std::unique_ptr<PointDefinition> &anon,
                                  const rapidjson::Value &customData, std::string_view pointName) {
     PointDefinition *pointData = nullptr;
 
@@ -29,8 +29,8 @@ PointDefinition *TryGetPointData(BeatmapAssociatedData &beatmapAD, PointDefiniti
         break;
     }
     default:
-        pointData = new PointDefinition(pointString);
-        anon = pointData;
+        anon = std::make_unique<PointDefinition>(pointString);
+        pointData = anon.get();
     }
 
     return pointData;

@@ -27,19 +27,13 @@ BeatmapObjectSpawnController *spawnController;
 
 static std::vector<AnimateTrackContext> coroutines;
 static std::vector<AssignPathAnimationContext> pathCoroutines;
-static std::vector<PointDefinition*> anonPointDefinitions;
 
 MAKE_HOOK_MATCH(BeatmapObjectSpawnController_Start, &BeatmapObjectSpawnController::Start, void, BeatmapObjectSpawnController *self) {
     spawnController = self;
     coroutines.clear();
     pathCoroutines.clear();
+    clearEventADs();
     TLogger::GetLogger().debug("coroutines and pathCoroutines capacity: %lu and %lu", coroutines.capacity(), pathCoroutines.capacity());
-    for (auto *pointDefinition : anonPointDefinitions) {
-        delete pointDefinition;
-    }
-    TLogger::GetLogger().debug("Swapping anonPointDefinitions from old capacity: %lu", anonPointDefinitions.capacity());
-    std::vector<PointDefinition*>().swap(anonPointDefinitions);
-    TLogger::GetLogger().debug("to new capacity: %lu", anonPointDefinitions.capacity());
     BeatmapObjectSpawnController_Start(self);
 }
 
@@ -80,7 +74,6 @@ void Events::UpdateCoroutines(BeatmapObjectCallbackController *callbackControlle
         if (UpdateCoroutine(*it, songTime)) {
             it++;
         } else {
-            delete it->anonPointDef;
             it = coroutines.erase(it);
         }
     }
@@ -156,12 +149,10 @@ void CustomEventCallback(BeatmapObjectCallbackController *callbackController, Cu
                         }
                     }
 
-                    auto anonPointDef = animateTrackData.anonPointDef.at(property);
                     auto pointData = animateTrackData.pointData.at(property);
 
                     if (pointData) {
-                        coroutines.emplace_back(pointData, property, duration, customEventData->time, easing,
-                                                anonPointDef);
+                        coroutines.emplace_back(pointData, property, duration, customEventData->time, easing);
                     } else {
                         property->value = std::nullopt;
                     }
@@ -182,12 +173,8 @@ void CustomEventCallback(BeatmapObjectCallbackController *callbackController, Cu
                         }
                     }
 
-                    PointDefinition *anonPointDef = assignPathAnimationData.anonPointDef.at(property);
                     auto *pointData = assignPathAnimationData.pointData.at(property);
                     if (pointData) {
-                        if (anonPointDef) {
-                            anonPointDefinitions.push_back(anonPointDef);
-                        }
                         if (!property->value.has_value())
                             property->value = PointDefinitionInterpolation();
                         property->value->Init(pointData);
