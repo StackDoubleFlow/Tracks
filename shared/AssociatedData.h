@@ -24,6 +24,9 @@ public:
     bool valid = false;
     std::unordered_map<std::string, Track> tracks;
     std::unordered_map<std::string, PointDefinition> pointDefinitions;
+
+    // anon point defs are just point defs created later
+    // for owning the point definition and freeing them
     std::vector<PointDefinition *> anonPointDefinitions;
 
     // BeatmapAssociatedData(const BeatmapAssociatedData&) = delete;
@@ -38,8 +41,6 @@ struct BeatmapObjectAssociatedData {
 struct AnimateTrackData {
     std::vector<Property *> properties;
 
-    // anon point defs are just for owning the point definition and freeing them
-    std::unordered_map<Property const*, std::unique_ptr<PointDefinition>> anonPointDef;
     std::unordered_map<Property const*, PointDefinition *> pointData;
 
     AnimateTrackData(BeatmapAssociatedData &beatmapAD, rapidjson::Value const &customData, Properties& trackProperties);
@@ -47,8 +48,7 @@ struct AnimateTrackData {
 
 struct AssignPathAnimationData {
     std::vector<PathProperty *> pathProperties;
-    // anon point defs are just for owning the point definition and freeing them
-    std::unordered_map<PathProperty const*, std::unique_ptr<PointDefinition>> anonPointDef;
+
     std::unordered_map<PathProperty const*, PointDefinition *> pointData;
 
     AssignPathAnimationData(BeatmapAssociatedData &beatmapAD, rapidjson::Value const &customData, PathProperties &trackPathProperties);
