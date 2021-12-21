@@ -83,16 +83,16 @@ AssignPathAnimationData::AssignPathAnimationData(BeatmapAssociatedData &beatmapA
 
                 PointDefinition *anonPointDef = nullptr;
                 auto pointData = Animation::TryGetPointData(beatmapAD, anonPointDef, customData, name);
-                if (pointData)
-                {
-                    if (!property->value.has_value())
-                        property->value = PointDefinitionInterpolation();
-                    property->value->Init(pointData);
-                }
-                else
-                {
-                    property->value = std::nullopt;
-                }
+//                if (pointData)
+//                {
+//                    if (!property->value.has_value())
+//                        property->value = PointDefinitionInterpolation();
+//                    property->value->Init(pointData);
+//                }
+//                else
+//                {
+//                    property->value = std::nullopt;
+//                }
 
                 this->anonPointDef[property] = anonPointDef;
                 this->pointData[property] = pointData;
