@@ -32,7 +32,6 @@ MAKE_HOOK_MATCH(BeatmapObjectSpawnController_Start, &BeatmapObjectSpawnControlle
     spawnController = self;
     coroutines.clear();
     pathCoroutines.clear();
-    clearEventADs();
     TLogger::GetLogger().debug("coroutines and pathCoroutines capacity: %lu and %lu", coroutines.capacity(), pathCoroutines.capacity());
     BeatmapObjectSpawnController_Start(self);
 }

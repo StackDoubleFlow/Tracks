@@ -53,12 +53,10 @@ AnimateTrackData::AnimateTrackData(BeatmapAssociatedData &beatmapAD, rapidjson::
 
                 PointDefinition* anonPointDef = nullptr;
                 auto pointData = Animation::TryGetPointData(beatmapAD, anonPointDef, customData, name);
-                if (!pointData)
-                {
-                    property->value = std::nullopt;
-                }
 
-                beatmapAD.anonPointDefinitions.emplace_back(anonPointDef);
+                if (anonPointDef)
+                    beatmapAD.anonPointDefinitions.emplace_back(anonPointDef);
+
                 this->pointData[property] = pointData;
             }
             else
@@ -83,7 +81,9 @@ AssignPathAnimationData::AssignPathAnimationData(BeatmapAssociatedData &beatmapA
 
                 PointDefinition* anonPointDef = nullptr;
                 auto pointData = Animation::TryGetPointData(beatmapAD, anonPointDef, customData, name);
-                beatmapAD.anonPointDefinitions.emplace_back(anonPointDef);
+                if (anonPointDef)
+                    beatmapAD.anonPointDefinitions.emplace_back(anonPointDef);
+
                 this->pointData[property] = pointData;
             }
             else
