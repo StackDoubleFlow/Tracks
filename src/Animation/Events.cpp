@@ -98,7 +98,20 @@ void Events::UpdateCoroutines(BeatmapObjectCallbackController *callbackControlle
 void LoadTrackEvent(CustomJSONData::CustomEventData const* customEventData, TracksAD::BeatmapAssociatedData& beatmapAD);
 
 void CustomEventCallback(BeatmapObjectCallbackController *callbackController, CustomJSONData::CustomEventData *customEventData) {
-    if (customEventData->type != "AnimateTrack" && customEventData->type != "AssignPathAnimation") {
+    bool isType = false;
+
+    static std::hash<std::string_view> stringViewHash;
+    auto typeHash = stringViewHash(customEventData->type);
+
+#define TYPE_GET(jsonName, varName)                                \
+    static auto jsonNameHash_##varName = stringViewHash(jsonName); \
+    if (!isType && typeHash == (jsonNameHash_##varName))                      \
+        isType = true;
+
+    TYPE_GET("AnimateTrack", AnimateTrack)
+    TYPE_GET("AssignPathAnimation", AssignPathAnimation)
+
+    if (!isType) {
         return;
     }
 

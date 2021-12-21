@@ -13,10 +13,19 @@ using namespace TracksAD;
 using namespace GlobalNamespace;
 
 void LoadTrackEvent(CustomJSONData::CustomEventData const* customEventData, TracksAD::BeatmapAssociatedData& beatmapAD) {
+    static std::hash<std::string_view> stringViewHash;
+    auto typeHash = stringViewHash(customEventData->type);
+
+#define TYPE_GET(jsonName, varName)                                \
+    static auto jsonNameHash_##varName = stringViewHash(jsonName); \
+
+    TYPE_GET("AnimateTrack", AnimateTrack)
+    TYPE_GET("AssignPathAnimation", AssignPathAnimation)
+
     EventType type;
-    if (customEventData->type == "AnimateTrack") {
+    if (typeHash == jsonNameHash_AnimateTrack) {
         type = EventType::animateTrack;
-    } else if (customEventData->type == "AssignPathAnimation") {
+    } else if (typeHash == jsonNameHash_AssignPathAnimation) {
         type = EventType::assignPathAnimation;
     } else {
         return;
