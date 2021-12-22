@@ -3,15 +3,15 @@
   "name": "Tracks",
   "id": "tracks",
   "author": "StackDoubleFlow",
-  "version": "0.4.4",
+  "version": "0.4.7",
   "packageId": "com.beatgames.beatsaber",
   "packageVersion": "1.17.1",
   "description": "Animation for Noodle and Chroma. Requires CustomJSONData. Don't delete",
   "dependencies": [
     {
-      "versionRange": ">=0.14.1",
+      "versionRange": ">=0.14.2",
       "id": "custom-json-data",
-      "modLink": "https://github.com/StackDoubleFlow/CustomJSONData/releases/download/v0.14.1/custom-json-data.qmod"
+      "modLink": "https://github.com/StackDoubleFlow/CustomJSONData/releases/download/v0.14.2/custom-json-data.qmod"
     }
   ],
   "modFiles": [
