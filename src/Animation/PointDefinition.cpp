@@ -267,6 +267,6 @@ void PointDefinitionManager::AddPoint(std::string pointDataName, PointDefinition
     if (this->pointData.contains(pointDataName)) {
         TLogger::GetLogger().error("Duplicate point defintion name, %s could not be registered!", pointDataName.c_str());
     } else {
-        this->pointData.emplace(pointDataName, pointData);
+        this->pointData.try_emplace(std::move(pointDataName), std::move(pointData));
     }
 } 

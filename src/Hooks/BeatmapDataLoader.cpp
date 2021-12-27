@@ -33,7 +33,7 @@ void TracksAD::readBeatmapDataAD(CustomJSONData::CustomBeatmapData *beatmapData)
             for (rapidjson::Value::ConstValueIterator itr = pointDefinitions.Begin(); itr != pointDefinitions.End(); itr++) {
                 std::string pointName = (*itr)["_name"].GetString();
                 PointDefinition pointData((*itr)["_points"]);
-                pointDataManager.AddPoint(pointName, pointData);
+                pointDataManager.AddPoint(pointName, std::move(pointData));
             }
         }
         TLogger::GetLogger().debug("Setting point definitions");
@@ -44,8 +44,7 @@ void TracksAD::readBeatmapDataAD(CustomJSONData::CustomBeatmapData *beatmapData)
     for (int i = 0; i < beatmapData->beatmapLinesData->Length(); i++) {
         BeatmapLineData *beatmapLineData = beatmapData->beatmapLinesData->values[i];
         for (int j = 0; j < beatmapLineData->beatmapObjectsData->size; j++) {
-            BeatmapObjectData *beatmapObjectData =
-                beatmapLineData->beatmapObjectsData->items->values[j];
+            BeatmapObjectData *beatmapObjectData = beatmapLineData->beatmapObjectsData->items->values[j];
 
             CustomJSONData::JSONWrapper *customDataWrapper;
             if (beatmapObjectData->klass == customObstacleDataClass) {
