@@ -4,6 +4,7 @@
 
 #include "GlobalNamespace/StandardLevelScenesTransitionSetupDataSO.hpp"
 #include "GlobalNamespace/IDifficultyBeatmap.hpp"
+#include "GlobalNamespace/PlayerSpecificSettings.hpp"
 #include "AssociatedData.h"
 
 using namespace TracksAD;
@@ -18,6 +19,7 @@ MAKE_HOOK_MATCH(StandardLevelScenesTransitionSetupDataSO_Init, &StandardLevelSce
     for (auto& [name, track] : ad.tracks) {
         track.ResetVariables();
     }
+    ad.leftHanded = playerSpecificSettings->leftHanded;
     clearEventADs();
 }
 

@@ -22,6 +22,7 @@ enum class EventType { animateTrack, assignPathAnimation, unknown };
 class BeatmapAssociatedData {
 public:
     bool valid = false;
+    bool leftHanded = false;
     std::unordered_map<std::string, Track> tracks;
     std::unordered_map<std::string, PointDefinition> pointDefinitions;
 
