@@ -7,11 +7,11 @@
 
 using namespace NEVector;
 
-Vector4 v4lerp(Vector4 a, Vector4 b, float t) {
+inline constexpr Vector4 v4lerp(Vector4 const& a, Vector4 const& b, float t) {
     return Vector4(a.x + (b.x - a.x) * t, a.y + (b.y - a.y) * t, a.z + (b.z - a.z) * t, a.w + (b.w - a.w) * t);
 }
 
-Vector3 SmoothVectorLerp(std::vector<PointData>& points, int a, int b, float time) {
+Vector3 SmoothVectorLerp(std::vector<PointData> const& points, int a, int b, float time) {
     // Catmull-Rom Spline
     Vector3 p0 = a - 1 < 0 ? points[a].point : points[a - 1].point;
     Vector3 p1 = points[a].point;
@@ -33,7 +33,7 @@ Vector3 SmoothVectorLerp(std::vector<PointData>& points, int a, int b, float tim
     return c;
 }
 
-void PointDefinition::SearchIndex(float time, PropertyType propertyType, int& l, int& r) {
+constexpr void PointDefinition::SearchIndex(float time, PropertyType propertyType, int& l, int& r) {
     l = 0;
     r = points.size();
 
@@ -49,7 +49,7 @@ void PointDefinition::SearchIndex(float time, PropertyType propertyType, int& l,
         case PropertyType::vector3:
             pointTime = points[m].point.w;
             break;
-        
+
         case PropertyType::vector4:
             pointTime = points[m].vector4Point.v;
         }
@@ -263,10 +263,10 @@ Vector4 PointDefinition::InterpolateVector4(float time) {
     return v4lerp(points[l].vector4Point, points[r].vector4Point, normalTime);
 }
 
-void PointDefinitionManager::AddPoint(std::string pointDataName, PointDefinition pointData) {
+void PointDefinitionManager::AddPoint(std::string_view pointDataName, PointDefinition const& pointData) {
     if (this->pointData.contains(pointDataName)) {
-        TLogger::GetLogger().error("Duplicate point defintion name, %s could not be registered!", pointDataName.c_str());
+        TLogger::GetLogger().error("Duplicate point definition name, %s could not be registered!", pointDataName.data());
     } else {
-        this->pointData.try_emplace(std::move(pointDataName), std::move(pointData));
+        this->pointData.try_emplace(pointDataName, pointData);
     }
 } 

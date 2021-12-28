@@ -101,7 +101,7 @@ struct Track {
     PathProperties pathProperties;
     std::vector<UnityEngine::GameObject*> gameObjects;
     // bool is true if removed
-    EventCallback<Track *, UnityEngine::GameObject *, bool> gameObjectModificationEvent;
+    UnorderedEventCallback<Track *, UnityEngine::GameObject *, bool> gameObjectModificationEvent;
 
     void
     AddGameObject(UnityEngine::GameObject *go)

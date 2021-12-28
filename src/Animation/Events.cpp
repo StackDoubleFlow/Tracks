@@ -36,7 +36,7 @@ MAKE_HOOK_MATCH(BeatmapObjectSpawnController_Start, &BeatmapObjectSpawnControlle
     BeatmapObjectSpawnController_Start(self);
 }
 
-bool UpdateCoroutine(AnimateTrackContext const& context, float songTime) {
+constexpr bool UpdateCoroutine(AnimateTrackContext const& context, float songTime) {
     float elapsedTime = songTime - context.startTime;
     float time = Easings::Interpolate(std::min(elapsedTime / context.duration, 1.0f), context.easing);
     if (!context.property->value.has_value()) {
@@ -60,7 +60,7 @@ bool UpdateCoroutine(AnimateTrackContext const& context, float songTime) {
     return elapsedTime < context.duration;
 }
 
-bool UpdatePathCoroutine(AssignPathAnimationContext const& context, float songTime) {
+constexpr bool UpdatePathCoroutine(AssignPathAnimationContext const& context, float songTime) {
     float elapsedTime = songTime - context.startTime;
     context.property->value->time = Easings::Interpolate(std::min(elapsedTime / context.duration, 1.0f), context.easing);
 

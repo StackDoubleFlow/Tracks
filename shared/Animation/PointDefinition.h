@@ -23,13 +23,13 @@ public:
     float InterpolateLinear(float time);
     NEVector::Vector4 InterpolateVector4(float time);
 private:
-    void SearchIndex(float time, PropertyType propertyType, int& l, int& r);
+    constexpr void SearchIndex(float time, PropertyType propertyType, int& l, int& r);
     std::vector<PointData> points;
 };
 
 class PointDefinitionManager {
 public:
-    std::unordered_map<std::string, PointDefinition> pointData;
+    std::unordered_map<std::string_view, PointDefinition> pointData;
 
-    void AddPoint(std::string pointDataName, PointDefinition pointData);
+    void AddPoint(std::string_view pointDataName, PointDefinition const& pointData);
 };

@@ -24,7 +24,7 @@ public:
     bool valid = false;
     bool leftHanded = false;
     std::unordered_map<std::string, Track> tracks;
-    std::unordered_map<std::string, PointDefinition> pointDefinitions;
+    std::unordered_map<std::string_view, PointDefinition> pointDefinitions;
 
     // anon point defs are just point defs created later
     // for owning the point definition and freeing them
