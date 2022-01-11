@@ -41,11 +41,8 @@ void TracksAD::readBeatmapDataAD(CustomJSONData::CustomBeatmapData *beatmapData)
     }
     auto &tracks = beatmapAD.tracks;
 
-    for (int i = 0; i < beatmapData->beatmapLinesData->Length(); i++) {
-        BeatmapLineData *beatmapLineData = beatmapData->beatmapLinesData->values[i];
-        for (int j = 0; j < beatmapLineData->beatmapObjectsData->size; j++) {
-            BeatmapObjectData *beatmapObjectData = beatmapLineData->beatmapObjectsData->items->values[j];
-
+    for (BeatmapLineData *beatmapLineData : beatmapData->beatmapLinesData) {
+        for (BeatmapObjectData *beatmapObjectData : beatmapLineData->beatmapObjectsData->items) {
             CustomJSONData::JSONWrapper *customDataWrapper;
             if (beatmapObjectData->klass == customObstacleDataClass) {
                 auto obstacleData =
