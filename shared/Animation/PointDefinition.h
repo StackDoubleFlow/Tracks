@@ -25,7 +25,7 @@ public:
     NEVector::Vector4 InterpolateVector4(float time);
 private:
     constexpr void SearchIndex(float time, PropertyType propertyType, int& l, int& r);
-    std::vector<PointData> points;
+    sbo::small_vector<PointData, 8> points;
 };
 
 class PointDefinitionManager {

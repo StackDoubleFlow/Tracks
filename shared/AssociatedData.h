@@ -18,6 +18,8 @@ class JSONWrapper;
 
 namespace TracksAD {
 
+using TracksVector = sbo::small_vector<Track*, 1>;
+
 enum class EventType { animateTrack, assignPathAnimation, unknown };
 
 class BeatmapAssociatedData {
@@ -37,21 +39,17 @@ public:
 
 struct BeatmapObjectAssociatedData {
     // Should this be an optional? - Fern
-    std::vector<Track*> tracks;
+    TracksVector tracks;
 };
 
 struct AnimateTrackData {
-    std::vector<Property *> properties;
-
-    std::unordered_map<Property const*, PointDefinition *> pointData;
+    sbo::small_vector<std::pair<Property *, PointDefinition *>> properties;
 
     AnimateTrackData(BeatmapAssociatedData &beatmapAD, rapidjson::Value const &customData, Properties& trackProperties);
 };
 
 struct AssignPathAnimationData {
-    std::vector<PathProperty *> pathProperties;
-
-    std::unordered_map<PathProperty const*, PointDefinition *> pointData;
+    sbo::small_vector<std::pair<PathProperty *, PointDefinition *>> pathProperties;
 
     AssignPathAnimationData(BeatmapAssociatedData &beatmapAD, rapidjson::Value const &customData, PathProperties &trackPathProperties);
 };
@@ -59,14 +57,14 @@ struct AssignPathAnimationData {
 struct CustomEventAssociatedData
 {
     // This can probably be omitted or a set
-    std::vector<Track *> tracks;
+    TracksVector tracks;
     float duration;
     Functions easing;
     EventType type;
 
     // probably not a set, this might be ordered. Oh how much I hate tracks
-    std::vector<AnimateTrackData> animateTrackData;
-    std::vector<AssignPathAnimationData> assignPathAnimation;
+    sbo::small_vector<AnimateTrackData, 1> animateTrackData;
+    sbo::small_vector<AssignPathAnimationData, 1> assignPathAnimation;
 
     bool parsed = false;
 };

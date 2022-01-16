@@ -62,7 +62,7 @@ void TracksAD::readBeatmapDataAD(CustomJSONData::CustomBeatmapData *beatmapData)
             if (customDataWrapper->value) {
                 rapidjson::Value &customData = *customDataWrapper->value;
                 BeatmapObjectAssociatedData &ad = getAD(customDataWrapper);
-                std::vector<Track *> tracksAD;
+                TracksVector tracksAD;
 
                 auto trackIt = customData.FindMember("_track");
                 if (trackIt != customData.MemberEnd()) {

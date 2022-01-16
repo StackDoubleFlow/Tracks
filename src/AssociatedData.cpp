@@ -49,15 +49,13 @@ AnimateTrackData::AnimateTrackData(BeatmapAssociatedData &beatmapAD, rapidjson::
             Property *property = trackProperties.FindProperty(name);
             if (property)
             {
-                this->properties.push_back(property);
-
                 PointDefinition* anonPointDef = nullptr;
                 auto pointData = Animation::TryGetPointData(beatmapAD, anonPointDef, customData, name);
 
                 if (anonPointDef)
                     beatmapAD.anonPointDefinitions.emplace_back(anonPointDef);
 
-                this->pointData[property] = pointData;
+                this->properties.emplace_back(property, pointData);
             }
             else
             {
@@ -77,14 +75,12 @@ AssignPathAnimationData::AssignPathAnimationData(BeatmapAssociatedData &beatmapA
             PathProperty *property = trackPathProperties.FindProperty(name);
             if (property)
             {
-                pathProperties.push_back(property);
-
                 PointDefinition* anonPointDef = nullptr;
                 auto pointData = Animation::TryGetPointData(beatmapAD, anonPointDef, customData, name);
                 if (anonPointDef)
                     beatmapAD.anonPointDefinitions.emplace_back(anonPointDef);
 
-                this->pointData[property] = pointData;
+                pathProperties.emplace_back(property, pointData);
             }
             else
             {

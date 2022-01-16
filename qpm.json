@@ -27,7 +27,7 @@
     },
     {
       "id": "custom-json-data",
-      "versionRange": "^0.14.0",
+      "versionRange": "^0.15.0",
       "additionalData": {}
     },
     {
@@ -42,7 +42,7 @@
     },
     {
       "id": "custom-types",
-      "versionRange": "*",
+      "versionRange": "^0.14",
       "additionalData": {}
     }
   ],

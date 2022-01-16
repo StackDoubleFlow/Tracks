@@ -56,7 +56,7 @@ void LoadTrackEvent(CustomJSONData::CustomEventData const* customEventData, Trac
     unsigned int trackSize = trackJSON.IsArray() ? trackJSON.Size() : 1;
 
 
-    std::vector<Track*> tracks;
+    sbo::small_vector<Track*, 1> tracks;
     tracks.reserve(trackSize);
 
     if (trackJSON.IsArray()) {

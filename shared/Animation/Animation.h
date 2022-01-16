@@ -94,7 +94,7 @@ namespace Animation {
 
     template<typename T, typename VectorExpression = std::function<std::optional<PointDefinitionInterpolation>(
             Track *)>>
-    static std::optional<T> MultiTrackPathProps(std::vector<Track *> const &tracks, T const &defaultT, float time,
+    static std::optional<T> MultiTrackPathProps(std::span<Track *> tracks, T const &defaultT, float time,
                                                 VectorExpression const &vectorExpression) {
         if (tracks.empty())
             return std::nullopt;
@@ -117,7 +117,7 @@ namespace Animation {
 
     template<typename T, typename VectorExpression = std::function<std::optional<PointDefinitionInterpolation>(
             Track *)>>
-    static std::optional<T> SumTrackPathProps(std::vector<Track *> const &tracks, T const &defaultT, float time,
+    static std::optional<T> SumTrackPathProps(std::span<Track *> tracks, T const &defaultT, float time,
                                               VectorExpression const &vectorExpression) {
         if (tracks.empty())
             return std::nullopt;
@@ -140,7 +140,7 @@ namespace Animation {
 
     template<typename T, typename VectorExpression = std::function<std::optional<PropertyValue>(Track *)>>
     static std::optional<T>
-    MultiTrackProps(std::vector<Track *> const &tracks, T const &defaultT, VectorExpression const &vectorExpression) {
+    MultiTrackProps(std::span<Track *> tracks, T const &defaultT, VectorExpression const &vectorExpression) {
 
         if (tracks.empty())
             return std::nullopt;
@@ -163,7 +163,7 @@ namespace Animation {
 
     template<typename T, typename VectorExpression = std::function<std::optional<PropertyValue>(Track *)>>
     static std::optional<T>
-    SumTrackProps(std::vector<Track *> const &tracks, T const &defaultT, VectorExpression const &vectorExpression) {
+    SumTrackProps(std::span<Track *> tracks, T const &defaultT, VectorExpression const &vectorExpression) {
         if (tracks.empty())
             return std::nullopt;
 
