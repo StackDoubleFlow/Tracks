@@ -2,6 +2,7 @@
 #include "beatsaber-hook/shared/config/rapidjson-utils.hpp"
 #include "Easings.h"
 #include "Track.h"
+#include "../Hash.h"
 
 struct PointData {
     NEVector::Vector2 linearPoint = NEVector::Vector2(0, 0);
@@ -29,7 +30,7 @@ private:
 
 class PointDefinitionManager {
 public:
-    std::unordered_map<std::string_view, PointDefinition> pointData;
+    std::unordered_map<std::string, PointDefinition, TracksAD::string_hash, TracksAD::string_equal> pointData;
 
-    void AddPoint(std::string_view pointDataName, PointDefinition const& pointData);
+    void AddPoint(std::string const& pointDataName, PointDefinition const& pointData);
 };

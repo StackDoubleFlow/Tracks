@@ -263,7 +263,7 @@ Vector4 PointDefinition::InterpolateVector4(float time) {
     return v4lerp(points[l].vector4Point, points[r].vector4Point, normalTime);
 }
 
-void PointDefinitionManager::AddPoint(std::string_view pointDataName, PointDefinition const& pointData) {
+void PointDefinitionManager::AddPoint(std::string const& pointDataName, PointDefinition const& pointData) {
     if (this->pointData.contains(pointDataName)) {
         TLogger::GetLogger().error("Duplicate point definition name, %s could not be registered!", pointDataName.data());
     } else {

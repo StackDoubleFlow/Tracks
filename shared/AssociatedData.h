@@ -5,6 +5,7 @@
 #include "Animation/Easings.h"
 #include "Animation/Track.h"
 #include "Vector.h"
+#include "Hash.h"
 
 namespace UnityEngine {
 class Renderer;
@@ -23,8 +24,8 @@ class BeatmapAssociatedData {
 public:
     bool valid = false;
     bool leftHanded = false;
-    std::unordered_map<std::string, Track> tracks;
-    std::unordered_map<std::string_view, PointDefinition> pointDefinitions;
+    std::unordered_map<std::string, Track, string_hash, string_equal> tracks;
+    std::unordered_map<std::string, PointDefinition, string_hash, string_equal> pointDefinitions;
 
     // anon point defs are just point defs created later
     // for owning the point definition and freeing them
