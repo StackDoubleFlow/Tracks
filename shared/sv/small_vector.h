@@ -7,6 +7,7 @@
 #include <memory>
 #include <type_traits>
 #include <vector>
+#include <span>
 
 namespace sbo{
 
@@ -55,8 +56,8 @@ namespace sbo{
                 m_alloc.deallocate(static_cast<T*>(p), n);
             m_smallBufferUsed = false;
         }
-        //according to the C++ standard when propagate_on_container_move_assignment is set to false, the comparision operators are used 
-        //to check if two allocators are equal. When they are not, an element wise move is done instead of just taking over the memory. 
+        //according to the C++ standard when propagate_on_container_move_assignment is set to false, the comparision operators are used
+        //to check if two allocators are equal. When they are not, an element wise move is done instead of just taking over the memory.
         //For our implementation this means the comparision has to return false, when the small buffer is active
         friend constexpr bool operator==(const small_buffer_vector_allocator& lhs, const small_buffer_vector_allocator& rhs) {
             return !lhs.m_smallBufferUsed && !rhs.m_smallBufferUsed;
@@ -96,11 +97,26 @@ namespace sbo{
             swap(static_cast<vectorT&>(a), static_cast<vectorT&>(b));
         }
 
-        // Fern
-        // for some reason I need to do this
+       // Fern
+        operator const vectorT&() const {
+            return static_cast<const vectorT&>(*this);
+        };
+
+        operator vectorT&() {
+            return static_cast<vectorT&>(*this);
+        };
+
+        operator std::span<const T>() const {
+            return std::span<T>(this->data(), this->size());
+        };
+
         operator std::span<T>() const {
-            return std::span<T>(*this);
-        }
+            return std::span<T>(const_cast<T*>(this->data()), this->size());
+        };
+
+        operator std::span<T>() {
+            return std::span<T>(this->data(), this->size());
+        };
         //
     };
 }
