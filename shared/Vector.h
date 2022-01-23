@@ -20,6 +20,11 @@ struct Vector4 : public UnityEngine::Vector4 {
         : UnityEngine::Vector4(x, y, z, w) {}
     constexpr Vector4(const UnityEngine::Vector4 &other) : UnityEngine::Vector4(other) {}
 
+    static Vector4 LerpUnclamped(Vector4 a, Vector4 b, float t)
+    {
+        return {a.x + (b.x - a.x) * t, a.y + (b.y - a.y) * t, a.z + (b.z - a.z) * t, a.w + (b.w - a.w) * t};
+    }
+
     constexpr operator Vector3() const { return Vector3(x, y, z); }
 };
 

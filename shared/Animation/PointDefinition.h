@@ -19,12 +19,17 @@ struct PointData {
 class PointDefinition {
 public:
     PointDefinition(const rapidjson::Value& value);
-    NEVector::Vector3 Interpolate(float time);
-    NEVector::Quaternion InterpolateQuaternion(float time);
-    float InterpolateLinear(float time);
-    NEVector::Vector4 InterpolateVector4(float time);
+    [[nodiscard]] NEVector::Vector3 Interpolate(float time) const;
+    [[nodiscard]] NEVector::Quaternion InterpolateQuaternion(float time) const;
+    [[nodiscard]] float InterpolateLinear(float time) const;
+    [[nodiscard]] NEVector::Vector4 InterpolateVector4(float time) const;
+
+    static const PointDefinition EMPTY_POINT;
+
 private:
-    constexpr void SearchIndex(float time, PropertyType propertyType, int& l, int& r);
+    constexpr PointDefinition() = default;
+
+    constexpr void SearchIndex(float time, PropertyType propertyType, int& l, int& r) const;
     sbo::small_vector<PointData, 8> points;
 };
 

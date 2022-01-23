@@ -93,11 +93,10 @@ void LoadTrackEvent(CustomJSONData::CustomEventData const* customEventData, Trac
 void CustomEventCallback(BeatmapObjectCallbackController *callbackController, CustomJSONData::CustomEventData *customEventData) {
     bool isType = false;
 
-    static std::hash<std::string_view> stringViewHash;
-    auto typeHash = stringViewHash(customEventData->type);
+    auto typeHash = customEventData->typeHash;
 
 #define TYPE_GET(jsonName, varName)                                \
-    static auto jsonNameHash_##varName = stringViewHash(jsonName); \
+    static auto jsonNameHash_##varName = std::hash<std::string_view>()(jsonName); \
     if (!isType && typeHash == (jsonNameHash_##varName))                      \
         isType = true;
 
@@ -128,7 +127,7 @@ void CustomEventCallback(BeatmapObjectCallbackController *callbackController, Cu
 
     auto bpm = spawnController->variableBpmProcessor->currentBpm; // spawnController->get_currentBpm()
 
-    duration = 60 * duration / bpm;
+    duration = 60.0f * duration / bpm;
 
     auto easing = eventAD.easing;
 

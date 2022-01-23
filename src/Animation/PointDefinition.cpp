@@ -1,11 +1,14 @@
 #include "Animation/PointDefinition.h"
 
 #include <utility>
+#include <numeric>
 #include "Animation/Track.h"
 #include "Animation/Easings.h"
 #include "TLogger.h"
 
 using namespace NEVector;
+
+const PointDefinition PointDefinition::EMPTY_POINT = PointDefinition();
 
 inline constexpr Vector4 v4lerp(Vector4 const& a, Vector4 const& b, float t) {
     return Vector4(a.x + (b.x - a.x) * t, a.y + (b.y - a.y) * t, a.z + (b.z - a.z) * t, a.w + (b.w - a.w) * t);
@@ -33,12 +36,12 @@ Vector3 SmoothVectorLerp(std::span<PointData> const& points, int a, int b, float
     return c;
 }
 
-constexpr void PointDefinition::SearchIndex(float time, PropertyType propertyType, int& l, int& r) {
+constexpr void PointDefinition::SearchIndex(float time, PropertyType propertyType, int& l, int& r) const {
     l = 0;
     r = points.size();
 
     while (l < r - 1) {
-        int m = (l + r) / 2;
+        int m = std::midpoint(l, r);
         float pointTime = 0;
         switch (propertyType) {
         case PropertyType::linear:
@@ -52,6 +55,7 @@ constexpr void PointDefinition::SearchIndex(float time, PropertyType propertyTyp
 
         case PropertyType::vector4:
             pointTime = points[m].vector4Point.v;
+            break;
         }
 
         if (pointTime < time) {
@@ -138,13 +142,13 @@ PointDefinition::PointDefinition(const rapidjson::Value& value) {
 
         int numNums = copiedList.size();
         if (numNums == 2) {
-            Vector2 vec = Vector2(copiedList[0], copiedList[1]);
+            Vector2 vec(copiedList[0], copiedList[1]);
             points.emplace_back(vec, easing);
         } else if (numNums == 4) {
-            Vector4 vec = Vector4(copiedList[0], copiedList[1], copiedList[2], copiedList[3]);
+            Vector4 vec(copiedList[0], copiedList[1], copiedList[2], copiedList[3]);
             points.emplace_back(vec, easing, spline);
         } else if (numNums >= 5){
-            Vector5 vec = Vector5(copiedList[0], copiedList[1], copiedList[2], copiedList[3], copiedList[4]);
+            Vector5 vec(copiedList[0], copiedList[1], copiedList[2], copiedList[3], copiedList[4]);
             points.emplace_back(vec, easing);
         } else {
             using namespace rapidjson;
@@ -169,7 +173,7 @@ PointDefinition::PointDefinition(const rapidjson::Value& value) {
     }
 }
 
-Vector3 PointDefinition::Interpolate(float time) {
+Vector3 PointDefinition::Interpolate(float time) const {
     if (points.empty()) {
         return Vector3::zero();
     }
@@ -195,7 +199,7 @@ Vector3 PointDefinition::Interpolate(float time) {
     }
 }
 
-Quaternion PointDefinition::InterpolateQuaternion(float time) {
+Quaternion PointDefinition::InterpolateQuaternion(float time) const {
     if (points.empty()) {
         return Quaternion::identity();
     }
@@ -219,7 +223,7 @@ Quaternion PointDefinition::InterpolateQuaternion(float time) {
     return Quaternion::SlerpUnclamped(quaternionOne, quaternionTwo, normalTime);
 }
 
-float PointDefinition::InterpolateLinear(float time) {
+float PointDefinition::InterpolateLinear(float time) const {
     if (points.empty()) {
         return 0;
     }
@@ -241,7 +245,7 @@ float PointDefinition::InterpolateLinear(float time) {
     return std::lerp(points[l].linearPoint.x, points[r].linearPoint.x, normalTime);
 }
 
-Vector4 PointDefinition::InterpolateVector4(float time) {
+Vector4 PointDefinition::InterpolateVector4(float time) const {
     if (points.empty()) {
         return Vector4{0,0,0,0};
     }

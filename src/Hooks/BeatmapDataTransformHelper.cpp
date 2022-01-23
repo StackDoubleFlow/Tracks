@@ -26,11 +26,10 @@ constexpr static float getFloat(rapidjson::Value& value) {
 void LoadTrackEvent(CustomJSONData::CustomEventData const* customEventData, TracksAD::BeatmapAssociatedData& beatmapAD) {
     CRASH_UNLESS(beatmapAD.valid);
 
-    static std::hash<std::string_view> stringViewHash;
-    auto typeHash = stringViewHash(customEventData->type);
+    auto typeHash = customEventData->typeHash;
 
 #define TYPE_GET(jsonName, varName)                                \
-    static auto jsonNameHash_##varName = stringViewHash(jsonName); \
+    static auto jsonNameHash_##varName = std::hash<std::string_view>()(jsonName); \
 
     TYPE_GET("AnimateTrack", AnimateTrack)
     TYPE_GET("AssignPathAnimation", AssignPathAnimation)
@@ -48,6 +47,8 @@ void LoadTrackEvent(CustomJSONData::CustomEventData const* customEventData, Trac
 
     if (eventAD.parsed)
         return;
+
+    eventAD.parsed = true;
 
     rapidjson::Value& eventData = *customEventData->data;
 
@@ -100,8 +101,6 @@ void LoadTrackEvent(CustomJSONData::CustomEventData const* customEventData, Trac
                 break;
         }
     }
-
-    eventAD.parsed = true;
 }
 
 MAKE_HOOK_MATCH(BeatmapDataTransformHelper_CreateTransformedBeatmapData,&BeatmapDataTransformHelper::CreateTransformedBeatmapData, GlobalNamespace::IReadonlyBeatmapData*,

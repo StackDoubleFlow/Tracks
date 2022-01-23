@@ -7,15 +7,15 @@ class PointDefinition;
 
 class PointDefinitionInterpolation {
 public:
-    UnityEngine::Vector3 Interpolate(float time);
-    UnityEngine::Quaternion InterpolateQuaternion(float time);
-    float InterpolateLinear(float time);
-    UnityEngine::Vector4 InterpolateVector4(float time);
-    void Init(PointDefinition *newPointData);
+    [[nodiscard]] UnityEngine::Vector3 Interpolate(float time) const;
+    [[nodiscard]] UnityEngine::Quaternion InterpolateQuaternion(float time) const;
+    [[nodiscard]] float InterpolateLinear(float time) const;
+    [[nodiscard]] UnityEngine::Vector4 InterpolateVector4(float time) const;
+    void Init(PointDefinition const* newPointData);
     void Finish();
 
     float time;
 private:
-    PointDefinition *basePointData;
-    PointDefinition *previousPointData;
+    PointDefinition const* basePointData;
+    PointDefinition const* previousPointData;
 };
