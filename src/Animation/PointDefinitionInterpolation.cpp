@@ -14,7 +14,9 @@ UnityEngine::Quaternion PointDefinitionInterpolation::InterpolateQuaternion(floa
     if (!previousPointData) {
         return basePointData->InterpolateQuaternion(time);
     }
-    return NEVector::Quaternion::SlerpUnclamped(previousPointData->InterpolateQuaternion(time), basePointData->InterpolateQuaternion(time), this->time);
+    static auto Quaternion_SlerpUnclamped = il2cpp_utils::il2cpp_type_check::FPtrWrapper<&NEVector::Quaternion::SlerpUnclamped>::get();
+
+    return Quaternion_SlerpUnclamped(previousPointData->InterpolateQuaternion(time), basePointData->InterpolateQuaternion(time), this->time);
 }
 
 float PointDefinitionInterpolation::InterpolateLinear(float time) const {

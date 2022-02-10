@@ -204,23 +204,26 @@ Quaternion PointDefinition::InterpolateQuaternion(float time) const {
         return Quaternion::identity();
     }
 
+    static auto Quaternion_Euler = il2cpp_utils::il2cpp_type_check::FPtrWrapper<static_cast<UnityEngine::Quaternion (*)(UnityEngine::Vector3)>(&UnityEngine::Quaternion::Euler)>::get();
+    static auto Quaternion_SlerpUnclamped = il2cpp_utils::il2cpp_type_check::FPtrWrapper<&NEVector::Quaternion::SlerpUnclamped>::get();
+
     if (points[0].point.w >= time) {
-        return Quaternion::Euler(points[0].point);
+        return Quaternion_Euler(points[0].point);
     }
 
     if (points[points.size() - 1].point.w <= time) {
-        return Quaternion::Euler(points[points.size() - 1].point);
+        return Quaternion_Euler(points[points.size() - 1].point);
     }
 
     int l;
     int r;
     SearchIndex(time, PropertyType::quaternion, l, r);
 
-    Quaternion quaternionOne = Quaternion::Euler(points[l].point);
-    Quaternion quaternionTwo = Quaternion::Euler(points[r].point);
+    Quaternion quaternionOne = Quaternion_Euler(points[l].point);
+    Quaternion quaternionTwo = Quaternion_Euler(points[r].point);
     float normalTime = (time - points[l].point.w) / (points[r].point.w - points[l].point.w);
     normalTime = Easings::Interpolate(normalTime, points[r].easing);
-    return Quaternion::SlerpUnclamped(quaternionOne, quaternionTwo, normalTime);
+    return Quaternion_SlerpUnclamped(quaternionOne, quaternionTwo, normalTime);
 }
 
 float PointDefinition::InterpolateLinear(float time) const {
