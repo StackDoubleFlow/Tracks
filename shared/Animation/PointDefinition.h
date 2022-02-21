@@ -1,19 +1,35 @@
 #pragma once
+#include <utility>
+
 #include "beatsaber-hook/shared/config/rapidjson-utils.hpp"
 #include "Easings.h"
 #include "Track.h"
 #include "../Hash.h"
 
 struct PointData {
-    NEVector::Vector2 linearPoint = NEVector::Vector2(0, 0);
-    NEVector::Vector4 point = NEVector::Vector4(0, 0, 0, 0);
-    NEVector::Vector5 vector4Point = NEVector::Vector5(0, 0, 0, 0, 0);
+    sbo::small_vector<float, 4> pointDatas;
+    float time;
     Functions easing = Functions::easeLinear;
     bool smooth = false;
 
-    PointData(NEVector::Vector4 point, Functions easing = Functions::easeLinear, bool smooth = false) : point{point}, easing{easing}, smooth{smooth} {};
-    PointData(NEVector::Vector2 point, Functions easing = Functions::easeLinear) : linearPoint{point}, easing{easing} {};
-    PointData(NEVector::Vector5 point, Functions easing = Functions::easeLinear) : vector4Point{point}, easing{easing} {};
+    PointData(std::span<float> point, float time, Functions easing = Functions::easeLinear, bool smooth = false) : pointDatas(point.begin(), point.end()), time(time), easing{easing}, smooth{smooth} {};
+    PointData(sbo::small_vector<float, 4>  point, float time, Functions easing = Functions::easeLinear, bool smooth = false) : pointDatas(std::move(point)), time(time), easing{easing}, smooth{smooth} {};
+
+
+    [[nodiscard]] constexpr NEVector::Vector4 toVector4() const {
+        CRASH_UNLESS(pointDatas.size() >= 4);
+        return {pointDatas[0], pointDatas[1], pointDatas[2], pointDatas[3]};
+    }
+
+    [[nodiscard]] constexpr NEVector::Vector3 toVector3() const {
+        CRASH_UNLESS(pointDatas.size() >= 3);
+        return {pointDatas[0], pointDatas[1], pointDatas[2]};
+    }
+
+    [[nodiscard]] constexpr float toFloat() const {
+        CRASH_UNLESS(pointDatas.size() >= 0);
+        return pointDatas[0];
+    }
 };
 
 class PointDefinition {
@@ -29,7 +45,20 @@ public:
 private:
     constexpr PointDefinition() = default;
 
-    constexpr void SearchIndex(float time, PropertyType propertyType, int& l, int& r) const;
+
+    /// <summary>
+    /// Does most of the interpolation magic between points
+    /// </summary>
+    /// <param name="time">time.</param>
+    /// <param name="pointL">If returned false, will be the point with data and no interpolation. If true, will interpolate to pointR in normalTime.</param>
+    /// <param name="pointR">If returned true, will interpolate from pointL to pointR in normalTime.</param>
+    /// <param name="normalTime">interpolation time.</param>
+    /// <param name="l">left value index</param>
+    /// <param name="r">right value index</param>
+    /// <returns>True if not interpolating between two values</returns>
+    bool InterpolateRaw(float time, PointData const*& pointL, PointData const*& pointR, float& normalTime, int& l, int& r) const;
+
+    constexpr void SearchIndex(float time, int& l, int& r) const;
     sbo::small_vector<PointData, 8> points;
 };
 
