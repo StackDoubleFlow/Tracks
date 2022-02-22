@@ -5,30 +5,39 @@
 #include "Easings.h"
 #include "Track.h"
 #include "../Hash.h"
+#include "TLogger.h"
 
 struct PointData {
-    sbo::small_vector<float, 4> pointDatas;
+    sbo::small_vector<float, 5> pointDatas;
     float time;
     Functions easing = Functions::easeLinear;
     bool smooth = false;
 
     PointData(std::span<float> point, float time, Functions easing = Functions::easeLinear, bool smooth = false) : pointDatas(point.begin(), point.end()), time(time), easing{easing}, smooth{smooth} {};
-    PointData(sbo::small_vector<float, 4>  point, float time, Functions easing = Functions::easeLinear, bool smooth = false) : pointDatas(std::move(point)), time(time), easing{easing}, smooth{smooth} {};
+    PointData(sbo::small_vector<float, 5> point, float time, Functions easing = Functions::easeLinear, bool smooth = false) : pointDatas(std::move(point)), time(time), easing{easing}, smooth{smooth} {};
 
 
-    [[nodiscard]] constexpr NEVector::Vector4 toVector4() const {
-        CRASH_UNLESS(pointDatas.size() >= 4);
-        return {pointDatas[0], pointDatas[1], pointDatas[2], pointDatas[3]};
+    [[nodiscard]] NEVector::Vector4 toVector4() const {
+        // reaxt did a _color "_color":[[1,1,1,0]]
+        // when it should be "_color":[[1,1,1,0,0]]
+        if (pointDatas.size() >= 4)
+            return {pointDatas[0], pointDatas[1], pointDatas[2], pointDatas[4]};
+        else
+            return {};
     }
 
     [[nodiscard]] constexpr NEVector::Vector3 toVector3() const {
-        CRASH_UNLESS(pointDatas.size() >= 3);
-        return {pointDatas[0], pointDatas[1], pointDatas[2]};
+        if (pointDatas.size() >= 3)
+            return {pointDatas[0], pointDatas[1], pointDatas[2]};
+        else
+            return {};
     }
 
     [[nodiscard]] constexpr float toFloat() const {
-        CRASH_UNLESS(pointDatas.size() >= 0);
-        return pointDatas[0];
+        if (!pointDatas.empty())
+            return pointDatas[0];
+        else
+            return {};
     }
 };
 

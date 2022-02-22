@@ -53,23 +53,23 @@ constexpr void PointDefinition::SearchIndex(float time, int& l, int& r) const {
 }
 
 struct TempPointData {
-    sbo::small_vector<float, 4> copiedList;
+    sbo::small_vector<float, 5> copiedList;
     float time;
     Functions easing = Functions::easeLinear;
     bool spline = false;
 
-    TempPointData(sbo::small_vector<float, 4> copiedList, float time, Functions easing, bool spline)
+    TempPointData(sbo::small_vector<float, 5> copiedList, float time, Functions easing, bool spline)
             : copiedList(std::move(copiedList)),
               time(time),
               easing(easing),
               spline(spline) {}
 
-    explicit TempPointData(sbo::small_vector<float, 4> copiedList) : copiedList(std::move(copiedList)) {}
+    explicit TempPointData(sbo::small_vector<float, 5> copiedList, float time) : copiedList(std::move(copiedList)), time(time) {}
 };
 
 PointDefinition::PointDefinition(const rapidjson::Value& value) {
     std::vector<TempPointData> tempPointDatas;
-    sbo::small_vector<float, 4> alternateList;
+    sbo::small_vector<float, 5> alternateList;
 
     for (int i = 0; i < value.Size(); i++) {
         const rapidjson::Value& rawPoint = value[i];
@@ -77,7 +77,7 @@ PointDefinition::PointDefinition(const rapidjson::Value& value) {
 
         // if [[...]]
         if (rawPoint.IsArray()) {
-            sbo::small_vector<float, 4> copiedList;
+            sbo::small_vector<float, 5> copiedList;
             bool spline = false;
             Functions easing = Functions::easeLinear;
 
@@ -120,10 +120,9 @@ PointDefinition::PointDefinition(const rapidjson::Value& value) {
     }
 
 
-    // if [...], also add 0 to end
+    // if [...]
     if (!alternateList.empty()) {
-        alternateList.emplace_back(0);
-        tempPointDatas.emplace_back(std::move(alternateList));
+        tempPointDatas.emplace_back(std::move(alternateList), 0);
     }
 
     for (auto const& pointData : tempPointDatas) {
