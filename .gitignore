@@ -7,7 +7,7 @@ ndkpath.txt
 QPM/
 ninja-build/
 build/
-
+*.cmake
 
 # QPM
 qpm.shared.json
