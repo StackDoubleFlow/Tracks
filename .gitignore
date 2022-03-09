@@ -4,7 +4,8 @@ obj/
 libs/
 ndkpath.txt
 *.qmod
-
+QPM/
+ninja-build/
 build/
 
 
