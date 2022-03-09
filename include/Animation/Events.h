@@ -20,11 +20,11 @@ struct AnimateTrackContext {
     float startTime;
     Functions easing;
 
-    AnimateTrackContext(PointDefinition *points, Property *aProperty, float duration, float startTime, Functions easing)
+    constexpr AnimateTrackContext(PointDefinition *points, Property *aProperty, float duration, float startTime, Functions easing)
     : points(points), property(aProperty), duration(duration), startTime(startTime), easing(easing)
                                                          {}
 
-    AnimateTrackContext() = default;
+    constexpr AnimateTrackContext() = default;
 };
 
 struct AssignPathAnimationContext {
@@ -33,9 +33,9 @@ struct AssignPathAnimationContext {
     float startTime;
     Functions easing;
 
-    AssignPathAnimationContext() = default;
+    constexpr AssignPathAnimationContext() = default;
 
-    AssignPathAnimationContext(PathProperty *aProperty, float duration, float startTime, Functions easing) : property(
+    constexpr AssignPathAnimationContext(PathProperty *aProperty, float duration, float startTime, Functions easing) : property(
             aProperty), duration(duration), startTime(startTime), easing(easing) {}
 };
 

@@ -36,7 +36,7 @@ MAKE_HOOK_MATCH(BeatmapObjectSpawnController_Start, &BeatmapObjectSpawnControlle
     BeatmapObjectSpawnController_Start(self);
 }
 
-bool UpdateCoroutine(AnimateTrackContext const& context, float songTime) {
+constexpr bool UpdateCoroutine(AnimateTrackContext const& context, float songTime) {
     float elapsedTime = songTime - context.startTime;
     float time = Easings::Interpolate(std::min(elapsedTime / context.duration, 1.0f), context.easing);
     if (!context.property->value.has_value()) {
@@ -60,7 +60,7 @@ bool UpdateCoroutine(AnimateTrackContext const& context, float songTime) {
     return elapsedTime < context.duration;
 }
 
-bool UpdatePathCoroutine(AssignPathAnimationContext const& context, float songTime) {
+constexpr bool UpdatePathCoroutine(AssignPathAnimationContext const& context, float songTime) {
     float elapsedTime = songTime - context.startTime;
     context.property->value->time = Easings::Interpolate(std::min(elapsedTime / context.duration, 1.0f), context.easing);
 
@@ -93,11 +93,10 @@ void LoadTrackEvent(CustomJSONData::CustomEventData const* customEventData, Trac
 void CustomEventCallback(BeatmapObjectCallbackController *callbackController, CustomJSONData::CustomEventData *customEventData) {
     bool isType = false;
 
-    static std::hash<std::string_view> stringViewHash;
-    auto typeHash = stringViewHash(customEventData->type);
+    auto typeHash = customEventData->typeHash;
 
 #define TYPE_GET(jsonName, varName)                                \
-    static auto jsonNameHash_##varName = stringViewHash(jsonName); \
+    static auto jsonNameHash_##varName = std::hash<std::string_view>()(jsonName); \
     if (!isType && typeHash == (jsonNameHash_##varName))                      \
         isType = true;
 
@@ -128,7 +127,7 @@ void CustomEventCallback(BeatmapObjectCallbackController *callbackController, Cu
 
     auto bpm = spawnController->variableBpmProcessor->currentBpm; // spawnController->get_currentBpm()
 
-    duration = 60 * duration / bpm;
+    duration = 60.0f * duration / bpm;
 
     auto easing = eventAD.easing;
 
@@ -139,7 +138,7 @@ void CustomEventCallback(BeatmapObjectCallbackController *callbackController, Cu
 
             for (auto const& animateTrackData : animateTrackDataList) {
 
-                for (auto const &property: animateTrackData.properties) {
+                for (auto const &[property, pointData]: animateTrackData.properties) {
                     for (auto it = coroutines.begin(); it != coroutines.end();) {
                         if (it->property == property) {
                             it = coroutines.erase(it);
@@ -147,8 +146,6 @@ void CustomEventCallback(BeatmapObjectCallbackController *callbackController, Cu
                             it++;
                         }
                     }
-
-                    auto pointData = animateTrackData.pointData.at(property);
 
                     if (pointData) {
                         coroutines.emplace_back(pointData, property, duration, customEventData->time, easing);
@@ -163,7 +160,7 @@ void CustomEventCallback(BeatmapObjectCallbackController *callbackController, Cu
             auto const& assignPathAnimationDataList = eventAD.assignPathAnimation;
 
             for (auto const& assignPathAnimationData : assignPathAnimationDataList) {
-                for (auto const& property: assignPathAnimationData.pathProperties) {
+                for (auto const& [property, pointData] : assignPathAnimationData.pathProperties) {
                     for (auto it = pathCoroutines.begin(); it != pathCoroutines.end();) {
                         if (it->property == property) {
                             it = pathCoroutines.erase(it);
@@ -172,7 +169,6 @@ void CustomEventCallback(BeatmapObjectCallbackController *callbackController, Cu
                         }
                     }
 
-                    auto *pointData = assignPathAnimationData.pointData.at(property);
                     if (pointData) {
                         if (!property->value.has_value())
                             property->value = PointDefinitionInterpolation();

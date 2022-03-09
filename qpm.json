@@ -4,7 +4,7 @@
   "info": {
     "name": "Tracks",
     "id": "tracks",
-    "version": "0.4.2",
+    "version": "0.5.0",
     "url": "https://github.com/StackDoubleFlow/Tracks",
     "additionalData": {
       "overrideSoName": "libtracks.so"
@@ -13,7 +13,7 @@
   "dependencies": [
     {
       "id": "beatsaber-hook",
-      "versionRange": "^2.3.2",
+      "versionRange": "^3.5.0",
       "additionalData": {
         "extraFiles": [
           "src/inline-hook"
@@ -22,12 +22,14 @@
     },
     {
       "id": "codegen",
-      "versionRange": "^0.14.0",
-      "additionalData": {}
+      "versionRange": "^0.20.0",
+      "additionalData": {
+        "includeQmod": false
+      }
     },
     {
       "id": "custom-json-data",
-      "versionRange": "^0.14.0",
+      "versionRange": "^0.16.0",
       "additionalData": {}
     },
     {
@@ -42,8 +44,10 @@
     },
     {
       "id": "custom-types",
-      "versionRange": "*",
-      "additionalData": {}
+      "versionRange": "^0.15",
+      "additionalData": {
+        "includeQmod": false
+      }
     }
   ],
   "additionalData": {}

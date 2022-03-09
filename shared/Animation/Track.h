@@ -3,6 +3,7 @@
 #include <string>
 #include "PointDefinitionInterpolation.h"
 #include "../Vector.h"
+#include "../sv/small_vector.h"
 #include "UnityEngine/GameObject.hpp"
 
 #include "beatsaber-hook/shared/utils/typedefs-wrappers.hpp"
@@ -99,9 +100,9 @@ public:
 struct Track {
     Properties properties;
     PathProperties pathProperties;
-    std::vector<UnityEngine::GameObject*> gameObjects;
+    sbo::small_vector<UnityEngine::GameObject*> gameObjects;
     // bool is true if removed
-    EventCallback<Track *, UnityEngine::GameObject *, bool> gameObjectModificationEvent;
+    UnorderedEventCallback<Track *, UnityEngine::GameObject *, bool> gameObjectModificationEvent;
 
     void
     AddGameObject(UnityEngine::GameObject *go)

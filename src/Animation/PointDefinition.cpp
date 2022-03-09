@@ -1,22 +1,25 @@
 #include "Animation/PointDefinition.h"
 
 #include <utility>
+#include <numeric>
 #include "Animation/Track.h"
 #include "Animation/Easings.h"
 #include "TLogger.h"
 
 using namespace NEVector;
 
-Vector4 v4lerp(Vector4 a, Vector4 b, float t) {
+const PointDefinition PointDefinition::EMPTY_POINT = PointDefinition();
+
+inline constexpr Vector4 v4lerp(Vector4 const& a, Vector4 const& b, float t) {
     return Vector4(a.x + (b.x - a.x) * t, a.y + (b.y - a.y) * t, a.z + (b.z - a.z) * t, a.w + (b.w - a.w) * t);
 }
 
-Vector3 SmoothVectorLerp(std::vector<PointData>& points, int a, int b, float time) {
+constexpr Vector3 SmoothVectorLerp(std::span<PointData> points, int a, int b, float time) {
     // Catmull-Rom Spline
-    Vector3 p0 = a - 1 < 0 ? points[a].point : points[a - 1].point;
-    Vector3 p1 = points[a].point;
-    Vector3 p2 = points[b].point;
-    Vector3 p3 = b + 1 > points.size() - 1 ? points[b].point : points[b + 1].point;
+    Vector3 p0 = a - 1 < 0 ? points[a].toVector3() : points[a - 1].toVector3();
+    Vector3 p1 = points[a].toVector3();
+    Vector3 p2 = points[b].toVector3();
+    Vector3 p3 = b + 1 > points.size() - 1 ? points[b].toVector3() : points[b + 1].toVector3();
 
     float t = time;
 
@@ -33,26 +36,13 @@ Vector3 SmoothVectorLerp(std::vector<PointData>& points, int a, int b, float tim
     return c;
 }
 
-void PointDefinition::SearchIndex(float time, PropertyType propertyType, int& l, int& r) {
+constexpr void PointDefinition::SearchIndex(float time, int& l, int& r) const {
     l = 0;
     r = points.size();
 
     while (l < r - 1) {
-        int m = (l + r) / 2;
-        float pointTime = 0;
-        switch (propertyType) {
-        case PropertyType::linear:
-            pointTime = points[m].linearPoint.y;
-            break;
-
-        case PropertyType::quaternion:
-        case PropertyType::vector3:
-            pointTime = points[m].point.w;
-            break;
-        
-        case PropertyType::vector4:
-            pointTime = points[m].vector4Point.v;
-        }
+        int m = std::midpoint(l, r);
+        float pointTime = points[m].time;
 
         if (pointTime < time) {
             l = m;
@@ -63,21 +53,23 @@ void PointDefinition::SearchIndex(float time, PropertyType propertyType, int& l,
 }
 
 struct TempPointData {
-    std::vector<float> copiedList;
+    sbo::small_vector<float, 5> copiedList;
+    float time;
     Functions easing = Functions::easeLinear;
     bool spline = false;
 
-    TempPointData(std::vector<float> copiedList, Functions easing, bool spline) : copiedList(std::move(copiedList)),
-                                                                                         easing(easing),
-                                                                                         spline(spline)
-                                                                                         {}
+    TempPointData(sbo::small_vector<float, 5> copiedList, float time, Functions easing, bool spline)
+            : copiedList(std::move(copiedList)),
+              time(time),
+              easing(easing),
+              spline(spline) {}
 
-    explicit TempPointData(std::vector<float> copiedList) : copiedList(std::move(copiedList)) {}
+    explicit TempPointData(sbo::small_vector<float, 5> copiedList, float time) : copiedList(std::move(copiedList)), time(time) {}
 };
 
 PointDefinition::PointDefinition(const rapidjson::Value& value) {
     std::vector<TempPointData> tempPointDatas;
-    std::vector<float> alternateList;
+    sbo::small_vector<float, 5> alternateList;
 
     for (int i = 0; i < value.Size(); i++) {
         const rapidjson::Value& rawPoint = value[i];
@@ -85,7 +77,7 @@ PointDefinition::PointDefinition(const rapidjson::Value& value) {
 
         // if [[...]]
         if (rawPoint.IsArray()) {
-            std::vector<float> copiedList;
+            sbo::small_vector<float, 5> copiedList;
             bool spline = false;
             Functions easing = Functions::easeLinear;
 
@@ -97,7 +89,7 @@ PointDefinition::PointDefinition(const rapidjson::Value& value) {
 
                 switch (rawPointItem.GetType()) {
                     case rapidjson::kNumberType:
-                        copiedList.push_back(rawPointItem.GetFloat());
+                        copiedList.emplace_back(rawPointItem.GetFloat());
                         break;
                     case rapidjson::kStringType: {
                         std::string flag(rawPointItem.GetString());
@@ -114,47 +106,32 @@ PointDefinition::PointDefinition(const rapidjson::Value& value) {
                 }
             }
 
-            tempPointDatas.emplace_back(std::move(copiedList), easing, spline);
+            float time = copiedList.back();
+            copiedList.erase(copiedList.end() - 1); // remove time from list
+
+            tempPointDatas.emplace_back(copiedList, time, easing, spline);
         }
         // if [...]
         else if (rawPoint.IsNumber()) {
-            alternateList.push_back(rawPoint.GetFloat());
+            alternateList.emplace_back(rawPoint.GetFloat());
         } else {
             TLogger::GetLogger().warning("Unknown point type: %i", rawPoint.GetType());
         }
     }
 
 
-    // if [...], also add 0 to end
+    // if [...]
     if (!alternateList.empty()) {
-        alternateList.emplace_back(0);
-        tempPointDatas.emplace_back(std::move(alternateList));
+        tempPointDatas.emplace_back(std::move(alternateList), 0);
     }
 
     for (auto const& pointData : tempPointDatas) {
-        std::vector<float> const& copiedList = pointData.copiedList;
+        auto const& copiedList = pointData.copiedList;
+        auto time = pointData.time;
         Functions easing = pointData.easing;
         bool spline = pointData.spline;
 
-        int numNums = copiedList.size();
-        if (numNums == 2) {
-            Vector2 vec = Vector2(copiedList[0], copiedList[1]);
-            points.emplace_back(vec, easing);
-        } else if (numNums == 4) {
-            Vector4 vec = Vector4(copiedList[0], copiedList[1], copiedList[2], copiedList[3]);
-            points.emplace_back(vec, easing, spline);
-        } else if (numNums >= 5){
-            Vector5 vec = Vector5(copiedList[0], copiedList[1], copiedList[2], copiedList[3], copiedList[4]);
-            points.emplace_back(vec, easing);
-        } else {
-            using namespace rapidjson;
-
-            StringBuffer sb;
-            PrettyWriter<StringBuffer> writer(sb);
-            value.Accept(writer);
-            auto str = sb.GetString();
-            TLogger::GetLogger().error("Point def with count %i failed: %s", numNums, str);
-        }
+        points.emplace_back(copiedList, time, easing, spline);
     }
 
     if (tempPointDatas.empty()) {
@@ -169,104 +146,117 @@ PointDefinition::PointDefinition(const rapidjson::Value& value) {
     }
 }
 
-Vector3 PointDefinition::Interpolate(float time) {
-    if (points.empty()) {
-        return Vector3::zero();
-    }
-
-    if (points[0].point.w >= time) {
-        return points[0].point;
-    }
-
-    if (points[points.size() - 1].point.w <= time) {
-        return points[points.size() - 1].point;
-    }
-
+Vector3 PointDefinition::Interpolate(float time) const {
+    PointData const* pointL;
+    PointData const* pointR;
+    float normalTime;
     int l;
     int r;
-    SearchIndex(time, PropertyType::vector3, l, r);
 
-    float normalTime = (time - points[l].point.w) / (points[r].point.w - points[l].point.w);
-    normalTime = Easings::Interpolate(normalTime, points[r].easing);
-    if (points[r].smooth) {
-        return SmoothVectorLerp(points, l, r, normalTime);
-    } else {
-        return Vector3::LerpUnclamped(points[l].point, points[r].point, normalTime);
+    if (InterpolateRaw(time, pointL, pointR, normalTime, l, r))
+    {
+        if (pointR->smooth) {
+            return SmoothVectorLerp(points, l, r, normalTime);
+        } else {
+            return Vector3::LerpUnclamped(points[l].toVector3(), points[r].toVector3(), normalTime);
+        }
     }
+
+    return pointL ? pointL->toVector3() : NEVector::Vector3::zero();
 }
 
-Quaternion PointDefinition::InterpolateQuaternion(float time) {
-    if (points.empty()) {
-        return Quaternion::identity();
-    }
-
-    if (points[0].point.w >= time) {
-        return Quaternion::Euler(points[0].point);
-    }
-
-    if (points[points.size() - 1].point.w <= time) {
-        return Quaternion::Euler(points[points.size() - 1].point);
-    }
-
+Quaternion PointDefinition::InterpolateQuaternion(float time) const {
+    PointData const* pointL;
+    PointData const* pointR;
+    float normalTime;
     int l;
     int r;
-    SearchIndex(time, PropertyType::quaternion, l, r);
 
-    Quaternion quaternionOne = Quaternion::Euler(points[l].point);
-    Quaternion quaternionTwo = Quaternion::Euler(points[r].point);
-    float normalTime = (time - points[l].point.w) / (points[r].point.w - points[l].point.w);
-    normalTime = Easings::Interpolate(normalTime, points[r].easing);
-    return Quaternion::SlerpUnclamped(quaternionOne, quaternionTwo, normalTime);
+    static auto Quaternion_Euler = il2cpp_utils::il2cpp_type_check::FPtrWrapper<static_cast<UnityEngine::Quaternion (*)(UnityEngine::Vector3)>(&UnityEngine::Quaternion::Euler)>::get();
+    static auto Quaternion_SlerpUnclamped = il2cpp_utils::il2cpp_type_check::FPtrWrapper<&NEVector::Quaternion::SlerpUnclamped>::get();
+
+
+    if (InterpolateRaw(time, pointL, pointR, normalTime, l, r))
+    {
+        auto quat1 = Quaternion_Euler(pointL->toVector3());
+        auto quat2 = Quaternion_Euler(pointR->toVector3());
+
+        return Quaternion_SlerpUnclamped(quat1, quat2, normalTime);
+    }
+
+    return pointL ? Quaternion_Euler(pointL->toVector3()) : Quaternion::identity();
 }
 
-float PointDefinition::InterpolateLinear(float time) {
-    if (points.empty()) {
-        return 0;
-    }
-
-    if (points[0].linearPoint.y >= time) {
-        return points[0].linearPoint.x;
-    }
-
-    if (points[points.size() - 1].linearPoint.y <= time) {
-        return points[points.size() - 1].linearPoint.x;
-    }
-
+float PointDefinition::InterpolateLinear(float time) const {
+    PointData const* pointL;
+    PointData const* pointR;
+    float normalTime;
     int l;
     int r;
-    SearchIndex(time, PropertyType::linear, l, r);
 
-    float normalTime = (time - points[l].linearPoint.y) / (points[r].linearPoint.y - points[l].linearPoint.y);
-    normalTime = Easings::Interpolate(normalTime, points[r].easing);
-    return std::lerp(points[l].linearPoint.x, points[r].linearPoint.x, normalTime);
+    if (InterpolateRaw(time, pointL, pointR, normalTime, l, r))
+    {
+        return std::lerp(pointL->toFloat(), pointR->toFloat(), normalTime);
+    }
+
+    return pointL ? pointL->toFloat() : 0;
 }
 
-Vector4 PointDefinition::InterpolateVector4(float time) {
-    if (points.empty()) {
-        return Vector4{0,0,0,0};
-    }
-
-    if (points[0].vector4Point.v >= time) {
-        return points[0].vector4Point;
-    }
-
-    if (points[points.size() - 1].vector4Point.v <= time) {
-        return points[points.size() - 1].vector4Point;
-    }
-
+Vector4 PointDefinition::InterpolateVector4(float time) const {
+    PointData const* pointL;
+    PointData const* pointR;
+    float normalTime;
     int l;
     int r;
-    SearchIndex(time, PropertyType::vector4, l, r);
 
-    float normalTime = (time - points[l].vector4Point.v) / (points[r].vector4Point.v - points[l].vector4Point.v);
-    normalTime = Easings::Interpolate(normalTime, points[r].easing);
-    return v4lerp(points[l].vector4Point, points[r].vector4Point, normalTime);
+    if (InterpolateRaw(time, pointL, pointR, normalTime, l, r))
+    {
+        return Vector4::LerpUnclamped(pointL->toVector4(), pointR->toVector4(), normalTime);
+    }
+
+    return pointL ? pointL->toVector4() : NEVector::Vector4(0,0,0,0);
 }
 
-void PointDefinitionManager::AddPoint(std::string pointDataName, PointDefinition pointData) {
+bool PointDefinition::InterpolateRaw(float time, PointData const*&pointL, PointData const*&pointR,
+                                     float &normalTime, int &l, int &r) const {
+
+    pointL = nullptr;
+    pointR = nullptr;
+    normalTime = 0;
+    l = 0;
+    r = 0;
+
+    if (points.empty()) {
+        return false;
+    }
+
+    PointData const &first = points.front();
+    if (first.time >= time) {
+        pointL = &first;
+        return false;
+    }
+
+    PointData const &last = points.back();
+    if (last.time <= time) {
+        pointL = &last;
+        return false;
+    }
+
+    SearchIndex(time, l, r);
+    pointL = &points[l];
+    pointR = &points[r];
+
+    float divisor = pointR->time - pointL->time;
+    normalTime = divisor != 0 ? (time - pointL->time) / divisor : 0;
+    normalTime = Easings::Interpolate(normalTime, pointR->easing);
+
+    return true;
+}
+
+void PointDefinitionManager::AddPoint(std::string const& pointDataName, PointDefinition const& pointData) {
     if (this->pointData.contains(pointDataName)) {
-        TLogger::GetLogger().error("Duplicate point defintion name, %s could not be registered!", pointDataName.c_str());
+        TLogger::GetLogger().error("Duplicate point definition name, %s could not be registered!", pointDataName.data());
     } else {
-        this->pointData.try_emplace(std::move(pointDataName), std::move(pointData));
+        this->pointData.try_emplace(pointDataName, pointData);
     }
 } 

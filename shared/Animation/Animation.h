@@ -13,7 +13,7 @@ namespace Animation {
 
 #pragma region track_utils
 
-    static constexpr std::optional<NEVector::Vector3>
+    [[nodiscard]] static constexpr std::optional<NEVector::Vector3>
     MirrorVectorNullable(std::optional<NEVector::Vector3> const &vector) {
         if (!vector) {
             return vector;
@@ -26,7 +26,7 @@ namespace Animation {
         return modifiedVector;
     }
 
-    constexpr static std::optional<NEVector::Quaternion> MirrorQuaternionNullable(std::optional<NEVector::Quaternion> const &quaternion) {
+    [[nodiscard]] constexpr static std::optional<NEVector::Quaternion> MirrorQuaternionNullable(std::optional<NEVector::Quaternion> const &quaternion) {
         if (!quaternion) {
             return quaternion;
         }
@@ -40,7 +40,7 @@ namespace Animation {
 // C++ compiler tomfoolery that's above my pay grade, that's what this is
 // my most educated guess is compiler inlining method magic
     template<typename T>
-    static constexpr std::optional<T> getPropertyNullable(Track *track, const std::optional<PropertyValue> &prop) {
+    [[nodiscard]] static constexpr std::optional<T> getPropertyNullable(Track *track, const std::optional<PropertyValue> &prop) {
         static_assert(std::is_same_v<T, float> ||
                       std::is_same_v<T, NEVector::Vector3> ||
                       std::is_same_v<T, NEVector::Vector4> ||
@@ -64,13 +64,13 @@ namespace Animation {
 
 // why not?
     template<typename T>
-    static constexpr std::optional<T> getPropertyNullable(Track *track, const Property &prop) {
+    [[nodiscard]] static constexpr std::optional<T> getPropertyNullable(Track *track, const Property &prop) {
         return getPropertyNullable<T>(track, prop.value);
     }
 
     template<typename T>
-    static constexpr std::optional<T>
-    getPathPropertyNullable(Track *track, std::optional<PointDefinitionInterpolation> &prop, float time) {
+    [[nodiscard]] static constexpr std::optional<T>
+    getPathPropertyNullable(Track *track, std::optional<PointDefinitionInterpolation> const& prop, float time) {
         static_assert(std::is_same_v<T, float> ||
                       std::is_same_v<T, NEVector::Vector3> ||
                       std::is_same_v<T, NEVector::Vector4> ||
@@ -92,9 +92,11 @@ namespace Animation {
         return std::nullopt;
     }
 
-    template<typename T, typename VectorExpression = std::function<std::optional<PointDefinitionInterpolation>(
-            Track *)>>
-    static std::optional<T> MultiTrackPathProps(std::vector<Track *> const &tracks, T const &defaultT, float time,
+    using PathPropertyLambda = std::function<std::optional<PointDefinitionInterpolation>&(Track *)>;
+    using PropertyLambda = std::function<std::optional<PropertyValue>const& (Track *)>;
+
+    template<typename T, typename VectorExpression = PathPropertyLambda>
+    [[nodiscard]] static std::optional<T> MultiTrackPathProps(std::span<Track *> tracks, T const &defaultT, float time,
                                                 VectorExpression const &vectorExpression) {
         if (tracks.empty())
             return std::nullopt;
@@ -103,7 +105,7 @@ namespace Animation {
         T total = defaultT;
 
         for (auto &track: tracks) {
-            auto point = vectorExpression(track);
+            std::optional<PointDefinitionInterpolation> const& point = vectorExpression(track);
             auto result = getPathPropertyNullable<T>(track, point, time);
 
             if (result) {
@@ -115,9 +117,8 @@ namespace Animation {
         return valid ? std::make_optional(total) : std::nullopt;
     }
 
-    template<typename T, typename VectorExpression = std::function<std::optional<PointDefinitionInterpolation>(
-            Track *)>>
-    static std::optional<T> SumTrackPathProps(std::vector<Track *> const &tracks, T const &defaultT, float time,
+    template<typename T, typename VectorExpression = PathPropertyLambda>
+    [[nodiscard]] static std::optional<T> SumTrackPathProps(std::span<Track *> tracks, T const &defaultT, float time,
                                               VectorExpression const &vectorExpression) {
         if (tracks.empty())
             return std::nullopt;
@@ -126,7 +127,7 @@ namespace Animation {
         T total = defaultT;
 
         for (auto &track: tracks) {
-            auto point = vectorExpression(track);
+            std::optional<PointDefinitionInterpolation> const& point = vectorExpression(track);
             auto result = getPathPropertyNullable<T>(track, point, time);
 
             if (result) {
@@ -138,9 +139,9 @@ namespace Animation {
         return valid ? std::make_optional(total) : std::nullopt;
     }
 
-    template<typename T, typename VectorExpression = std::function<std::optional<PropertyValue>(Track *)>>
-    static std::optional<T>
-    MultiTrackProps(std::vector<Track *> const &tracks, T const &defaultT, VectorExpression const &vectorExpression) {
+    template<typename T, typename VectorExpression = PropertyLambda>
+    [[nodiscard]] static std::optional<T>
+    MultiTrackProps(std::span<Track *> tracks, T const &defaultT, VectorExpression const &vectorExpression) {
 
         if (tracks.empty())
             return std::nullopt;
@@ -149,7 +150,7 @@ namespace Animation {
         T total = defaultT;
 
         for (auto &track: tracks) {
-            auto point = vectorExpression(track);
+            std::optional<PropertyValue> const& point = vectorExpression(track);
             auto result = getPropertyNullable<T>(track, point);
 
             if (result) {
@@ -161,9 +162,9 @@ namespace Animation {
         return valid ? std::make_optional(total) : std::nullopt;
     }
 
-    template<typename T, typename VectorExpression = std::function<std::optional<PropertyValue>(Track *)>>
-    static std::optional<T>
-    SumTrackProps(std::vector<Track *> const &tracks, T const &defaultT, VectorExpression const &vectorExpression) {
+    template<typename T, typename VectorExpression = PropertyLambda>
+    [[nodiscard]]  static std::optional<T>
+    SumTrackProps(std::span<Track *> tracks, T const &defaultT, VectorExpression const &vectorExpression) {
         if (tracks.empty())
             return std::nullopt;
 
@@ -171,7 +172,7 @@ namespace Animation {
         T total = defaultT;
 
         for (auto &track: tracks) {
-            auto point = vectorExpression(track);
+            std::optional<PropertyValue> const& point = vectorExpression(track);
             auto result = getPropertyNullable<T>(track, point);
 
             if (result) {
@@ -183,11 +184,11 @@ namespace Animation {
         return valid ? std::make_optional(total) : std::nullopt;
     }
 
-#define MSumTrackProps(tracks, defaultT, prop) SumTrackProps(tracks, defaultT, [](Track* track) { return track->properties.prop.value;})
-#define MMultTrackProps(tracks, defaultT, prop) MultiTrackProps(tracks, defaultT, [](Track* track) { return track->properties.prop.value; })
+#define MSumTrackProps(tracks, defaultT, prop) SumTrackProps(tracks, defaultT, [](Track* track) -> std::optional<PropertyValue> const& { return track->properties.prop.value;})
+#define MMultTrackProps(tracks, defaultT, prop) MultiTrackProps(tracks, defaultT, [](Track* track) -> std::optional<PropertyValue> const& { return track->properties.prop.value; })
 
-#define MSumTrackPathProps(tracks, defaultT, prop, time) SumTrackPathProps(tracks, defaultT, time, [](Track* track) { return track->pathProperties.prop.value; })
-#define MMultTrackPathProps(tracks, defaultT, prop, time) MultiTrackPathProps(tracks, defaultT, time, [](Track* track) { return track->pathProperties.prop.value; })
+#define MSumTrackPathProps(tracks, defaultT, prop, time) SumTrackPathProps(tracks, defaultT, time, [](Track* track) -> std::optional<PointDefinitionInterpolation> const& { return track->pathProperties.prop.value; })
+#define MMultTrackPathProps(tracks, defaultT, prop, time) MultiTrackPathProps(tracks, defaultT, time, [](Track* track) -> std::optional<PointDefinitionInterpolation> const& { return track->pathProperties.prop.value; })
 
 #pragma endregion
 
