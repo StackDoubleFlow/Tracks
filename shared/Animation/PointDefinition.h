@@ -5,7 +5,6 @@
 #include "Easings.h"
 #include "Track.h"
 #include "../Hash.h"
-#include "TLogger.h"
 
 struct PointData {
     sbo::small_vector<float, 5> pointDatas;
