@@ -125,14 +125,16 @@ PointDefinition::PointDefinition(const rapidjson::Value& value) {
         tempPointDatas.emplace_back(std::move(alternateList), 0);
     }
 
-    for (auto const& pointData : tempPointDatas) {
-        auto const& copiedList = pointData.copiedList;
+
+    for (auto const &pointData: tempPointDatas) {
+        auto const &copiedList = pointData.copiedList;
         auto time = pointData.time;
         Functions easing = pointData.easing;
         bool spline = pointData.spline;
 
         points.emplace_back(copiedList, time, easing, spline);
     }
+
 
     if (tempPointDatas.empty()) {
         using namespace rapidjson;

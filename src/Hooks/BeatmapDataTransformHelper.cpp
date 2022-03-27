@@ -12,7 +12,7 @@
 using namespace TracksAD;
 using namespace GlobalNamespace;
 
-constexpr static float getFloat(rapidjson::Value& value) {
+constexpr static float getFloat(rapidjson::Value const& value) {
     switch (value.GetType()) {
         case rapidjson::kStringType:
             return std::stof(value.GetString());
@@ -50,7 +50,7 @@ void LoadTrackEvent(CustomJSONData::CustomEventData const* customEventData, Trac
 
     eventAD.parsed = true;
 
-    rapidjson::Value& eventData = *customEventData->data;
+    rapidjson::Value const& eventData = *customEventData->data;
 
     eventAD.type = type;
     auto const& trackJSON = eventData["_track"];
@@ -104,12 +104,17 @@ void LoadTrackEvent(CustomJSONData::CustomEventData const* customEventData, Trac
 }
 
 MAKE_HOOK_MATCH(BeatmapDataTransformHelper_CreateTransformedBeatmapData,&BeatmapDataTransformHelper::CreateTransformedBeatmapData, GlobalNamespace::IReadonlyBeatmapData*,
-                IReadonlyBeatmapData* beatmapData, GlobalNamespace::IPreviewBeatmapLevel* beatmapLevel,
-                GlobalNamespace::GameplayModifiers* gameplayModifiers, GlobalNamespace::PracticeSettings* practiceSettings,
-                bool leftHanded, GlobalNamespace::EnvironmentEffectsFilterPreset environmentEffectsFilterPreset,
-                GlobalNamespace::EnvironmentIntensityReductionOptions* environmentIntensityReductionOptions,
-                bool screenDisplacementEffectsEnabled) {
-    auto result = (CustomJSONData::CustomBeatmapData*) BeatmapDataTransformHelper_CreateTransformedBeatmapData(beatmapData, beatmapLevel, gameplayModifiers, practiceSettings, leftHanded, environmentEffectsFilterPreset, environmentIntensityReductionOptions, screenDisplacementEffectsEnabled);
+                ::GlobalNamespace::IReadonlyBeatmapData* beatmapData,
+                ::GlobalNamespace::IPreviewBeatmapLevel* beatmapLevel,
+                ::GlobalNamespace::GameplayModifiers* gameplayModifiers,
+                bool leftHanded, ::GlobalNamespace::EnvironmentEffectsFilterPreset environmentEffectsFilterPreset,
+                ::GlobalNamespace::EnvironmentIntensityReductionOptions* environmentIntensityReductionOptions,
+                ::GlobalNamespace::MainSettingsModelSO* mainSettingsModel
+                ) {
+    auto result = (CustomJSONData::CustomBeatmapData*)
+            BeatmapDataTransformHelper_CreateTransformedBeatmapData(beatmapData, beatmapLevel, gameplayModifiers, leftHanded,
+                                                                    environmentEffectsFilterPreset, environmentIntensityReductionOptions,
+                                                                    mainSettingsModel);
 
     auto &beatmapAD = TracksAD::getBeatmapAD(result->customData);
 
@@ -118,8 +123,8 @@ MAKE_HOOK_MATCH(BeatmapDataTransformHelper_CreateTransformedBeatmapData,&Beatmap
     }
 
 
-    for (auto const& customEventData : *result->customEventsData) {
-        LoadTrackEvent(&customEventData, beatmapAD);
+    for (auto const& customEventData : result->GetBeatmapItemsCpp<CustomJSONData::CustomEventData*>()) {
+        LoadTrackEvent(customEventData, beatmapAD);
     }
 
     return reinterpret_cast<IReadonlyBeatmapData *>(result);

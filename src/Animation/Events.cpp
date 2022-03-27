@@ -1,7 +1,9 @@
-#include "GlobalNamespace/BeatmapObjectCallbackController.hpp"
+#include "GlobalNamespace/BeatmapCallbacksController.hpp"
 #include "GlobalNamespace/BeatmapData.hpp"
 #include "GlobalNamespace/BeatmapObjectSpawnController.hpp"
-#include "GlobalNamespace/VariableBpmProcessor.hpp"
+#include "GlobalNamespace/BpmController.hpp"
+
+#include "UnityEngine/Resources.hpp"
 
 #include "beatsaber-hook/shared/utils/hooking.hpp"
 #include "custom-json-data/shared/CustomEventData.h"
@@ -24,6 +26,8 @@ using namespace NEVector;
 using namespace TracksAD;
 
 BeatmapObjectSpawnController *spawnController;
+// BeatmapObjectSpawnController.cpp
+extern SafePtr<BpmController> bpmController;
 
 static std::vector<AnimateTrackContext> coroutines;
 static std::vector<AssignPathAnimationContext> pathCoroutines;
@@ -67,8 +71,8 @@ constexpr bool UpdatePathCoroutine(AssignPathAnimationContext const& context, fl
     return elapsedTime < context.duration;
 }
 
-void Events::UpdateCoroutines(BeatmapObjectCallbackController *callbackController) {
-    auto songTime = TimeSourceHelper::getSongTime(callbackController->audioTimeSource);
+void Events::UpdateCoroutines(BeatmapCallbacksController *callbackController) {
+    auto songTime = callbackController->songTime;
     for (auto it = coroutines.begin(); it != coroutines.end();) {
         if (UpdateCoroutine(*it, songTime)) {
             it++;
@@ -90,7 +94,7 @@ void Events::UpdateCoroutines(BeatmapObjectCallbackController *callbackControlle
 // BeatmapDataTransformHelper.cpp
 void LoadTrackEvent(CustomJSONData::CustomEventData const* customEventData, TracksAD::BeatmapAssociatedData& beatmapAD);
 
-void CustomEventCallback(BeatmapObjectCallbackController *callbackController, CustomJSONData::CustomEventData *customEventData) {
+void CustomEventCallback(BeatmapCallbacksController *callbackController, CustomJSONData::CustomEventData *customEventData) {
     bool isType = false;
 
     auto typeHash = customEventData->typeHash;
@@ -125,7 +129,7 @@ void CustomEventCallback(BeatmapObjectCallbackController *callbackController, Cu
 
     auto duration = eventAD.duration;
 
-    auto bpm = spawnController->variableBpmProcessor->currentBpm; // spawnController->get_currentBpm()
+    auto bpm = bpmController->currentBpm; // spawnController->get_currentBpm()
 
     duration = 60.0f * duration / bpm;
 

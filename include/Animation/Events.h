@@ -3,13 +3,13 @@
 #include "Animation/Track.h"
 
 namespace GlobalNamespace {
-class BeatmapObjectCallbackController;
+class BeatmapCallbacksController;
 }
 
 namespace Events {
 
 void AddEventCallbacks(Logger &logger);
-void UpdateCoroutines(GlobalNamespace::BeatmapObjectCallbackController *callbackController);
+void UpdateCoroutines(GlobalNamespace::BeatmapCallbacksController *callbackController);
 
 
 

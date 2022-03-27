@@ -9,6 +9,8 @@
 #include "GlobalNamespace/BeatmapData.hpp"
 #include "GlobalNamespace/BeatmapDataLoader.hpp"
 
+#include "System/Linq/Enumerable.hpp"
+
 using namespace GlobalNamespace;
 using namespace TracksAD;
 
@@ -23,7 +25,7 @@ void TracksAD::readBeatmapDataAD(CustomJSONData::CustomBeatmapData *beatmapData)
     }
 
     if (beatmapData->customData->value) {
-        rapidjson::Value &customData = *beatmapData->customData->value;
+        rapidjson::Value const& customData = *beatmapData->customData->value;
 
         PointDefinitionManager pointDataManager;
         auto pointDefinitionsIt = customData.FindMember("_pointDefinitions");
@@ -41,80 +43,82 @@ void TracksAD::readBeatmapDataAD(CustomJSONData::CustomBeatmapData *beatmapData)
     }
     auto &tracks = beatmapAD.tracks;
 
-    for (BeatmapLineData *beatmapLineData : beatmapData->beatmapLinesData) {
-        for (BeatmapObjectData *beatmapObjectData : beatmapLineData->beatmapObjectsData->items) {
-            if (!beatmapObjectData)
-                continue;
+    auto notes = beatmapData->GetBeatmapItemsCpp<NoteData*>();
+    auto obstacles = beatmapData->GetBeatmapItemsCpp<ObstacleData*>();
 
-            CustomJSONData::JSONWrapper *customDataWrapper;
-            if (beatmapObjectData->klass == customObstacleDataClass) {
-                auto obstacleData =
-                    (CustomJSONData::CustomObstacleData *)beatmapObjectData;
-                customDataWrapper = obstacleData->customData;
-            } else if (beatmapObjectData->klass == customNoteDataClass) {
-                auto noteData =
-                    (CustomJSONData::CustomNoteData *)beatmapObjectData;
-                customDataWrapper = noteData->customData;
-            } else {
-                continue;
-            }
+    std::vector<BeatmapObjectData*> objects(notes.size() + obstacles.size());
 
-            if (customDataWrapper->value) {
-                rapidjson::Value &customData = *customDataWrapper->value;
-                BeatmapObjectAssociatedData &ad = getAD(customDataWrapper);
-                TracksVector tracksAD;
+    std::copy(notes.begin(), notes.end(), std::back_inserter(objects));
+    std::copy(obstacles.begin(), obstacles.end(), std::back_inserter(objects));
 
-                auto trackIt = customData.FindMember("_track");
-                if (trackIt != customData.MemberEnd()) {
-                    rapidjson::Value& tracksObject = trackIt->value;
+    for (auto* beatmapObjectData : objects) {
+        if (!beatmapObjectData) continue;
+
+        CustomJSONData::JSONWrapper *customDataWrapper;
+        if (beatmapObjectData->klass == customObstacleDataClass) {
+            auto obstacleData =
+                    (CustomJSONData::CustomObstacleData *) beatmapObjectData;
+            customDataWrapper = obstacleData->customData;
+        } else if (beatmapObjectData->klass == customNoteDataClass) {
+            auto noteData =
+                    (CustomJSONData::CustomNoteData *) beatmapObjectData;
+            customDataWrapper = noteData->customData;
+        } else {
+            continue;
+        }
+
+        if (customDataWrapper->value) {
+            rapidjson::Value const& customData = *customDataWrapper->value;
+            BeatmapObjectAssociatedData &ad = getAD(customDataWrapper);
+            TracksVector tracksAD;
+
+            auto trackIt = customData.FindMember("_track");
+            if (trackIt != customData.MemberEnd()) {
+                rapidjson::Value const& tracksObject = trackIt->value;
 
 
-                    switch (tracksObject.GetType()) {
-                        case rapidjson::Type::kArrayType: {
-                            if (tracksObject.Empty())
-                                break;
-
-                            for (auto &trackElement : tracksObject.GetArray())
-                            {
-                                Track *track = &tracks[trackElement.GetString()];
-                                tracksAD.emplace_back(track);
-                            }
+                switch (tracksObject.GetType()) {
+                    case rapidjson::Type::kArrayType: {
+                        if (tracksObject.Empty())
                             break;
-                        }
-                        case rapidjson::Type::kStringType:
-                        {
-                            Track *track = &tracks[tracksObject.GetString()];
+
+                        for (auto &trackElement: tracksObject.GetArray()) {
+                            Track *track = &tracks[trackElement.GetString()];
                             tracksAD.emplace_back(track);
-                            break;
                         }
+                        break;
+                    }
+                    case rapidjson::Type::kStringType: {
+                        Track *track = &tracks[tracksObject.GetString()];
+                        tracksAD.emplace_back(track);
+                        break;
+                    }
 
-                        default: {
-                            TLogger::GetLogger().error("Tracks object is not an array or a string, what? Why?");
-                            break;
-                        }
+                    default: {
+                        TLogger::GetLogger().error("Tracks object is not an array or a string, what? Why?");
+                        break;
                     }
                 }
-
-                ad.tracks = tracksAD;
             }
+
+            ad.tracks = tracksAD;
         }
+
     }
 
     beatmapAD.valid = true;
 }
 
 MAKE_HOOK_MATCH(GetBeatmapDataFromBeatmapSaveData,
-                &BeatmapDataLoader::GetBeatmapDataFromBeatmapSaveData, BeatmapData *,
-                BeatmapDataLoader *self, List<BeatmapSaveData::NoteData *> *notesSaveData,
-                List<BeatmapSaveData::WaypointData *> *waypointsSaveData,
-                List<BeatmapSaveData::ObstacleData *> *obstaclesSaveData,
-                List<BeatmapSaveData::EventData *> *eventsSaveData,
-                BeatmapSaveData::SpecialEventKeywordFiltersData *evironmentSpecialEventFilterData,
-                float startBpm, float shuffle, float shufflePeriod) {
+                &BeatmapDataLoader::GetBeatmapDataFromBeatmapSaveData, BeatmapData *, BeatmapSaveDataVersion3::BeatmapSaveData* beatmapSaveData,
+                float startBpm, bool loadingForDesignatedEnvironment,
+                ::GlobalNamespace::EnvironmentKeywords* environmentKeywords,
+                ::GlobalNamespace::EnvironmentLightGroups* environmentLightGroups,
+                ::GlobalNamespace::DefaultEnvironmentEvents* defaultEnvironmentEvents) {
     auto *result =
         reinterpret_cast<CustomJSONData::CustomBeatmapData *>(GetBeatmapDataFromBeatmapSaveData(
-            self, notesSaveData, waypointsSaveData, obstaclesSaveData, eventsSaveData,
-            evironmentSpecialEventFilterData, startBpm, shuffle, shufflePeriod));
+                beatmapSaveData, startBpm, loadingForDesignatedEnvironment, environmentKeywords,
+            environmentLightGroups, defaultEnvironmentEvents));
     
     TracksAD::readBeatmapDataAD(result);
 

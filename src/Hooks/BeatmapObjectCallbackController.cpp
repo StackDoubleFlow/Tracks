@@ -2,8 +2,12 @@
 #include "beatsaber-hook/shared/utils/hooking.hpp"
 #include "Animation/Events.h"
 
-#include "GlobalNamespace/BeatmapObjectCallbackController.hpp"
+#include "GlobalNamespace/BeatmapCallbacksController.hpp"
+#include "GlobalNamespace/BeatmapCallbacksUpdater.hpp"
+#include "GlobalNamespace/BpmController.hpp"
+#include "GlobalNamespace/BpmController_InitData.hpp"
 #include "custom-types/shared/coroutine.hpp"
+#include "UnityEngine/Resources.hpp"
 
 using namespace GlobalNamespace;
 
@@ -14,7 +18,7 @@ using namespace GlobalNamespace;
 
 #pragma clang diagnostic push
 #pragma ide diagnostic ignored "EndlessLoop"
-custom_types::Helpers::Coroutine updateCoroutines(BeatmapObjectCallbackController* self) {
+custom_types::Helpers::Coroutine updateCoroutines(BeatmapCallbacksController* self) {
     while (true) {
         Events::UpdateCoroutines(self);
         co_yield nullptr;
@@ -23,9 +27,21 @@ custom_types::Helpers::Coroutine updateCoroutines(BeatmapObjectCallbackControlle
 #pragma clang diagnostic pop
 
 
-MAKE_HOOK_MATCH(BeatmapObjectCallbackController_Start, &BeatmapObjectCallbackController::Start, void, BeatmapObjectCallbackController *self) {
-    BeatmapObjectCallbackController_Start(self);
-    self->StartCoroutine(custom_types::Helpers::CoroutineHelper::New(updateCoroutines(self)));
+BeatmapCallbacksController* controller;
+SafePtr<BpmController> bpmController;
+
+MAKE_HOOK_MATCH(BeatmapObjectCallbackController_Start, &BeatmapCallbacksController::ManualUpdate, void, BeatmapCallbacksController *self, float songTime) {
+    BeatmapObjectCallbackController_Start(self, songTime);
+    if (controller != self) {
+
+        UnityEngine::Resources::FindObjectsOfTypeAll<BeatmapCallbacksUpdater*>()
+                .get(0)->StartCoroutine(custom_types::Helpers::CoroutineHelper::New(updateCoroutines(self)));
+    }
+}
+
+MAKE_HOOK_FIND_INSTANCE(BpmController_ctor, classof(BpmController*), ".ctor", void, BpmController* self, BpmController::InitData* initData, BeatmapCallbacksController* beatmapCallbacksController) {
+    BpmController_ctor(self, initData, beatmapCallbacksController);
+    bpmController = self;
 }
 
 
