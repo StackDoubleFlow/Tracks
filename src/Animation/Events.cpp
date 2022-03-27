@@ -19,6 +19,7 @@
 #include "AssociatedData.h"
 #include "TLogger.h"
 #include "Vector.h"
+#include "StaticHolders.hpp"
 
 using namespace Events;
 using namespace GlobalNamespace;
@@ -27,7 +28,6 @@ using namespace TracksAD;
 
 BeatmapObjectSpawnController *spawnController;
 // BeatmapObjectSpawnController.cpp
-extern SafePtr<BpmController> bpmController;
 
 static std::vector<AnimateTrackContext> coroutines;
 static std::vector<AssignPathAnimationContext> pathCoroutines;
@@ -129,7 +129,7 @@ void CustomEventCallback(BeatmapCallbacksController *callbackController, CustomJ
 
     auto duration = eventAD.duration;
 
-    auto bpm = bpmController->currentBpm; // spawnController->get_currentBpm()
+    auto bpm = TracksStatic::bpmController->currentBpm; // spawnController->get_currentBpm()
 
     duration = 60.0f * duration / bpm;
 

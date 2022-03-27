@@ -8,6 +8,7 @@
 #include "GlobalNamespace/BpmController_InitData.hpp"
 #include "custom-types/shared/coroutine.hpp"
 #include "UnityEngine/Resources.hpp"
+#include "StaticHolders.hpp"
 
 using namespace GlobalNamespace;
 
@@ -28,12 +29,12 @@ custom_types::Helpers::Coroutine updateCoroutines(BeatmapCallbacksController* se
 
 
 BeatmapCallbacksController* controller;
-SafePtr<BpmController> bpmController;
+SafePtr<BpmController> TracksStatic::bpmController;
 
 MAKE_HOOK_MATCH(BeatmapObjectCallbackController_Start, &BeatmapCallbacksController::ManualUpdate, void, BeatmapCallbacksController *self, float songTime) {
     BeatmapObjectCallbackController_Start(self, songTime);
     if (controller != self) {
-
+        controller = self;
         UnityEngine::Resources::FindObjectsOfTypeAll<BeatmapCallbacksUpdater*>()
                 .get(0)->StartCoroutine(custom_types::Helpers::CoroutineHelper::New(updateCoroutines(self)));
     }
@@ -41,11 +42,12 @@ MAKE_HOOK_MATCH(BeatmapObjectCallbackController_Start, &BeatmapCallbacksControll
 
 MAKE_HOOK_FIND_INSTANCE(BpmController_ctor, classof(BpmController*), ".ctor", void, BpmController* self, BpmController::InitData* initData, BeatmapCallbacksController* beatmapCallbacksController) {
     BpmController_ctor(self, initData, beatmapCallbacksController);
-    bpmController = self;
+    TracksStatic::bpmController = self;
 }
 
 
 void InstallBeatmapObjectCallbackControllerHooks(Logger& logger) {
     INSTALL_HOOK(logger, BeatmapObjectCallbackController_Start);
+    INSTALL_HOOK(logger, BpmController_ctor);
 }
 TInstallHooks(InstallBeatmapObjectCallbackControllerHooks)

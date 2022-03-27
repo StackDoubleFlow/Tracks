@@ -19,7 +19,6 @@ using namespace CustomJSONData;
 using namespace GlobalNamespace;
 
 SafePtr<System::Action_1<System::Threading::Tasks::Task*>> callbackOther;
-SafePtr<System::Func_2<System::Threading::Tasks::Task_1<GlobalNamespace::IReadonlyBeatmapData*>*, GlobalNamespace::IReadonlyBeatmapData*>> callback;
 GameplayCoreSceneSetupData * gameplayCoreSceneSetupData;
 
 //#define MakeDelegate(DelegateType, ...) (il2cpp_utils::MakeDelegate<DelegateType>(classof(DelegateType), __VA_ARGS__))
@@ -34,26 +33,8 @@ MAKE_HOOK_MATCH(StandardLevelScenesTransitionSetupDataSO_Init, &StandardLevelSce
     StandardLevelScenesTransitionSetupDataSO_Init(self, gameMode, difficultyBeatmap, previewBeatmapLevel, overrideEnvironmentSettings, overrideColorScheme,
                                                   gameplayModifiers, playerSpecificSettings, practiceSettings, backButtonText, useTestNoteCutSoundEffects, startPaused);
 
-
-    auto *beatmapData = reinterpret_cast<CustomBeatmapData*>(self->get_transformedBeatmapData());
-    auto& ad = getBeatmapAD(beatmapData->customData);
-    for (auto& [name, track] : ad.tracks) {
-        track.ResetVariables();
-    }
-    ad.leftHanded = playerSpecificSettings->leftHanded;
-    clearEventADs();
+    TLogger::GetLogger().debug("Got beatmap %s", il2cpp_utils::ClassStandardName(reinterpret_cast<Il2CppObject*>(difficultyBeatmap)->klass).c_str());
 }
-
-MAKE_HOOK_MATCH(GameplayCoreSceneSetupData_GetTransformedBeatmapDataAsync,
-                &GameplayCoreSceneSetupData::GetTransformedBeatmapDataAsync,
-                System::Threading::Tasks::Task_1<::GlobalNamespace::IReadonlyBeatmapData*>*, GameplayCoreSceneSetupData *self) {
-    auto ret = GameplayCoreSceneSetupData_GetTransformedBeatmapDataAsync(self);
-
-    gameplayCoreSceneSetupData = self;
-
-    return ret->ContinueWith(callback.operator System::Func_2<System::Threading::Tasks::Task_1<GlobalNamespace::IReadonlyBeatmapData *> *, GlobalNamespace::IReadonlyBeatmapData *> *const());
-}
-
 
 MAKE_HOOK_MATCH(LevelScenesTransitionSetupDataSO_BeforeScenesWillBeActivatedAsync,
                 &LevelScenesTransitionSetupDataSO::BeforeScenesWillBeActivatedAsync,
@@ -84,31 +65,6 @@ MAKE_HOOK_MATCH(LevelScenesTransitionSetupDataSO_BeforeScenesWillBeActivatedAsyn
 
 void InstallStandardLevelScenesTransitionSetupDataSOHooks(Logger& logger){
 
-    std::function<GlobalNamespace::IReadonlyBeatmapData*(System::Threading::Tasks::Task_1<::GlobalNamespace::IReadonlyBeatmapData*>*)>func = [](System::Threading::Tasks::Task_1<::GlobalNamespace::IReadonlyBeatmapData*>* t) {
-        auto beatmap = t->get_Result();
-
-        TLogger::GetLogger().debug("Casting %p", beatmap);
-        TLogger::GetLogger().debug("Casting %s", il2cpp_utils::ClassStandardName(reinterpret_cast<Il2CppObject*>(beatmap)->klass).c_str());
-
-        auto *beatmapData = il2cpp_utils::cast<CustomBeatmapData>(beatmap);
-        TLogger::GetLogger().debug("Crashing %p", beatmapData);
-        CRASH_UNLESS(beatmapData);
-
-        auto& ad = getBeatmapAD(beatmapData->customData);
-        for (auto& [name, track] : ad.tracks) {
-            track.ResetVariables();
-        }
-        ad.leftHanded = gameplayCoreSceneSetupData->playerSpecificSettings->leftHanded;
-        clearEventADs();
-
-        return beatmap;
-    };
-
-    callback = il2cpp_utils::MakeDelegate<
-            System::Func_2<System::Threading::Tasks::Task_1<GlobalNamespace::IReadonlyBeatmapData*>*, GlobalNamespace::IReadonlyBeatmapData*>*>(
-            func
-    );
-
     std::function<void(System::Threading::Tasks::Task*)> func2 = [](System::Threading::Tasks::Task*) {
         auto beatmap = gameplayCoreSceneSetupData->transformedBeatmapData;
 
@@ -132,7 +88,7 @@ void InstallStandardLevelScenesTransitionSetupDataSOHooks(Logger& logger){
             func2
     );
 
-    // TODO: Fix
+
 
     INSTALL_HOOK(logger, LevelScenesTransitionSetupDataSO_BeforeScenesWillBeActivatedAsync);
 //    INSTALL_HOOK(logger, StandardLevelScenesTransitionSetupDataSO_Init);
