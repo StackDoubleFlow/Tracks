@@ -92,7 +92,8 @@ void Events::UpdateCoroutines(BeatmapCallbacksController *callbackController) {
 }
 
 // BeatmapDataTransformHelper.cpp
-void LoadTrackEvent(CustomJSONData::CustomEventData const* customEventData, TracksAD::BeatmapAssociatedData& beatmapAD);
+void LoadTrackEvent(CustomJSONData::CustomEventData const *customEventData, TracksAD::BeatmapAssociatedData &beatmapAD,
+                    bool v2);
 
 void CustomEventCallback(BeatmapCallbacksController *callbackController, CustomJSONData::CustomEventData *customEventData) {
     bool isType = false;
@@ -124,7 +125,7 @@ void CustomEventCallback(BeatmapCallbacksController *callbackController, CustomJ
             TracksAD::readBeatmapDataAD(customBeatmapData);
         }
 
-        LoadTrackEvent(customEventData, beatmapAD);
+        LoadTrackEvent(customEventData, beatmapAD, customBeatmapData->v2orEarlier);
     }
 
     auto duration = eventAD.duration;

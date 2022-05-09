@@ -1,4 +1,7 @@
+#include "AssociatedData.h"
 #include "Animation/Track.h"
+
+using namespace TracksAD::Constants;
 
 #include <functional>
 
@@ -11,20 +14,37 @@ Property *Properties::FindProperty(std::string_view name) {
     static std::hash<std::string_view> stringViewHash;
     auto nameHash = stringViewHash(name);
 
-    PROP_GET("_position", position)
-    PROP_GET("_rotation", rotation)
-    PROP_GET("_scale", scale)
-    PROP_GET("_localRotation", localRotation)
-    PROP_GET("_localPosition", localPosition)
-    PROP_GET("_dissolve", dissolve)
-    PROP_GET("_dissolveArrow", dissolveArrow)
-    PROP_GET("_time", time)
-    PROP_GET("_interactable", cuttable)
-    PROP_GET("_color", color)
-    PROP_GET("_attenuation", attentuation)
-    PROP_GET("_offset", fogOffset)
-    PROP_GET("_startY", heightFogStartY)
-    PROP_GET("_height", heightFogHeight)
+    if (v2) {
+        PROP_GET(V2_POSITION, position)
+        PROP_GET(V2_ROTATION, rotation)
+        PROP_GET(V2_SCALE, scale)
+        PROP_GET(V2_LOCAL_ROTATION, localRotation)
+        PROP_GET(V2_LOCAL_POSITION, localPosition)
+        PROP_GET(V2_DISSOLVE, dissolve)
+        PROP_GET(V2_DISSOLVE_ARROW, dissolveArrow)
+        PROP_GET(V2_TIME, time)
+        PROP_GET(V2_CUTTABLE, cuttable)
+        PROP_GET(V2_COLOR, color)
+        PROP_GET(V2_ATTENUATION, attentuation)
+        PROP_GET(V2_OFFSET, fogOffset)
+        PROP_GET(V2_HEIGHT_FOG_STARTY, heightFogStartY)
+        PROP_GET(V2_HEIGHT_FOG_HEIGHT, heightFogHeight)
+    } else {
+        PROP_GET(POSITION, position)
+        PROP_GET(ROTATION, rotation)
+        PROP_GET(SCALE, scale)
+        PROP_GET(LOCAL_ROTATION, localRotation)
+        PROP_GET(LOCAL_POSITION, localPosition)
+        PROP_GET(DISSOLVE, dissolve)
+        PROP_GET(DISSOLVE_ARROW, dissolveArrow)
+        PROP_GET(TIME, time)
+        PROP_GET(CUTTABLE, cuttable)
+        PROP_GET(COLOR, color)
+        PROP_GET(ATTENUATION, attentuation)
+        PROP_GET(OFFSET, fogOffset)
+        PROP_GET(HEIGHT_FOG_STARTY, heightFogStartY)
+        PROP_GET(HEIGHT_FOG_HEIGHT, heightFogHeight)
+    }
 
     return nullptr;
 }
@@ -33,16 +53,29 @@ PathProperty *PathProperties::FindProperty(std::string_view name) {
     static std::hash<std::string_view> stringViewHash;
     auto nameHash = stringViewHash(name);
 
-    PROP_GET("_position", position)
-    PROP_GET("_rotation", rotation)
-    PROP_GET("_scale", scale)
-    PROP_GET("_localRotation", localRotation)
-    PROP_GET("_localPosition", localPosition)
-    PROP_GET("_definitePosition", definitePosition)
-    PROP_GET("_dissolve", dissolve)
-    PROP_GET("_dissolveArrow", dissolveArrow)
-    PROP_GET("_interactable", cuttable)
-    PROP_GET("_color", color)
+    if (v2) {
+        PROP_GET(V2_POSITION, position)
+        PROP_GET(V2_ROTATION, rotation)
+        PROP_GET(V2_SCALE, scale)
+        PROP_GET(V2_LOCAL_ROTATION, localRotation)
+        PROP_GET(V2_LOCAL_POSITION, localPosition)
+        PROP_GET(V2_DEFINITE_POSITION, definitePosition)
+        PROP_GET(V2_DISSOLVE, dissolve)
+        PROP_GET(V2_DISSOLVE_ARROW, dissolveArrow)
+        PROP_GET(V2_CUTTABLE, cuttable)
+        PROP_GET(V2_COLOR, color)
+    } else {
+        PROP_GET(POSITION, position)
+        PROP_GET(ROTATION, rotation)
+        PROP_GET(SCALE, scale)
+        PROP_GET(LOCAL_ROTATION, localRotation)
+        PROP_GET(LOCAL_POSITION, localPosition)
+        PROP_GET(DEFINITE_POSITION, definitePosition)
+        PROP_GET(DISSOLVE, dissolve)
+        PROP_GET(DISSOLVE_ARROW, dissolveArrow)
+        PROP_GET(CUTTABLE, cuttable)
+        PROP_GET(COLOR, color)
+    }
 
     return nullptr;
 }
@@ -67,8 +100,8 @@ void Track::ResetVariables() {
     // pathProperties.dissolveArrow.value = std::nullopt;
     // pathProperties.cuttable.value = std::nullopt;
     // pathProperties.color.value = std::nullopt;
-    properties = Properties();
-    pathProperties = PathProperties();
+    properties = Properties(v2);
+    pathProperties = PathProperties(v2);
     gameObjects.clear();
     gameObjectModificationEvent.clear();
 }

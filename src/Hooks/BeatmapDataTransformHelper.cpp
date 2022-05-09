@@ -23,7 +23,8 @@ constexpr static float getFloat(rapidjson::Value const& value) {
     }
 }
 
-void LoadTrackEvent(CustomJSONData::CustomEventData const* customEventData, TracksAD::BeatmapAssociatedData& beatmapAD) {
+void LoadTrackEvent(CustomJSONData::CustomEventData const *customEventData, TracksAD::BeatmapAssociatedData &beatmapAD,
+                    bool v2) {
     CRASH_UNLESS(beatmapAD.valid);
 
     auto typeHash = customEventData->typeHash;
@@ -67,10 +68,10 @@ void LoadTrackEvent(CustomJSONData::CustomEventData const* customEventData, Trac
                 continue;
             }
 
-            tracks.emplace_back(&beatmapAD.tracks[track.GetString()]);
+            tracks.emplace_back(&beatmapAD.tracks.try_emplace(track.GetString(), v2).first->second);
         }
     } else if (trackJSON.IsString()) {
-        tracks.emplace_back(&beatmapAD.tracks[trackJSON.GetString()]);
+        tracks.emplace_back(&beatmapAD.tracks.try_emplace(trackJSON.GetString(), v2).first->second);
     } else {
         TLogger::GetLogger().debug("Track object is not a string or array, why?");
         eventAD.type = EventType::unknown;
@@ -124,7 +125,8 @@ MAKE_HOOK_MATCH(BeatmapDataTransformHelper_CreateTransformedBeatmapData,&Beatmap
 
 
     for (auto const& customEventData : result->GetBeatmapItemsCpp<CustomJSONData::CustomEventData*>()) {
-        LoadTrackEvent(customEventData, beatmapAD);
+        if(!customEventData) continue;
+        LoadTrackEvent(customEventData, beatmapAD, result->v2orEarlier);
     }
 
     return reinterpret_cast<IReadonlyBeatmapData *>(result);

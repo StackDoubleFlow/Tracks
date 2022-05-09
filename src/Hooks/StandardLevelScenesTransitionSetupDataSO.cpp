@@ -74,6 +74,7 @@ void InstallStandardLevelScenesTransitionSetupDataSOHooks(Logger& logger){
         auto *beatmapData = il2cpp_utils::cast<CustomBeatmapData>(beatmap);
         TLogger::GetLogger().debug("Crashing %p", beatmapData);
         CRASH_UNLESS(beatmapData);
+        TLogger::GetLogger().debug("Did not crash");
 
         auto& ad = getBeatmapAD(beatmapData->customData);
         for (auto& [name, track] : ad.tracks) {
@@ -81,6 +82,7 @@ void InstallStandardLevelScenesTransitionSetupDataSOHooks(Logger& logger){
         }
         ad.leftHanded = gameplayCoreSceneSetupData->playerSpecificSettings->leftHanded;
         clearEventADs();
+        TLogger::GetLogger().debug("Reset tracks sucessfully");
     };
 
     callbackOther = il2cpp_utils::MakeDelegate<
