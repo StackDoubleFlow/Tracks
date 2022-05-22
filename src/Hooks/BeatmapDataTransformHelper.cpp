@@ -54,7 +54,7 @@ void LoadTrackEvent(CustomJSONData::CustomEventData const *customEventData, Trac
     rapidjson::Value const& eventData = *customEventData->data;
 
     eventAD.type = type;
-    auto const& trackJSON = eventData["_track"];
+    auto const& trackJSON = eventData[(v2 ? TracksAD::Constants::V2_TRACK : TracksAD::Constants::TRACK).data()];
     unsigned int trackSize = trackJSON.IsArray() ? trackJSON.Size() : 1;
 
 
@@ -79,8 +79,8 @@ void LoadTrackEvent(CustomJSONData::CustomEventData const *customEventData, Trac
     }
 
     eventAD.tracks = std::move(tracks);
-    auto durationIt = eventData.FindMember("_duration");
-    auto easingIt = eventData.FindMember("_easing");
+    auto durationIt = eventData.FindMember((v2 ? TracksAD::Constants::V2_DURATION : TracksAD::Constants::DURATION).data());
+    auto easingIt = eventData.FindMember((v2 ? TracksAD::Constants::V2_EASING : TracksAD::Constants::EASING).data());
 
     eventAD.duration = durationIt != eventData.MemberEnd() ? getFloat(durationIt->value) : 0;
     eventAD.easing = easingIt != eventData.MemberEnd() ? FunctionFromStr(easingIt->value.GetString()) : Functions::easeLinear;

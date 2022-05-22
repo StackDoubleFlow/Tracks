@@ -40,11 +40,16 @@ void clearEventADs()
     eventDataMap.clear();
 }
 
+inline bool IsStringProperties(std::string_view n) {
+    using namespace TracksAD::Constants;
+    return n != V2_TRACK && n != V2_DURATION && n != V2_EASING && n != TRACK && n != DURATION && n != EASING;
+}
+
 AnimateTrackData::AnimateTrackData(BeatmapAssociatedData &beatmapAD, rapidjson::Value const &customData, Properties& trackProperties)
 {
     for (auto const& member : customData.GetObject()) {
         const char *name = member.name.GetString();
-        if (strcmp(name, "_track") && strcmp(name, "_duration") && strcmp(name, "_easing"))
+        if (IsStringProperties(name))
         {
             Property *property = trackProperties.FindProperty(name);
             if (property)
@@ -70,7 +75,7 @@ AssignPathAnimationData::AssignPathAnimationData(BeatmapAssociatedData &beatmapA
     for (auto const &member : customData.GetObject())
     {
         const char *name = member.name.GetString();
-        if (strcmp(name, "_track") && strcmp(name, "_duration") && strcmp(name, "_easing"))
+        if (IsStringProperties(name))
         {
             PathProperty *property = trackPathProperties.FindProperty(name);
             if (property)
