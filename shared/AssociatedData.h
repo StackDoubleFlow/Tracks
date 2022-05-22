@@ -41,6 +41,7 @@ namespace TracksAD {
         inline static constexpr const std::string_view V2_HEIGHT_FOG_STARTY = "_startY";
         inline static constexpr const std::string_view V2_HEIGHT_FOG_HEIGHT = "_height";
 
+        inline static constexpr const std::string_view INTERACTABLE = "interactable";
         inline static constexpr const std::string_view DURATION = "duration";
         inline static constexpr const std::string_view EASING = "easing";
         inline static constexpr const std::string_view NAME = "name";
@@ -49,7 +50,9 @@ namespace TracksAD {
         inline static constexpr const std::string_view TRACK = "track";
         inline static constexpr const std::string_view ANIMATION = "animation";
         inline static constexpr const std::string_view POSITION = "position";
-        inline static constexpr const std::string_view LOCAL_POSITION = "position";
+        inline static constexpr const std::string_view OFFSET_POSITION = "offsetPosition";
+        inline static constexpr const std::string_view OFFSET_ROTATION = "offsetWorldRotation";
+        inline static constexpr const std::string_view LOCAL_POSITION = "localPosition";
         inline static constexpr const std::string_view ROTATION = "rotation";
         inline static constexpr const std::string_view LOCAL_ROTATION = "localRotation";
         inline static constexpr const std::string_view SCALE = "scale";
