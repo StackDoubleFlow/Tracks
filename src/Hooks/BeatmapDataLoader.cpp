@@ -36,7 +36,7 @@ void TracksAD::readBeatmapDataAD(CustomJSONData::CustomBeatmapData *beatmapData)
             for (rapidjson::Value::ConstValueIterator itr = pointDefinitions.Begin(); itr != pointDefinitions.End(); itr++) {
                 std::string pointName = (*itr)[v2 ? Constants::V2_NAME.data() : Constants::NAME.data()].GetString();
                 PointDefinition pointData((*itr)[v2 ? Constants::V2_POINTS.data() : Constants::POINTS.data()]);
-                pointDataManager.AddPoint(pointName, pointData);
+                pointDataManager.AddPoint(pointName, std::move(pointData));
             }
         }
         TLogger::GetLogger().debug("Setting point definitions");

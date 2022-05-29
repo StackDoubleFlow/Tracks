@@ -5,6 +5,7 @@
 #include "Animation/Track.h"
 #include "Animation/Easings.h"
 #include "TLogger.h"
+#include "custom-json-data/shared/CJDLogger.h"
 
 using namespace NEVector;
 
@@ -261,4 +262,12 @@ void PointDefinitionManager::AddPoint(std::string const& pointDataName, PointDef
     } else {
         this->pointData.try_emplace(pointDataName, pointData);
     }
-} 
+}
+
+void PointDefinitionManager::AddPoint(std::string const &pointDataName, PointDefinition &&pointData) {
+    if (this->pointData.contains(pointDataName)) {
+        TLogger::GetLogger().error("Duplicate point definition name, %s could not be registered!", pointDataName.data());
+    } else {
+        this->pointData.try_emplace(pointDataName, std::move(pointData));
+    }
+}

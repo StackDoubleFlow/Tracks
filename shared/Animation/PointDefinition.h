@@ -75,4 +75,5 @@ public:
     std::unordered_map<std::string, PointDefinition, TracksAD::string_hash, TracksAD::string_equal> pointData;
 
     void AddPoint(std::string const& pointDataName, PointDefinition const& pointData);
+    void AddPoint(std::string const& pointDataName, PointDefinition&& pointData);
 };
