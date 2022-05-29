@@ -87,7 +87,7 @@ public:
 
     // anon point defs are just point defs created later
     // for owning the point definition and freeing them
-    std::vector<PointDefinition *> anonPointDefinitions;
+    std::unordered_set<PointDefinition *> anonPointDefinitions;
 
     // BeatmapAssociatedData(const BeatmapAssociatedData&) = delete;
     ~BeatmapAssociatedData();

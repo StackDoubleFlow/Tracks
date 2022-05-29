@@ -13,6 +13,7 @@
 #include "System/Func_2.hpp"
 
 #include "AssociatedData.h"
+#include "custom-json-data/shared/CustomBeatmapSaveDatav3.h"
 
 using namespace TracksAD;
 using namespace CustomJSONData;
@@ -33,6 +34,7 @@ MAKE_HOOK_MATCH(StandardLevelScenesTransitionSetupDataSO_Init, &StandardLevelSce
     StandardLevelScenesTransitionSetupDataSO_Init(self, gameMode, difficultyBeatmap, previewBeatmapLevel, overrideEnvironmentSettings, overrideColorScheme,
                                                   gameplayModifiers, playerSpecificSettings, practiceSettings, backButtonText, useTestNoteCutSoundEffects, startPaused);
 
+    clearEventADs();
     TLogger::GetLogger().debug("Got beatmap %s", il2cpp_utils::ClassStandardName(reinterpret_cast<Il2CppObject*>(difficultyBeatmap)->klass).c_str());
 }
 
