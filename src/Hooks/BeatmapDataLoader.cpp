@@ -21,6 +21,9 @@ void TracksAD::readBeatmapDataAD(CustomJSONData::CustomBeatmapData *beatmapData)
     BeatmapAssociatedData &beatmapAD = getBeatmapAD(beatmapData->customData);
     bool v2 = beatmapData->v2orEarlier;
 
+    CJDLogger::Logger.fmtLog<Paper::LogLevel::INF>("Reading beatmap ad");
+    Paper::Logger::Backtrace(CJDLogger::Logger.tag, 20);
+
     if (beatmapAD.valid) {
         return;
     }
@@ -36,7 +39,8 @@ void TracksAD::readBeatmapDataAD(CustomJSONData::CustomBeatmapData *beatmapData)
             for (rapidjson::Value::ConstValueIterator itr = pointDefinitions.Begin(); itr != pointDefinitions.End(); itr++) {
                 std::string pointName = (*itr)[v2 ? Constants::V2_NAME.data() : Constants::NAME.data()].GetString();
                 PointDefinition pointData((*itr)[v2 ? Constants::V2_POINTS.data() : Constants::POINTS.data()]);
-                pointDataManager.AddPoint(pointName, std::move(pointData));
+                CJDLogger::Logger.fmtLog<Paper::LogLevel::INF>("Constructed point {}", pointName);
+                pointDataManager.AddPoint(pointName, pointData);
             }
         }
         TLogger::GetLogger().debug("Setting point definitions");
@@ -44,69 +48,69 @@ void TracksAD::readBeatmapDataAD(CustomJSONData::CustomBeatmapData *beatmapData)
     }
     auto &tracks = beatmapAD.tracks;
 
+
+
+    auto doForObjects = [&](auto&& objects) {
+        for (auto *beatmapObjectData: objects) {
+            if (!beatmapObjectData) continue;
+
+            CustomJSONData::JSONWrapper *customDataWrapper;
+            if (beatmapObjectData->klass == customObstacleDataClass) {
+                auto obstacleData =
+                        (CustomJSONData::CustomObstacleData *) beatmapObjectData;
+                customDataWrapper = obstacleData->customData;
+            } else if (beatmapObjectData->klass == customNoteDataClass) {
+                auto noteData =
+                        (CustomJSONData::CustomNoteData *) beatmapObjectData;
+                customDataWrapper = noteData->customData;
+            } else {
+                continue;
+            }
+
+            if (customDataWrapper->value) {
+                rapidjson::Value const &customData = *customDataWrapper->value;
+                BeatmapObjectAssociatedData &ad = getAD(customDataWrapper);
+                TracksVector tracksAD;
+
+                auto trackIt = customData.FindMember(v2 ? Constants::V2_TRACK.data() : Constants::TRACK.data());
+                if (trackIt != customData.MemberEnd()) {
+                    rapidjson::Value const &tracksObject = trackIt->value;
+
+
+                    switch (tracksObject.GetType()) {
+                        case rapidjson::Type::kArrayType: {
+                            if (tracksObject.Empty())
+                                break;
+
+                            for (auto &trackElement: tracksObject.GetArray()) {
+                                Track *track = &tracks.try_emplace(trackElement.GetString(), v2).first->second;
+                                tracksAD.emplace_back(track);
+                            }
+                            break;
+                        }
+                        case rapidjson::Type::kStringType: {
+                            Track *track = &tracks.try_emplace(tracksObject.GetString(), v2).first->second;
+                            tracksAD.emplace_back(track);
+                            break;
+                        }
+
+                        default: {
+                            TLogger::GetLogger().error("Tracks object is not an array or a string, what? Why?");
+                            break;
+                        }
+                    }
+                }
+
+                ad.tracks = tracksAD;
+            }
+
+        }
+    };
     auto notes = beatmapData->GetBeatmapItemsCpp<NoteData*>();
     auto obstacles = beatmapData->GetBeatmapItemsCpp<ObstacleData*>();
 
-    std::vector<BeatmapObjectData*> objects;
-    objects.reserve(notes.size() + obstacles.size());
-
-    std::copy(notes.begin(), notes.end(), std::back_inserter(objects));
-    std::copy(obstacles.begin(), obstacles.end(), std::back_inserter(objects));
-
-    for (auto* beatmapObjectData : objects) {
-        if (!beatmapObjectData) continue;
-
-        CustomJSONData::JSONWrapper *customDataWrapper;
-        if (beatmapObjectData->klass == customObstacleDataClass) {
-            auto obstacleData =
-                    (CustomJSONData::CustomObstacleData *) beatmapObjectData;
-            customDataWrapper = obstacleData->customData;
-        } else if (beatmapObjectData->klass == customNoteDataClass) {
-            auto noteData =
-                    (CustomJSONData::CustomNoteData *) beatmapObjectData;
-            customDataWrapper = noteData->customData;
-        } else {
-            continue;
-        }
-
-        if (customDataWrapper->value) {
-            rapidjson::Value const& customData = *customDataWrapper->value;
-            BeatmapObjectAssociatedData &ad = getAD(customDataWrapper);
-            TracksVector tracksAD;
-
-            auto trackIt = customData.FindMember(v2 ? Constants::V2_TRACK.data() : Constants::TRACK.data());
-            if (trackIt != customData.MemberEnd()) {
-                rapidjson::Value const& tracksObject = trackIt->value;
-
-
-                switch (tracksObject.GetType()) {
-                    case rapidjson::Type::kArrayType: {
-                        if (tracksObject.Empty())
-                            break;
-
-                        for (auto &trackElement: tracksObject.GetArray()) {
-                            Track *track = &tracks.try_emplace(trackElement.GetString(), v2).first->second;
-                            tracksAD.emplace_back(track);
-                        }
-                        break;
-                    }
-                    case rapidjson::Type::kStringType: {
-                        Track *track = &tracks.try_emplace(tracksObject.GetString(), v2).first->second;
-                        tracksAD.emplace_back(track);
-                        break;
-                    }
-
-                    default: {
-                        TLogger::GetLogger().error("Tracks object is not an array or a string, what? Why?");
-                        break;
-                    }
-                }
-            }
-
-            ad.tracks = tracksAD;
-        }
-
-    }
+    doForObjects(notes);
+    doForObjects(obstacles);
 
     beatmapAD.valid = true;
 }

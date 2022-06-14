@@ -80,6 +80,11 @@ enum class EventType { animateTrack, assignPathAnimation, unknown };
 
 class BeatmapAssociatedData {
 public:
+    BeatmapAssociatedData() = default;
+    ~BeatmapAssociatedData() = default;
+
+    [[deprecated("Don't copy this!")]]
+    BeatmapAssociatedData(BeatmapAssociatedData const&) = default;
     bool valid = false;
     bool leftHanded = false;
     std::unordered_map<std::string, Track, string_hash, string_equal> tracks;
@@ -87,10 +92,9 @@ public:
 
     // anon point defs are just point defs created later
     // for owning the point definition and freeing them
-    std::unordered_set<PointDefinition *> anonPointDefinitions;
+    std::unordered_set<std::shared_ptr<PointDefinition>> anonPointDefinitions;
 
     // BeatmapAssociatedData(const BeatmapAssociatedData&) = delete;
-    ~BeatmapAssociatedData();
 };
 
 struct BeatmapObjectAssociatedData {

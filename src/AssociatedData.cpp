@@ -8,11 +8,6 @@ using namespace TracksAD;
 
 namespace TracksAD {
 
-BeatmapAssociatedData::~BeatmapAssociatedData() {
-    for (auto *pointDefinition : anonPointDefinitions) {
-        delete pointDefinition;
-    }
-}
 
 BeatmapObjectAssociatedData &getAD(CustomJSONData::JSONWrapper *customData) {
     std::any &ad = customData->associatedData['T'];

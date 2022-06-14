@@ -59,6 +59,8 @@ struct TempPointData {
     Functions easing = Functions::easeLinear;
     bool spline = false;
 
+    TempPointData(TempPointData&&) = default;
+
     TempPointData(sbo::small_vector<float, 5> copiedList, float time, Functions easing, bool spline)
             : copiedList(std::move(copiedList)),
               time(time),
