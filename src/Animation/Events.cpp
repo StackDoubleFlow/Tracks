@@ -1,3 +1,5 @@
+#include "beatsaber-hook/shared/utils/hooking.hpp"
+
 #include "GlobalNamespace/BeatmapCallbacksController.hpp"
 #include "GlobalNamespace/BeatmapData.hpp"
 #include "GlobalNamespace/BeatmapObjectSpawnController.hpp"
@@ -96,6 +98,7 @@ void LoadTrackEvent(CustomJSONData::CustomEventData const *customEventData, Trac
                     bool v2);
 
 void CustomEventCallback(BeatmapCallbacksController *callbackController, CustomJSONData::CustomEventData *customEventData) {
+    PAPER_IL2CPP_CATCH_HANDLER(
     bool isType = false;
 
     auto typeHash = customEventData->typeHash;
@@ -130,6 +133,10 @@ void CustomEventCallback(BeatmapCallbacksController *callbackController, CustomJ
 
     auto duration = eventAD.duration;
 
+    if (!TracksStatic::bpmController) {
+        CJDLogger::Logger.fmtLog<Paper::LogLevel::ERR>("BPM CONTROLLER NOT INITIALIZED");
+    }
+
     auto bpm = TracksStatic::bpmController->currentBpm; // spawnController->get_currentBpm()
 
     duration = 60.0f * duration / bpm;
@@ -147,6 +154,7 @@ void CustomEventCallback(BeatmapCallbacksController *callbackController, CustomJ
                     for (auto it = coroutines.begin(); it != coroutines.end();) {
                         if (it->property == property) {
                             it = coroutines.erase(it);
+                            break;
                         } else {
                             it++;
                         }
@@ -169,6 +177,7 @@ void CustomEventCallback(BeatmapCallbacksController *callbackController, CustomJ
                     for (auto it = pathCoroutines.begin(); it != pathCoroutines.end();) {
                         if (it->property == property) {
                             it = pathCoroutines.erase(it);
+                            break;
                         } else {
                             it++;
                         }
@@ -189,6 +198,7 @@ void CustomEventCallback(BeatmapCallbacksController *callbackController, CustomJ
         default:
             break;
     }
+    )
 }
 
 void Events::AddEventCallbacks(Logger& logger) {

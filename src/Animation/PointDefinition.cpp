@@ -236,7 +236,7 @@ bool PointDefinition::InterpolateRaw(float time, PointData const*&pointL, PointD
     }
 
     PointData const &first = points.front();
-    if (first.time >= time) {
+    if (first.time >= time || points.size() == 1) {
         pointL = &first;
         return false;
     }

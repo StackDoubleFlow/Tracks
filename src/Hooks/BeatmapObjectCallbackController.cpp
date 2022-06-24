@@ -20,10 +20,12 @@ using namespace GlobalNamespace;
 #pragma clang diagnostic push
 #pragma ide diagnostic ignored "EndlessLoop"
 custom_types::Helpers::Coroutine updateCoroutines(BeatmapCallbacksController* self) {
-    while (true) {
-        Events::UpdateCoroutines(self);
-        co_yield nullptr;
-    }
+    IL2CPP_CATCH_HANDLER(
+        while (true) {
+            Events::UpdateCoroutines(self);
+            co_yield nullptr;
+        }
+    )
 }
 #pragma clang diagnostic pop
 
