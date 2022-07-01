@@ -37,10 +37,18 @@ void TracksAD::readBeatmapDataAD(CustomJSONData::CustomBeatmapData *beatmapData)
         if (pointDefinitionsIt != customData.MemberEnd()) {
             const rapidjson::Value &pointDefinitions = pointDefinitionsIt->value;
             for (rapidjson::Value::ConstValueIterator itr = pointDefinitions.Begin(); itr != pointDefinitions.End(); itr++) {
-                std::string pointName = (*itr)[v2 ? Constants::V2_NAME.data() : Constants::NAME.data()].GetString();
-                PointDefinition pointData((*itr)[v2 ? Constants::V2_POINTS.data() : Constants::POINTS.data()]);
-                CJDLogger::Logger.fmtLog<Paper::LogLevel::INF>("Constructed point {}", pointName);
-                pointDataManager.AddPoint(pointName, pointData);
+                if (v2) {
+                    std::string pointName = (*itr)[Constants::V2_NAME.data()].GetString();
+                    PointDefinition pointData((*itr)[Constants::V2_POINTS.data()]);
+                    CJDLogger::Logger.fmtLog<Paper::LogLevel::INF>("Constructed point {}", pointName);
+                    pointDataManager.AddPoint(pointName, pointData);
+                } else {
+                    for (auto const& [name, pointDataVal] : pointDefinitionsIt->value.GetObject()) {
+                        PointDefinition pointData(pointDataVal);
+                        CJDLogger::Logger.fmtLog<Paper::LogLevel::INF>("Constructed point {}", name.GetString());
+                        pointDataManager.AddPoint(name.GetString(), pointData);
+                    }
+                }
             }
         }
         TLogger::GetLogger().debug("Setting point definitions");
