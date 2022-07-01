@@ -258,6 +258,10 @@ bool PointDefinition::InterpolateRaw(float time, PointData const*&pointL, PointD
     return true;
 }
 
+bool PointDefinition::isSingle() const {
+    return points.size() == 1;
+}
+
 void PointDefinitionManager::AddPoint(std::string const& pointDataName, PointDefinition const& pointData) {
     if (this->pointData.contains(pointDataName)) {
         TLogger::GetLogger().error("Duplicate point definition name, %s could not be registered!", pointDataName.data());

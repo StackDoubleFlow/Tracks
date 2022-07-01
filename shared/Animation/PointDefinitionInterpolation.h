@@ -12,6 +12,7 @@ public:
     [[nodiscard]] float InterpolateLinear(float time) const;
     [[nodiscard]] UnityEngine::Vector4 InterpolateVector4(float time) const;
     void Init(PointDefinition const* newPointData);
+    void Restart();
     void Finish();
 
     float time;

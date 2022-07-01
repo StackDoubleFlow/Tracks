@@ -81,8 +81,10 @@ void LoadTrackEvent(CustomJSONData::CustomEventData const *customEventData, Trac
     eventAD.tracks = std::move(tracks);
     auto durationIt = eventData.FindMember((v2 ? TracksAD::Constants::V2_DURATION : TracksAD::Constants::DURATION).data());
     auto easingIt = eventData.FindMember((v2 ? TracksAD::Constants::V2_EASING : TracksAD::Constants::EASING).data());
+    auto repeatIt = eventData.FindMember(TracksAD::Constants::REPEAT.data());
 
     eventAD.duration = durationIt != eventData.MemberEnd() ? getFloat(durationIt->value) : 0;
+    eventAD.repeat = eventAD.duration > 0 && repeatIt != eventData.MemberEnd() ? repeatIt->value.GetInt() : 0;
     eventAD.easing = easingIt != eventData.MemberEnd() ? FunctionFromStr(easingIt->value.GetString()) : Functions::easeLinear;
 
     for (auto const& track : eventAD.tracks) {

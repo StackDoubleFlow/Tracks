@@ -37,7 +37,7 @@ void clearEventADs()
 
 inline bool IsStringProperties(std::string_view n) {
     using namespace TracksAD::Constants;
-    return n != V2_TRACK && n != V2_DURATION && n != V2_EASING && n != TRACK && n != DURATION && n != EASING;
+    return n != V2_TRACK && n != V2_DURATION && n != V2_EASING && n != TRACK && n != DURATION && n != EASING && n != REPEAT;
 }
 
 AnimateTrackData::AnimateTrackData(BeatmapAssociatedData &beatmapAD, rapidjson::Value const &customData, Properties& trackProperties)

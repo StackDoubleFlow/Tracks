@@ -50,6 +50,7 @@ public:
 
     static const PointDefinition EMPTY_POINT;
 
+    [[nodiscard]] bool isSingle() const;
 private:
     constexpr PointDefinition() = default;
 

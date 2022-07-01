@@ -44,7 +44,8 @@ MAKE_HOOK_MATCH(BeatmapObjectSpawnController_Start, &BeatmapObjectSpawnControlle
 
 constexpr bool UpdateCoroutine(AnimateTrackContext const& context, float songTime) {
     float elapsedTime = songTime - context.startTime;
-    float time = Easings::Interpolate(std::min(elapsedTime / context.duration, 1.0f), context.easing);
+    float normalizedTime = context.duration > 0 ? std::min(elapsedTime / context.duration, 1.0f) : 1;
+    float time = Easings::Interpolate(normalizedTime, context.easing);
     if (!context.property->value.has_value()) {
         context.property->value = { 0 };
     }
@@ -63,14 +64,14 @@ constexpr bool UpdateCoroutine(AnimateTrackContext const& context, float songTim
         break;
     }
 
-    return elapsedTime < context.duration;
+    return context.duration <= 0 || elapsedTime < context.duration;
 }
 
 constexpr bool UpdatePathCoroutine(AssignPathAnimationContext const& context, float songTime) {
     float elapsedTime = songTime - context.startTime;
     context.property->value->time = Easings::Interpolate(std::min(elapsedTime / context.duration, 1.0f), context.easing);
 
-    return elapsedTime < context.duration;
+    return context.duration <= 0 || elapsedTime < context.duration;
 }
 
 void Events::UpdateCoroutines(BeatmapCallbacksController *callbackController) {
@@ -79,7 +80,13 @@ void Events::UpdateCoroutines(BeatmapCallbacksController *callbackController) {
         if (UpdateCoroutine(*it, songTime)) {
             it++;
         } else {
-            it = coroutines.erase(it);
+
+            if (it->repeat <= 0) {
+                it = coroutines.erase(it);
+            } else {
+                it->repeat--;
+                it->startTime += it->duration;
+            }
         }
     }
 
@@ -88,7 +95,13 @@ void Events::UpdateCoroutines(BeatmapCallbacksController *callbackController) {
             it++;
         } else {
             it->property->value->Finish();
-            it = pathCoroutines.erase(it);
+            if (it->repeat <= 0) {
+                it = pathCoroutines.erase(it);
+            } else {
+                it->repeat--;
+                it->startTime += it->duration;
+                it->property->value->Restart();
+            }
         }
     }
 }
@@ -142,6 +155,7 @@ void CustomEventCallback(BeatmapCallbacksController *callbackController, CustomJ
     duration = 60.0f * duration / bpm;
 
     auto easing = eventAD.easing;
+    auto repeat = eventAD.repeat;
 
     switch (eventAD.type)
     {
@@ -161,7 +175,8 @@ void CustomEventCallback(BeatmapCallbacksController *callbackController, CustomJ
                     }
 
                     if (pointData) {
-                        coroutines.emplace_back(pointData, property, duration, customEventData->time, easing);
+                        float pointDuration = pointData->isSingle() ? 0 : duration;
+                        coroutines.emplace_back(pointData, property, pointDuration, customEventData->time, easing, repeat);
                     } else {
                         property->value = std::nullopt;
                     }
@@ -187,7 +202,8 @@ void CustomEventCallback(BeatmapCallbacksController *callbackController, CustomJ
                         if (!property->value.has_value())
                             property->value = PointDefinitionInterpolation();
                         property->value->Init(pointData);
-                        pathCoroutines.emplace_back(property, duration, customEventData->time, easing);
+//                        float pointDuration = pointData->isSingle() ? 0 : duration;
+                        pathCoroutines.emplace_back(property, duration, customEventData->time, easing, repeat);
                     } else {
                         property->value = std::nullopt;
                     }

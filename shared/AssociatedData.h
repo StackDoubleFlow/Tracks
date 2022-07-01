@@ -58,6 +58,7 @@ namespace TracksAD {
         inline static constexpr const std::string_view SCALE = "scale";
         inline static constexpr const std::string_view DEFINITE_POSITION = "definitePosition";
         inline static constexpr const std::string_view EVENT = "event";
+        inline static constexpr const std::string_view REPEAT = "repeat";
         inline static constexpr const std::string_view TYPE = "type";
         inline static constexpr const std::string_view EVENT_DEFINITIONS = "eventDefinitions";
         inline static constexpr const std::string_view ATTENUATION = "attenuation";
@@ -121,6 +122,7 @@ struct CustomEventAssociatedData
     float duration;
     Functions easing;
     EventType type;
+    int repeat;
 
     // probably not a set, this might be ordered. Oh how much I hate tracks
     sbo::small_vector<AnimateTrackData, 1> animateTrackData;

@@ -50,3 +50,7 @@ void PointDefinitionInterpolation::Init(PointDefinition const* newPointData) {
 void PointDefinitionInterpolation::Finish() {
     previousPointData = nullptr;
 }
+
+void PointDefinitionInterpolation::Restart() {
+    Init(basePointData);
+}
