@@ -42,36 +42,42 @@ MAKE_HOOK_MATCH(BeatmapObjectSpawnController_Start, &BeatmapObjectSpawnControlle
     BeatmapObjectSpawnController_Start(self);
 }
 
-constexpr bool UpdateCoroutine(AnimateTrackContext const& context, float songTime) {
+bool UpdateCoroutine(AnimateTrackContext const& context, float songTime) {
     float elapsedTime = songTime - context.startTime;
+    if (elapsedTime < 0) return true;
+
     float normalizedTime = context.duration > 0 ? std::min(elapsedTime / context.duration, 1.0f) : 1;
     float time = Easings::Interpolate(normalizedTime, context.easing);
     if (!context.property->value.has_value()) {
         context.property->value = { 0 };
     }
+    bool last;
     switch (context.property->type) {
     case PropertyType::linear:
-        context.property->value->linear = context.points->InterpolateLinear(time);
+        context.property->value->linear = context.points->InterpolateLinear(time, last);
         break;
     case PropertyType::vector3:
-        context.property->value->vector3 = context.points->Interpolate(time);
+        context.property->value->vector3 = context.points->Interpolate(time, last);
         break;
     case PropertyType::vector4:
-        context.property->value->vector4 = context.points->InterpolateVector4(time);
+        context.property->value->vector4 = context.points->InterpolateVector4(time, last);
         break;
     case PropertyType::quaternion:
-        context.property->value->quaternion = context.points->InterpolateQuaternion(time);
+        context.property->value->quaternion = context.points->InterpolateQuaternion(time, last);
         break;
     }
+    context.property->lastUpdated = getCurrentTime();
 
-    return context.duration <= 0 || elapsedTime < context.duration;
+    return last || context.duration <= 0 || elapsedTime < context.duration;
 }
 
-constexpr bool UpdatePathCoroutine(AssignPathAnimationContext const& context, float songTime) {
+bool UpdatePathCoroutine(AssignPathAnimationContext const& context, float songTime) {
     float elapsedTime = songTime - context.startTime;
+    if (elapsedTime < 0) return true;
+
     context.property->value->time = Easings::Interpolate(std::min(elapsedTime / context.duration, 1.0f), context.easing);
 
-    return context.duration <= 0 || elapsedTime < context.duration;
+    return context.duration <= 0 || elapsedTime < context.duration || context.property->value;
 }
 
 void Events::UpdateCoroutines(BeatmapCallbacksController *callbackController) {

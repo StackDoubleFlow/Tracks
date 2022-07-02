@@ -151,14 +151,14 @@ PointDefinition::PointDefinition(const rapidjson::Value& value) {
     }
 }
 
-Vector3 PointDefinition::Interpolate(float time) const {
+Vector3 PointDefinition::Interpolate(float time, bool &last) const {
     PointData const* pointL;
     PointData const* pointR;
     float normalTime;
     int l;
     int r;
 
-    if (InterpolateRaw(time, pointL, pointR, normalTime, l, r))
+    if (InterpolateRaw(time, pointL, pointR, normalTime, l, r, last))
     {
         if (pointR->smooth) {
             return SmoothVectorLerp(points, l, r, normalTime);
@@ -170,7 +170,7 @@ Vector3 PointDefinition::Interpolate(float time) const {
     return pointL ? pointL->toVector3() : NEVector::Vector3::zero();
 }
 
-Quaternion PointDefinition::InterpolateQuaternion(float time) const {
+Quaternion PointDefinition::InterpolateQuaternion(float time, bool &last) const {
     PointData const* pointL;
     PointData const* pointR;
     float normalTime;
@@ -181,7 +181,7 @@ Quaternion PointDefinition::InterpolateQuaternion(float time) const {
     static auto Quaternion_SlerpUnclamped = il2cpp_utils::il2cpp_type_check::FPtrWrapper<&NEVector::Quaternion::SlerpUnclamped>::get();
 
 
-    if (InterpolateRaw(time, pointL, pointR, normalTime, l, r))
+    if (InterpolateRaw(time, pointL, pointR, normalTime, l, r, last))
     {
         auto quat1 = Quaternion_Euler(pointL->toVector3());
         auto quat2 = Quaternion_Euler(pointR->toVector3());
@@ -192,14 +192,14 @@ Quaternion PointDefinition::InterpolateQuaternion(float time) const {
     return pointL ? Quaternion_Euler(pointL->toVector3()) : Quaternion::identity();
 }
 
-float PointDefinition::InterpolateLinear(float time) const {
+float PointDefinition::InterpolateLinear(float time, bool &last) const {
     PointData const* pointL;
     PointData const* pointR;
     float normalTime;
     int l;
     int r;
 
-    if (InterpolateRaw(time, pointL, pointR, normalTime, l, r))
+    if (InterpolateRaw(time, pointL, pointR, normalTime, l, r, last))
     {
         return std::lerp(pointL->toFloat(), pointR->toFloat(), normalTime);
     }
@@ -207,14 +207,14 @@ float PointDefinition::InterpolateLinear(float time) const {
     return pointL ? pointL->toFloat() : 0;
 }
 
-Vector4 PointDefinition::InterpolateVector4(float time) const {
+Vector4 PointDefinition::InterpolateVector4(float time, bool &last) const {
     PointData const* pointL;
     PointData const* pointR;
     float normalTime;
     int l;
     int r;
 
-    if (InterpolateRaw(time, pointL, pointR, normalTime, l, r))
+    if (InterpolateRaw(time, pointL, pointR, normalTime, l, r, last))
     {
         return Vector4::LerpUnclamped(pointL->toVector4(), pointR->toVector4(), normalTime);
     }
@@ -222,14 +222,15 @@ Vector4 PointDefinition::InterpolateVector4(float time) const {
     return pointL ? pointL->toVector4() : NEVector::Vector4(0,0,0,0);
 }
 
-bool PointDefinition::InterpolateRaw(float time, PointData const*&pointL, PointData const*&pointR,
-                                     float &normalTime, int &l, int &r) const {
+bool PointDefinition::InterpolateRaw(float time, PointData const *&pointL, PointData const *&pointR, float &normalTime,
+                                     int &l, int &r, bool &lastB) const {
 
     pointL = nullptr;
     pointR = nullptr;
     normalTime = 0;
     l = 0;
     r = 0;
+    lastB = false;
 
     if (points.empty()) {
         return false;
@@ -243,6 +244,7 @@ bool PointDefinition::InterpolateRaw(float time, PointData const*&pointL, PointD
 
     PointData const &last = points.back();
     if (last.time <= time) {
+        lastB = true;
         pointL = &last;
         return false;
     }

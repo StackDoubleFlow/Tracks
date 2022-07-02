@@ -8,6 +8,12 @@
 
 #include "beatsaber-hook/shared/utils/typedefs-wrappers.hpp"
 
+#include <chrono>
+
+inline auto getCurrentTime() {
+    return std::chrono::system_clock::now().time_since_epoch().count();
+}
+
 namespace Events {
     struct AnimateTrackContext;
 }
@@ -30,6 +36,7 @@ struct Property {
     Property(PropertyType t) : type{t}, value{std::nullopt} {};
     PropertyType type;
     std::optional<PropertyValue> value;
+    uint32_t lastUpdated;
 };
 
 struct PathProperty {

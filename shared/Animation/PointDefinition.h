@@ -43,10 +43,10 @@ struct PointData {
 class PointDefinition {
 public:
     PointDefinition(const rapidjson::Value& value);
-    [[nodiscard]] NEVector::Vector3 Interpolate(float time) const;
-    [[nodiscard]] NEVector::Quaternion InterpolateQuaternion(float time) const;
-    [[nodiscard]] float InterpolateLinear(float time) const;
-    [[nodiscard]] NEVector::Vector4 InterpolateVector4(float time) const;
+    [[nodiscard]] NEVector::Vector3 Interpolate(float time, bool &last) const;
+    [[nodiscard]] NEVector::Quaternion InterpolateQuaternion(float time, bool &last) const;
+    [[nodiscard]] float InterpolateLinear(float time, bool &last) const;
+    [[nodiscard]] NEVector::Vector4 InterpolateVector4(float time, bool &last) const;
 
     static const PointDefinition EMPTY_POINT;
 
@@ -65,7 +65,8 @@ private:
     /// <param name="l">left value index</param>
     /// <param name="r">right value index</param>
     /// <returns>True if not interpolating between two values</returns>
-    bool InterpolateRaw(float time, PointData const*& pointL, PointData const*& pointR, float& normalTime, int& l, int& r) const;
+    bool InterpolateRaw(float time, PointData const *&pointL, PointData const *&pointR, float &normalTime,
+                        int &l, int &r, bool &last) const;
 
     constexpr void SearchIndex(float time, int& l, int& r) const;
     sbo::small_vector<PointData, 8> points;
