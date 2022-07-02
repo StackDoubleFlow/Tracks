@@ -123,22 +123,6 @@ void TracksAD::readBeatmapDataAD(CustomJSONData::CustomBeatmapData *beatmapData)
     beatmapAD.valid = true;
 }
 
-MAKE_HOOK_MATCH(GetBeatmapDataFromBeatmapSaveData,
-                &BeatmapDataLoader::GetBeatmapDataFromBeatmapSaveData, BeatmapData *, BeatmapSaveDataVersion3::BeatmapSaveData* beatmapSaveData,
-                float startBpm, bool loadingForDesignatedEnvironment,
-                ::GlobalNamespace::EnvironmentKeywords* environmentKeywords,
-                ::GlobalNamespace::EnvironmentLightGroups* environmentLightGroups,
-                ::GlobalNamespace::DefaultEnvironmentEvents* defaultEnvironmentEvents) {
-    auto *result =
-        reinterpret_cast<CustomJSONData::CustomBeatmapData *>(GetBeatmapDataFromBeatmapSaveData(
-                beatmapSaveData, startBpm, loadingForDesignatedEnvironment, environmentKeywords,
-            environmentLightGroups, defaultEnvironmentEvents));
-    
-    TracksAD::readBeatmapDataAD(result);
-
-    return result;
-}
-
 void InstallBeatmapDataLoaderHooks(Logger &logger) {
 //    INSTALL_HOOK(logger, GetBeatmapDataFromBeatmapSaveData);
 }
