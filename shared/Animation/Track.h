@@ -11,7 +11,7 @@
 #include <chrono>
 
 inline auto getCurrentTime() {
-    return std::chrono::system_clock::now().time_since_epoch().count();
+    return std::chrono::high_resolution_clock::now().time_since_epoch().count();
 }
 
 namespace Events {
@@ -36,7 +36,7 @@ struct Property {
     Property(PropertyType t) : type{t}, value{std::nullopt} {};
     PropertyType type;
     std::optional<PropertyValue> value;
-    uint32_t lastUpdated;
+    uint64_t lastUpdated;
 };
 
 struct PathProperty {

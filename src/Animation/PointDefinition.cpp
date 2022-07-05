@@ -177,19 +177,18 @@ Quaternion PointDefinition::InterpolateQuaternion(float time, bool &last) const 
     int l;
     int r;
 
-    static auto Quaternion_Euler = il2cpp_utils::il2cpp_type_check::FPtrWrapper<static_cast<UnityEngine::Quaternion (*)(UnityEngine::Vector3)>(&UnityEngine::Quaternion::Euler)>::get();
     static auto Quaternion_SlerpUnclamped = il2cpp_utils::il2cpp_type_check::FPtrWrapper<&NEVector::Quaternion::SlerpUnclamped>::get();
 
 
     if (InterpolateRaw(time, pointL, pointR, normalTime, l, r, last))
     {
-        auto quat1 = Quaternion_Euler(pointL->toVector3());
-        auto quat2 = Quaternion_Euler(pointR->toVector3());
+        auto quat1 = pointL->toQuaternion();
+        auto quat2 = pointR->toQuaternion();
 
         return Quaternion_SlerpUnclamped(quat1, quat2, normalTime);
     }
 
-    return pointL ? Quaternion_Euler(pointL->toVector3()) : Quaternion::identity();
+    return pointL ? pointL->toQuaternion() : Quaternion::identity();
 }
 
 float PointDefinition::InterpolateLinear(float time, bool &last) const {

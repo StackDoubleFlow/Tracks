@@ -8,13 +8,25 @@
 
 struct PointData {
     sbo::small_vector<float, 5> pointDatas;
+    NEVector::Quaternion quat;
     float time;
     Functions easing = Functions::easeLinear;
     bool smooth = false;
 
-    PointData(std::span<float> point, float time, Functions easing = Functions::easeLinear, bool smooth = false) : pointDatas(point.begin(), point.end()), time(time), easing{easing}, smooth{smooth} {};
-    PointData(sbo::small_vector<float, 5> point, float time, Functions easing = Functions::easeLinear, bool smooth = false) : pointDatas(std::move(point)), time(time), easing{easing}, smooth{smooth} {};
+    PointData(std::span<float> point, float time, Functions easing = Functions::easeLinear, bool smooth = false) : pointDatas(point.begin(), point.end()), time(time), easing{easing}, smooth{smooth} {
+        convertToQuaternion();
+    };
+    PointData(sbo::small_vector<float, 5> point, float time, Functions easing = Functions::easeLinear, bool smooth = false) : pointDatas(std::move(point)), time(time), easing{easing}, smooth{smooth} {
+        convertToQuaternion();
+    };
 
+    void convertToQuaternion() {
+        if (pointDatas.size() >= 3) {
+            static auto Quaternion_Euler = il2cpp_utils::il2cpp_type_check::FPtrWrapper<static_cast<UnityEngine::Quaternion (*)(
+                    UnityEngine::Vector3)>(&UnityEngine::Quaternion::Euler)>::get();
+            quat = Quaternion_Euler(toVector3());
+        }
+    }
 
     [[nodiscard]] NEVector::Vector4 toVector4() const {
         // reaxt did a _color "_color":[[1,1,1,0]]
@@ -37,6 +49,10 @@ struct PointData {
             return pointDatas[0];
         else
             return {};
+    }
+
+    [[nodiscard]] constexpr NEVector::Quaternion toQuaternion() const {
+        return quat;
     }
 };
 

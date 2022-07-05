@@ -48,25 +48,42 @@ bool UpdateCoroutine(AnimateTrackContext const& context, float songTime) {
 
     float normalizedTime = context.duration > 0 ? std::min(elapsedTime / context.duration, 1.0f) : 1;
     float time = Easings::Interpolate(normalizedTime, context.easing);
+    bool changed = false;
     if (!context.property->value.has_value()) {
         context.property->value = { 0 };
+        changed = true;
     }
     bool last;
     switch (context.property->type) {
-    case PropertyType::linear:
-        context.property->value->linear = context.points->InterpolateLinear(time, last);
-        break;
-    case PropertyType::vector3:
-        context.property->value->vector3 = context.points->Interpolate(time, last);
-        break;
-    case PropertyType::vector4:
-        context.property->value->vector4 = context.points->InterpolateVector4(time, last);
-        break;
-    case PropertyType::quaternion:
-        context.property->value->quaternion = context.points->InterpolateQuaternion(time, last);
+    case PropertyType::linear: {
+        auto val = context.points->InterpolateLinear(time, last);
+        changed = changed || !context.property->value || val != context.property->value->linear;
+        context.property->value->linear = val;
         break;
     }
-    context.property->lastUpdated = getCurrentTime();
+    case PropertyType::vector3: {
+        auto val = context.points->Interpolate(time, last);
+        changed = changed || !context.property->value || val != context.property->value->vector3;
+        context.property->value->vector3 = val;
+        break;
+    }
+    case PropertyType::vector4: {
+        auto val = context.points->InterpolateVector4(time, last);
+        changed |= !context.property->value || val != context.property->value->vector4;
+        context.property->value->vector4 = val;
+        break;
+    }
+    case PropertyType::quaternion: {
+        auto val = context.points->InterpolateQuaternion(time, last);
+        changed = changed ||
+                !context.property->value || NEVector::Quaternion::Dot(context.property->value->quaternion, val) < 1.0f;
+        context.property->value->quaternion = val;
+        break;
+    }
+    }
+    if (changed || context.property->lastUpdated == 0) {
+        context.property->lastUpdated = getCurrentTime();
+    }
 
     return last || context.duration <= 0 || elapsedTime < context.duration;
 }
