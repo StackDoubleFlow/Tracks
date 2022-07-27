@@ -1,5 +1,8 @@
 #include "THooks.h"
 #include "beatsaber-hook/shared/utils/hooking.hpp"
+
+#include "custom-types/shared/delegate.hpp"
+
 #include "custom-json-data/shared/CustomBeatmapData.h"
 
 #include "GlobalNamespace/StandardLevelScenesTransitionSetupDataSO.hpp"
@@ -92,7 +95,7 @@ void InstallStandardLevelScenesTransitionSetupDataSOHooks(Logger& logger){
         )
     };
 
-    callbackOther = il2cpp_utils::MakeDelegate<
+    callbackOther = custom_types::MakeDelegate<
             System::Action_1<System::Threading::Tasks::Task*>*>(
             func2
     );
