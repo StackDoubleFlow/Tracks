@@ -18,9 +18,8 @@ PointDefinition *TryGetPointData(BeatmapAssociatedData &beatmapAD, PointDefiniti
     case rapidjson::kNullType:
         return pointData;
     case rapidjson::kStringType: {
-        auto &ad = beatmapAD;
-        auto itr = ad.pointDefinitions.find(pointString.GetString());
-        if (itr != ad.pointDefinitions.end()) {
+        auto itr = beatmapAD.pointDefinitions.find(pointString.GetString());
+        if (itr != beatmapAD.pointDefinitions.end()) {
             pointData = &itr->second;
         } else {
             TLogger::GetLogger().warning("Could not find point definition %s",

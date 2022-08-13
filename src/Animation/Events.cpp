@@ -1,7 +1,11 @@
-#include "GlobalNamespace/BeatmapObjectCallbackController.hpp"
+#include "beatsaber-hook/shared/utils/hooking.hpp"
+
+#include "GlobalNamespace/BeatmapCallbacksController.hpp"
 #include "GlobalNamespace/BeatmapData.hpp"
 #include "GlobalNamespace/BeatmapObjectSpawnController.hpp"
-#include "GlobalNamespace/VariableBpmProcessor.hpp"
+#include "GlobalNamespace/BpmController.hpp"
+
+#include "UnityEngine/Resources.hpp"
 
 #include "beatsaber-hook/shared/utils/hooking.hpp"
 #include "custom-json-data/shared/CustomEventData.h"
@@ -17,6 +21,7 @@
 #include "AssociatedData.h"
 #include "TLogger.h"
 #include "Vector.h"
+#include "StaticHolders.hpp"
 
 using namespace Events;
 using namespace GlobalNamespace;
@@ -24,6 +29,7 @@ using namespace NEVector;
 using namespace TracksAD;
 
 BeatmapObjectSpawnController *spawnController;
+// BeatmapObjectSpawnController.cpp
 
 static std::vector<AnimateTrackContext> coroutines;
 static std::vector<AssignPathAnimationContext> pathCoroutines;
@@ -36,44 +42,74 @@ MAKE_HOOK_MATCH(BeatmapObjectSpawnController_Start, &BeatmapObjectSpawnControlle
     BeatmapObjectSpawnController_Start(self);
 }
 
-constexpr bool UpdateCoroutine(AnimateTrackContext const& context, float songTime) {
+bool UpdateCoroutine(AnimateTrackContext const& context, float songTime) {
     float elapsedTime = songTime - context.startTime;
-    float time = Easings::Interpolate(std::min(elapsedTime / context.duration, 1.0f), context.easing);
+    if (elapsedTime < 0) return true;
+
+    float normalizedTime = context.duration > 0 ? std::min(elapsedTime / context.duration, 1.0f) : 1;
+    float time = Easings::Interpolate(normalizedTime, context.easing);
+    bool changed = false;
     if (!context.property->value.has_value()) {
         context.property->value = { 0 };
+        changed = true;
     }
+    bool last;
     switch (context.property->type) {
-    case PropertyType::linear:
-        context.property->value->linear = context.points->InterpolateLinear(time);
+    case PropertyType::linear: {
+        auto val = context.points->InterpolateLinear(time, last);
+        changed = changed || !context.property->value || val != context.property->value->linear;
+        context.property->value->linear = val;
         break;
-    case PropertyType::vector3:
-        context.property->value->vector3 = context.points->Interpolate(time);
+    }
+    case PropertyType::vector3: {
+        auto val = context.points->Interpolate(time, last);
+        changed = changed || !context.property->value || val != context.property->value->vector3;
+        context.property->value->vector3 = val;
         break;
-    case PropertyType::vector4:
-        context.property->value->vector4 = context.points->InterpolateVector4(time);
+    }
+    case PropertyType::vector4: {
+        auto val = context.points->InterpolateVector4(time, last);
+        changed |= !context.property->value || val != context.property->value->vector4;
+        context.property->value->vector4 = val;
         break;
-    case PropertyType::quaternion:
-        context.property->value->quaternion = context.points->InterpolateQuaternion(time);
+    }
+    case PropertyType::quaternion: {
+        auto val = context.points->InterpolateQuaternion(time, last);
+        changed = changed ||
+                !context.property->value || NEVector::Quaternion::Dot(context.property->value->quaternion, val) < 1.0f;
+        context.property->value->quaternion = val;
         break;
+    }
+    }
+    if (changed || context.property->lastUpdated == 0) {
+        context.property->lastUpdated = getCurrentTime();
     }
 
-    return elapsedTime < context.duration;
+    return last || context.duration <= 0 || elapsedTime < context.duration;
 }
 
-constexpr bool UpdatePathCoroutine(AssignPathAnimationContext const& context, float songTime) {
+bool UpdatePathCoroutine(AssignPathAnimationContext const& context, float songTime) {
     float elapsedTime = songTime - context.startTime;
+    if (elapsedTime < 0) return true;
+
     context.property->value->time = Easings::Interpolate(std::min(elapsedTime / context.duration, 1.0f), context.easing);
 
-    return elapsedTime < context.duration;
+    return context.duration <= 0 || elapsedTime < context.duration || context.property->value;
 }
 
-void Events::UpdateCoroutines(BeatmapObjectCallbackController *callbackController) {
-    auto songTime = TimeSourceHelper::getSongTime(callbackController->audioTimeSource);
+void Events::UpdateCoroutines(BeatmapCallbacksController *callbackController) {
+    auto songTime = callbackController->songTime;
     for (auto it = coroutines.begin(); it != coroutines.end();) {
         if (UpdateCoroutine(*it, songTime)) {
             it++;
         } else {
-            it = coroutines.erase(it);
+
+            if (it->repeat <= 0) {
+                it = coroutines.erase(it);
+            } else {
+                it->repeat--;
+                it->startTime += it->duration;
+            }
         }
     }
 
@@ -82,15 +118,23 @@ void Events::UpdateCoroutines(BeatmapObjectCallbackController *callbackControlle
             it++;
         } else {
             it->property->value->Finish();
-            it = pathCoroutines.erase(it);
+            if (it->repeat <= 0) {
+                it = pathCoroutines.erase(it);
+            } else {
+                it->repeat--;
+                it->startTime += it->duration;
+                it->property->value->Restart();
+            }
         }
     }
 }
 
 // BeatmapDataTransformHelper.cpp
-void LoadTrackEvent(CustomJSONData::CustomEventData const* customEventData, TracksAD::BeatmapAssociatedData& beatmapAD);
+void LoadTrackEvent(CustomJSONData::CustomEventData const *customEventData, TracksAD::BeatmapAssociatedData &beatmapAD,
+                    bool v2);
 
-void CustomEventCallback(BeatmapObjectCallbackController *callbackController, CustomJSONData::CustomEventData *customEventData) {
+void CustomEventCallback(BeatmapCallbacksController *callbackController, CustomJSONData::CustomEventData *customEventData) {
+    PAPER_IL2CPP_CATCH_HANDLER(
     bool isType = false;
 
     auto typeHash = customEventData->typeHash;
@@ -120,16 +164,21 @@ void CustomEventCallback(BeatmapObjectCallbackController *callbackController, Cu
             TracksAD::readBeatmapDataAD(customBeatmapData);
         }
 
-        LoadTrackEvent(customEventData, beatmapAD);
+        LoadTrackEvent(customEventData, beatmapAD, customBeatmapData->v2orEarlier);
     }
 
     auto duration = eventAD.duration;
 
-    auto bpm = spawnController->variableBpmProcessor->currentBpm; // spawnController->get_currentBpm()
+    if (!TracksStatic::bpmController) {
+        CJDLogger::Logger.fmtLog<Paper::LogLevel::ERR>("BPM CONTROLLER NOT INITIALIZED");
+    }
+
+    auto bpm = TracksStatic::bpmController->currentBpm; // spawnController->get_currentBpm()
 
     duration = 60.0f * duration / bpm;
 
     auto easing = eventAD.easing;
+    auto repeat = eventAD.repeat;
 
     switch (eventAD.type)
     {
@@ -142,13 +191,15 @@ void CustomEventCallback(BeatmapObjectCallbackController *callbackController, Cu
                     for (auto it = coroutines.begin(); it != coroutines.end();) {
                         if (it->property == property) {
                             it = coroutines.erase(it);
+                            break;
                         } else {
                             it++;
                         }
                     }
 
                     if (pointData) {
-                        coroutines.emplace_back(pointData, property, duration, customEventData->time, easing);
+                        float pointDuration = pointData->isSingle() ? 0 : duration;
+                        coroutines.emplace_back(pointData, property, pointDuration, customEventData->time, easing, repeat);
                     } else {
                         property->value = std::nullopt;
                     }
@@ -164,6 +215,7 @@ void CustomEventCallback(BeatmapObjectCallbackController *callbackController, Cu
                     for (auto it = pathCoroutines.begin(); it != pathCoroutines.end();) {
                         if (it->property == property) {
                             it = pathCoroutines.erase(it);
+                            break;
                         } else {
                             it++;
                         }
@@ -173,7 +225,8 @@ void CustomEventCallback(BeatmapObjectCallbackController *callbackController, Cu
                         if (!property->value.has_value())
                             property->value = PointDefinitionInterpolation();
                         property->value->Init(pointData);
-                        pathCoroutines.emplace_back(property, duration, customEventData->time, easing);
+//                        float pointDuration = pointData->isSingle() ? 0 : duration;
+                        pathCoroutines.emplace_back(property, duration, customEventData->time, easing, repeat);
                     } else {
                         property->value = std::nullopt;
                     }
@@ -184,6 +237,7 @@ void CustomEventCallback(BeatmapObjectCallbackController *callbackController, Cu
         default:
             break;
     }
+    )
 }
 
 void Events::AddEventCallbacks(Logger& logger) {

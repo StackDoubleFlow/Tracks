@@ -8,6 +8,12 @@
 
 #include "beatsaber-hook/shared/utils/typedefs-wrappers.hpp"
 
+#include <chrono>
+
+inline auto getCurrentTime() {
+    return std::chrono::high_resolution_clock::now().time_since_epoch().count();
+}
+
 namespace Events {
     struct AnimateTrackContext;
 }
@@ -30,6 +36,7 @@ struct Property {
     Property(PropertyType t) : type{t}, value{std::nullopt} {};
     PropertyType type;
     std::optional<PropertyValue> value;
+    uint64_t lastUpdated;
 };
 
 struct PathProperty {
@@ -40,7 +47,8 @@ struct PathProperty {
 
 class Properties {
 public:
-    Properties() : position{Property(PropertyType::vector3)},
+    Properties(bool v2) : v2(v2),
+                   position{Property(PropertyType::vector3)},
                    rotation{Property(PropertyType::quaternion)},
                    scale{Property(PropertyType::vector3)},
                    localRotation{Property(PropertyType::quaternion)},
@@ -51,6 +59,8 @@ public:
                    cuttable{Property(PropertyType::linear)},
                    color{Property(PropertyType::vector4)} {};
     Property *FindProperty(std::string_view name);
+
+    bool v2;
 
     // Noodle
     Property position;
@@ -73,7 +83,7 @@ public:
 
 class PathProperties {
 public:
-    PathProperties() : position{PropertyType::vector3},
+    PathProperties(bool v2) : v2(v2), position{PropertyType::vector3},
                        rotation{PropertyType::quaternion},
                        scale{PropertyType::vector3},
                        localRotation{PropertyType::quaternion},
@@ -83,6 +93,7 @@ public:
                        dissolveArrow{PropertyType::linear},
                        cuttable{PropertyType::linear},
                        color{PropertyType::vector4} {};
+    bool v2;
     PathProperty *FindProperty(std::string_view name);
 
     PathProperty position;
@@ -98,6 +109,10 @@ public:
 };
 
 struct Track {
+    const bool v2;
+
+    Track(bool v2) : v2(v2), properties(v2), pathProperties(v2) {}
+
     Properties properties;
     PathProperties pathProperties;
     sbo::small_vector<UnityEngine::GameObject*> gameObjects;

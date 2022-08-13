@@ -5,6 +5,7 @@
 #include "Animation/Track.h"
 #include "Animation/Easings.h"
 #include "TLogger.h"
+#include "custom-json-data/shared/CJDLogger.h"
 
 using namespace NEVector;
 
@@ -57,6 +58,8 @@ struct TempPointData {
     float time;
     Functions easing = Functions::easeLinear;
     bool spline = false;
+
+    TempPointData(TempPointData&&) = default;
 
     TempPointData(sbo::small_vector<float, 5> copiedList, float time, Functions easing, bool spline)
             : copiedList(std::move(copiedList)),
@@ -125,14 +128,16 @@ PointDefinition::PointDefinition(const rapidjson::Value& value) {
         tempPointDatas.emplace_back(std::move(alternateList), 0);
     }
 
-    for (auto const& pointData : tempPointDatas) {
-        auto const& copiedList = pointData.copiedList;
+
+    for (auto const &pointData: tempPointDatas) {
+        auto const &copiedList = pointData.copiedList;
         auto time = pointData.time;
         Functions easing = pointData.easing;
         bool spline = pointData.spline;
 
         points.emplace_back(copiedList, time, easing, spline);
     }
+
 
     if (tempPointDatas.empty()) {
         using namespace rapidjson;
@@ -146,14 +151,14 @@ PointDefinition::PointDefinition(const rapidjson::Value& value) {
     }
 }
 
-Vector3 PointDefinition::Interpolate(float time) const {
+Vector3 PointDefinition::Interpolate(float time, bool &last) const {
     PointData const* pointL;
     PointData const* pointR;
     float normalTime;
     int l;
     int r;
 
-    if (InterpolateRaw(time, pointL, pointR, normalTime, l, r))
+    if (InterpolateRaw(time, pointL, pointR, normalTime, l, r, last))
     {
         if (pointR->smooth) {
             return SmoothVectorLerp(points, l, r, normalTime);
@@ -165,36 +170,35 @@ Vector3 PointDefinition::Interpolate(float time) const {
     return pointL ? pointL->toVector3() : NEVector::Vector3::zero();
 }
 
-Quaternion PointDefinition::InterpolateQuaternion(float time) const {
+Quaternion PointDefinition::InterpolateQuaternion(float time, bool &last) const {
     PointData const* pointL;
     PointData const* pointR;
     float normalTime;
     int l;
     int r;
 
-    static auto Quaternion_Euler = il2cpp_utils::il2cpp_type_check::FPtrWrapper<static_cast<UnityEngine::Quaternion (*)(UnityEngine::Vector3)>(&UnityEngine::Quaternion::Euler)>::get();
     static auto Quaternion_SlerpUnclamped = il2cpp_utils::il2cpp_type_check::FPtrWrapper<&NEVector::Quaternion::SlerpUnclamped>::get();
 
 
-    if (InterpolateRaw(time, pointL, pointR, normalTime, l, r))
+    if (InterpolateRaw(time, pointL, pointR, normalTime, l, r, last))
     {
-        auto quat1 = Quaternion_Euler(pointL->toVector3());
-        auto quat2 = Quaternion_Euler(pointR->toVector3());
+        auto quat1 = pointL->toQuaternion();
+        auto quat2 = pointR->toQuaternion();
 
         return Quaternion_SlerpUnclamped(quat1, quat2, normalTime);
     }
 
-    return pointL ? Quaternion_Euler(pointL->toVector3()) : Quaternion::identity();
+    return pointL ? pointL->toQuaternion() : Quaternion::identity();
 }
 
-float PointDefinition::InterpolateLinear(float time) const {
+float PointDefinition::InterpolateLinear(float time, bool &last) const {
     PointData const* pointL;
     PointData const* pointR;
     float normalTime;
     int l;
     int r;
 
-    if (InterpolateRaw(time, pointL, pointR, normalTime, l, r))
+    if (InterpolateRaw(time, pointL, pointR, normalTime, l, r, last))
     {
         return std::lerp(pointL->toFloat(), pointR->toFloat(), normalTime);
     }
@@ -202,14 +206,14 @@ float PointDefinition::InterpolateLinear(float time) const {
     return pointL ? pointL->toFloat() : 0;
 }
 
-Vector4 PointDefinition::InterpolateVector4(float time) const {
+Vector4 PointDefinition::InterpolateVector4(float time, bool &last) const {
     PointData const* pointL;
     PointData const* pointR;
     float normalTime;
     int l;
     int r;
 
-    if (InterpolateRaw(time, pointL, pointR, normalTime, l, r))
+    if (InterpolateRaw(time, pointL, pointR, normalTime, l, r, last))
     {
         return Vector4::LerpUnclamped(pointL->toVector4(), pointR->toVector4(), normalTime);
     }
@@ -217,27 +221,29 @@ Vector4 PointDefinition::InterpolateVector4(float time) const {
     return pointL ? pointL->toVector4() : NEVector::Vector4(0,0,0,0);
 }
 
-bool PointDefinition::InterpolateRaw(float time, PointData const*&pointL, PointData const*&pointR,
-                                     float &normalTime, int &l, int &r) const {
+bool PointDefinition::InterpolateRaw(float time, PointData const *&pointL, PointData const *&pointR, float &normalTime,
+                                     int &l, int &r, bool &lastB) const {
 
     pointL = nullptr;
     pointR = nullptr;
     normalTime = 0;
     l = 0;
     r = 0;
+    lastB = false;
 
     if (points.empty()) {
         return false;
     }
 
     PointData const &first = points.front();
-    if (first.time >= time) {
+    if (first.time >= time || points.size() == 1) {
         pointL = &first;
         return false;
     }
 
     PointData const &last = points.back();
     if (last.time <= time) {
+        lastB = true;
         pointL = &last;
         return false;
     }
@@ -253,10 +259,22 @@ bool PointDefinition::InterpolateRaw(float time, PointData const*&pointL, PointD
     return true;
 }
 
+bool PointDefinition::isSingle() const {
+    return points.size() == 1;
+}
+
 void PointDefinitionManager::AddPoint(std::string const& pointDataName, PointDefinition const& pointData) {
     if (this->pointData.contains(pointDataName)) {
         TLogger::GetLogger().error("Duplicate point definition name, %s could not be registered!", pointDataName.data());
     } else {
         this->pointData.try_emplace(pointDataName, pointData);
     }
-} 
+}
+
+void PointDefinitionManager::AddPoint(std::string const &pointDataName, PointDefinition &&pointData) {
+    if (this->pointData.contains(pointDataName)) {
+        TLogger::GetLogger().error("Duplicate point definition name, %s could not be registered!", pointDataName.data());
+    } else {
+        this->pointData.try_emplace(pointDataName, std::move(pointData));
+    }
+}

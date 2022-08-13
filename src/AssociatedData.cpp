@@ -8,11 +8,6 @@ using namespace TracksAD;
 
 namespace TracksAD {
 
-BeatmapAssociatedData::~BeatmapAssociatedData() {
-    for (auto *pointDefinition : anonPointDefinitions) {
-        delete pointDefinition;
-    }
-}
 
 BeatmapObjectAssociatedData &getAD(CustomJSONData::JSONWrapper *customData) {
     std::any &ad = customData->associatedData['T'];
@@ -40,11 +35,16 @@ void clearEventADs()
     eventDataMap.clear();
 }
 
+inline bool IsStringProperties(std::string_view n) {
+    using namespace TracksAD::Constants;
+    return n != V2_TRACK && n != V2_DURATION && n != V2_EASING && n != TRACK && n != DURATION && n != EASING && n != REPEAT;
+}
+
 AnimateTrackData::AnimateTrackData(BeatmapAssociatedData &beatmapAD, rapidjson::Value const &customData, Properties& trackProperties)
 {
     for (auto const& member : customData.GetObject()) {
         const char *name = member.name.GetString();
-        if (strcmp(name, "_track") && strcmp(name, "_duration") && strcmp(name, "_easing"))
+        if (IsStringProperties(name))
         {
             Property *property = trackProperties.FindProperty(name);
             if (property)
@@ -53,7 +53,7 @@ AnimateTrackData::AnimateTrackData(BeatmapAssociatedData &beatmapAD, rapidjson::
                 auto pointData = Animation::TryGetPointData(beatmapAD, anonPointDef, customData, name);
 
                 if (anonPointDef)
-                    beatmapAD.anonPointDefinitions.emplace_back(anonPointDef);
+                    beatmapAD.anonPointDefinitions.emplace(anonPointDef);
 
                 this->properties.emplace_back(property, pointData);
             }
@@ -70,7 +70,7 @@ AssignPathAnimationData::AssignPathAnimationData(BeatmapAssociatedData &beatmapA
     for (auto const &member : customData.GetObject())
     {
         const char *name = member.name.GetString();
-        if (strcmp(name, "_track") && strcmp(name, "_duration") && strcmp(name, "_easing"))
+        if (IsStringProperties(name))
         {
             PathProperty *property = trackPathProperties.FindProperty(name);
             if (property)
@@ -78,7 +78,7 @@ AssignPathAnimationData::AssignPathAnimationData(BeatmapAssociatedData &beatmapA
                 PointDefinition* anonPointDef = nullptr;
                 auto pointData = Animation::TryGetPointData(beatmapAD, anonPointDef, customData, name);
                 if (anonPointDef)
-                    beatmapAD.anonPointDefinitions.emplace_back(anonPointDef);
+                    beatmapAD.anonPointDefinitions.emplace(anonPointDef);
 
                 pathProperties.emplace_back(property, pointData);
             }

@@ -7,8 +7,8 @@
 
 namespace NEJSON {
 
-    static std::optional<bool> ReadOptionalBool(const rapidjson::Value &object, const char *key) {
-        auto itr = object.FindMember(key);
+    static std::optional<bool> ReadOptionalBool(const rapidjson::Value &object, std::string_view const key) {
+        auto itr = object.FindMember(key.data());
         if (itr != object.MemberEnd()) {
             if (itr->value.IsString()) {
                 std::string boolS = itr->value.GetString();
@@ -26,8 +26,8 @@ namespace NEJSON {
         return std::nullopt;
     }
 
-    static std::optional<float> ReadOptionalFloat(const rapidjson::Value &object, const char *key) {
-        auto itr = object.FindMember(key);
+    static std::optional<float> ReadOptionalFloat(const rapidjson::Value &object, std::string_view const key) {
+        auto itr = object.FindMember(key.data());
         if (itr != object.MemberEnd()) {
             return itr->value.GetFloat();
         }
@@ -35,8 +35,8 @@ namespace NEJSON {
     }
 
     static std::optional<NEVector::Vector2> ReadOptionalVector2(const rapidjson::Value &object,
-                                                                const char *key) {
-        auto itr = object.FindMember(key);
+                                                                std::string_view const key) {
+        auto itr = object.FindMember(key.data());
         if (itr != object.MemberEnd() && itr->value.Size() >= 2) {
             float x = itr->value[0].GetFloat();
             float y = itr->value[1].GetFloat();
@@ -47,8 +47,8 @@ namespace NEJSON {
 
 // Used for note flip
     static std::optional<NEVector::Vector2> ReadOptionalVector2_emptyY(const rapidjson::Value &object,
-                                                                       const char *key) {
-        auto itr = object.FindMember(key);
+                                                                       std::string_view const key) {
+        auto itr = object.FindMember(key.data());
 
         if (itr != object.MemberEnd() && itr->value.Size() >= 1) {
             float x = itr->value[0].GetFloat();
@@ -64,8 +64,8 @@ namespace NEJSON {
 
     using OptPair = std::pair<std::optional<float>, std::optional<float>>;
 
-    static OptPair ReadOptionalPair(const rapidjson::Value &object,const char *key) {
-        auto itr = object.FindMember(key);
+    static OptPair ReadOptionalPair(const rapidjson::Value &object, std::string_view const key) {
+        auto itr = object.FindMember(key.data());
 
         if (itr != object.MemberEnd() && itr->value.Size() >= 1) {
             float x = itr->value[0].GetFloat();
@@ -81,8 +81,8 @@ namespace NEJSON {
     }
 
     static std::optional<NEVector::Quaternion> ReadOptionalRotation(const rapidjson::Value &object,
-                                                                    const char *key) {
-        auto itr = object.FindMember(key);
+                                                                    std::string_view const key) {
+        auto itr = object.FindMember(key.data());
         if (itr != object.MemberEnd()) {
             NEVector::Vector3 rot;
             if (itr->value.IsArray() && itr->value.Size() >= 3) {
@@ -100,8 +100,8 @@ namespace NEJSON {
     }
 
     static std::optional<NEVector::Vector3> ReadOptionalVector3(const rapidjson::Value &object,
-                                                                const char *key) {
-        auto itr = object.FindMember(key);
+                                                                std::string_view const key) {
+        auto itr = object.FindMember(key.data());
         if (itr != object.MemberEnd() && itr->value.Size() >= 3) {
             float x = itr->value[0].GetFloat();
             float y = itr->value[1].GetFloat();
@@ -112,8 +112,8 @@ namespace NEJSON {
     }
 
     static std::optional<std::array<std::optional<float>, 3>> ReadOptionalScale(const rapidjson::Value &object,
-                                                                                const char *key) {
-        auto itr = object.FindMember(key);
+                                                                                std::string_view const key) {
+        auto itr = object.FindMember(key.data());
         if (itr != object.MemberEnd() && itr->value.IsArray()) {
             rapidjson::SizeType size = itr->value.Size();
             std::optional<float> x = size >= 1 ? std::optional{itr->value[0].GetFloat()} : std::nullopt;
