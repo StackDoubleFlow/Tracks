@@ -102,7 +102,7 @@ void InstallStandardLevelScenesTransitionSetupDataSOHooks(Logger& logger){
 
 
 
-    INSTALL_HOOK(logger, LevelScenesTransitionSetupDataSO_BeforeScenesWillBeActivatedAsync);
+//    INSTALL_HOOK(logger, LevelScenesTransitionSetupDataSO_BeforeScenesWillBeActivatedAsync);
 //    INSTALL_HOOK(logger, StandardLevelScenesTransitionSetupDataSO_Init);
 //    INSTALL_HOOK(logger, GameplayCoreSceneSetupData_GetTransformedBeatmapDataAsync);
 }

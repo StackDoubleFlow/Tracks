@@ -6,6 +6,7 @@
 
 #include "GlobalNamespace/BeatmapDataTransformHelper.hpp"
 #include "GlobalNamespace/EnvironmentEffectsFilterPreset.hpp"
+#include "GlobalNamespace/GameplayModifiers.hpp"
 
 #include "custom-json-data/shared/CustomBeatmapData.h"
 
@@ -114,10 +115,10 @@ MAKE_HOOK_MATCH(BeatmapDataTransformHelper_CreateTransformedBeatmapData,&Beatmap
                 ::GlobalNamespace::EnvironmentIntensityReductionOptions* environmentIntensityReductionOptions,
                 ::GlobalNamespace::MainSettingsModelSO* mainSettingsModel
                 ) {
-    auto result = (CustomJSONData::CustomBeatmapData*)
+    auto result = il2cpp_utils::cast<CustomJSONData::CustomBeatmapData>(
             BeatmapDataTransformHelper_CreateTransformedBeatmapData(beatmapData, beatmapLevel, gameplayModifiers, leftHanded,
                                                                     environmentEffectsFilterPreset, environmentIntensityReductionOptions,
-                                                                    mainSettingsModel);
+                                                                    mainSettingsModel));
 
     auto &beatmapAD = TracksAD::getBeatmapAD(result->customData);
 
@@ -131,7 +132,7 @@ MAKE_HOOK_MATCH(BeatmapDataTransformHelper_CreateTransformedBeatmapData,&Beatmap
         LoadTrackEvent(customEventData, beatmapAD, result->v2orEarlier);
     }
 
-    return reinterpret_cast<IReadonlyBeatmapData *>(result);
+    return result->i_IReadonlyBeatmapData();
 }
 
 void InstallBeatmapDataTransformHelperHooks(Logger& logger) {
