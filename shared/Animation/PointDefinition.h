@@ -5,6 +5,7 @@
 #include "Easings.h"
 #include "Track.h"
 #include "../Hash.h"
+#include "UnityEngine/Color.hpp"
 
 struct PointData {
     sbo::small_vector<float, 5> pointDatas;
@@ -12,6 +13,7 @@ struct PointData {
     float time;
     Functions easing = Functions::easeLinear;
     bool smooth = false;
+    bool hsv = false;
 
     PointData(std::span<float> point, float time, Functions easing = Functions::easeLinear, bool smooth = false) : pointDatas(point.begin(), point.end()), time(time), easing{easing}, smooth{smooth} {
         convertToQuaternion();
@@ -35,6 +37,10 @@ struct PointData {
             return {pointDatas[0], pointDatas[1], pointDatas[2], pointDatas[4]};
         else
             return {};
+    }
+    [[nodiscard]] UnityEngine::Color toColor() const {
+        auto v = toVector4();
+        return {v.x, v.y, v.z, v.w};
     }
 
     [[nodiscard]] constexpr NEVector::Vector3 toVector3() const {

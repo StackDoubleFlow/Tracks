@@ -6,6 +6,7 @@
 #include "Animation/Easings.h"
 #include "TLogger.h"
 #include "custom-json-data/shared/CJDLogger.h"
+#include "sombrero/shared/HSBColor.hpp"
 
 using namespace NEVector;
 
@@ -58,6 +59,7 @@ struct TempPointData {
     float time;
     Functions easing = Functions::easeLinear;
     bool spline = false;
+    bool hsv = false;
 
     TempPointData(TempPointData&&) = default;
 
@@ -83,6 +85,7 @@ PointDefinition::PointDefinition(const rapidjson::Value& value) {
             sbo::small_vector<float, 5> copiedList;
             bool spline = false;
             Functions easing = Functions::easeLinear;
+            bool hsv = false;
 
             for (int j = 0; j < rawPoint.Size(); j++) {
                 const rapidjson::Value &rawPointItem = rawPoint[j];
@@ -100,6 +103,8 @@ PointDefinition::PointDefinition(const rapidjson::Value& value) {
                             easing = FunctionFromStr(flag);
                         } else if (flag == "splineCatmullRom") {
                             spline = true;
+                        } else if (flag == "lerpHSV") {
+                            hsv = true;
                         }
                         break;
                     }
@@ -112,7 +117,8 @@ PointDefinition::PointDefinition(const rapidjson::Value& value) {
             float time = copiedList.back();
             copiedList.erase(copiedList.end() - 1); // remove time from list
 
-            tempPointDatas.emplace_back(copiedList, time, easing, spline);
+            auto& p = tempPointDatas.emplace_back(copiedList, time, easing, spline);
+            p.hsv = true;
         }
         // if [...]
         else if (rawPoint.IsNumber()) {
@@ -135,7 +141,7 @@ PointDefinition::PointDefinition(const rapidjson::Value& value) {
         Functions easing = pointData.easing;
         bool spline = pointData.spline;
 
-        points.emplace_back(copiedList, time, easing, spline);
+        points.emplace_back(copiedList, time, easing, spline).hsv = pointData.hsv;
     }
 
 
@@ -213,12 +219,24 @@ Vector4 PointDefinition::InterpolateVector4(float time, bool &last) const {
     int l;
     int r;
 
-    if (InterpolateRaw(time, pointL, pointR, normalTime, l, r, last))
-    {
+    if (!InterpolateRaw(time, pointL, pointR, normalTime, l, r, last))
+        return pointL ? pointL->toVector4() : NEVector::Vector4(0, 0, 0, 0);
+
+    if (pointR->hsv) {
+        Sombrero::HSBColor pointLData(pointL->toColor());
+        Sombrero::HSBColor pointRData(pointR->toColor());
+
+        Vector4 pointLV4(pointLData.h, pointLData.s, pointLData.b, pointLData.a);
+        Vector4 pointRV4(pointRData.h, pointRData.s, pointRData.b, pointRData.a);
+
+        auto result = Vector4::LerpUnclamped(pointLV4, pointRV4, normalTime);
+
+        auto rgbResult = Sombrero::HSBColor(result.x, result.y, result.z, result.w).ToColor();
+
+        return {rgbResult.r, rgbResult.g, rgbResult.b, normalTime};
+    } else {
         return Vector4::LerpUnclamped(pointL->toVector4(), pointR->toVector4(), normalTime);
     }
-
-    return pointL ? pointL->toVector4() : NEVector::Vector4(0,0,0,0);
 }
 
 bool PointDefinition::InterpolateRaw(float time, PointData const *&pointL, PointData const *&pointR, float &normalTime,
