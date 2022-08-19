@@ -40,7 +40,7 @@ namespace Animation {
 // C++ compiler tomfoolery that's above my pay grade, that's what this is
 // my most educated guess is compiler inlining method magic
     template<typename T>
-    [[nodiscard]] static constexpr std::optional<T> getPropertyNullable(Track *track, const std::optional<PropertyValue> &prop) {
+    [[nodiscard]] static constexpr std::optional<T> getPropertyNullable(Track const*track, const std::optional<PropertyValue> &prop) {
         static_assert(std::is_same_v<T, float> ||
                       std::is_same_v<T, NEVector::Vector3> ||
                       std::is_same_v<T, NEVector::Vector4> ||
@@ -64,7 +64,7 @@ namespace Animation {
 
 // why not?
     template<typename T>
-    [[nodiscard]] static constexpr std::optional<T> getPropertyNullable(Track *track, const Property &prop) {
+    [[nodiscard]] static constexpr std::optional<T> getPropertyNullable(Track const*track, const Property &prop) {
         return getPropertyNullable<T>(track, prop.value);
     }
 
@@ -92,11 +92,33 @@ namespace Animation {
         return std::nullopt;
     }
 
-    using PathPropertyLambda = std::function<std::optional<PointDefinitionInterpolation>&(Track *)>;
-    using PropertyLambda = std::function<std::optional<PropertyValue>const& (Track *)>;
+    template<typename T, typename F>
+    static std::optional<std::vector<T>> getPropertiesNullable(std::span<Track const*> const tracks, F&& propFn, uint32_t lastCheckedTime) {
+        if (tracks.empty()) return std::nullopt;
+
+        std::vector<T> props;
+
+        for (auto t : tracks) {
+            if (!t) continue;
+            auto const& prop = propFn(t->properties);
+
+            if (lastCheckedTime != 0 && prop.lastUpdated != 0 && prop.lastUpdated < lastCheckedTime) continue;
+
+            auto val = Animation::getPropertyNullable<T>(t, prop.value);
+            if (val)
+            props.template emplace_back(*val);
+        }
+
+        if (props.empty()) return std::nullopt;
+
+        return props;
+    }
+
+    using PathPropertyLambda = std::function<std::optional<PointDefinitionInterpolation>&(Track const*)>;
+    using PropertyLambda = std::function<std::optional<PropertyValue>const& (Track const*)>;
 
     template<typename T, typename VectorExpression = PathPropertyLambda>
-    [[nodiscard]] static std::optional<T> MultiTrackPathProps(std::span<Track *> tracks, T const &defaultT, float time,
+    [[nodiscard]] static std::optional<T> MultiTrackPathProps(std::span<Track const*> tracks, T const &defaultT, float time,
                                                 VectorExpression const &vectorExpression) {
         if (tracks.empty())
             return std::nullopt;
@@ -118,7 +140,7 @@ namespace Animation {
     }
 
     template<typename T, typename VectorExpression = PathPropertyLambda>
-    [[nodiscard]] static std::optional<T> SumTrackPathProps(std::span<Track *> tracks, T const &defaultT, float time,
+    [[nodiscard]] static std::optional<T> SumTrackPathProps(std::span<Track const*> tracks, T const &defaultT, float time,
                                               VectorExpression const &vectorExpression) {
         if (tracks.empty())
             return std::nullopt;
@@ -141,7 +163,7 @@ namespace Animation {
 
     template<typename T, typename VectorExpression = PropertyLambda>
     [[nodiscard]] static std::optional<T>
-    MultiTrackProps(std::span<Track *> tracks, T const &defaultT, VectorExpression const &vectorExpression) {
+    MultiTrackProps(std::span<Track const*> tracks, T const &defaultT, VectorExpression const &vectorExpression) {
 
         if (tracks.empty())
             return std::nullopt;
@@ -164,7 +186,7 @@ namespace Animation {
 
     template<typename T, typename VectorExpression = PropertyLambda>
     [[nodiscard]]  static std::optional<T>
-    SumTrackProps(std::span<Track *> tracks, T const &defaultT, VectorExpression const &vectorExpression) {
+    SumTrackProps(std::span<Track const*> tracks, T const &defaultT, VectorExpression const &vectorExpression) {
         if (tracks.empty())
             return std::nullopt;
 
