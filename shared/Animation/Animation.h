@@ -70,7 +70,7 @@ namespace Animation {
 
     template<typename T>
     [[nodiscard]] static constexpr std::optional<T>
-    getPathPropertyNullable(Track *track, std::optional<PointDefinitionInterpolation> const& prop, float time) {
+    getPathPropertyNullable(Track const*track, std::optional<PointDefinitionInterpolation> const& prop, float time) {
         static_assert(std::is_same_v<T, float> ||
                       std::is_same_v<T, NEVector::Vector3> ||
                       std::is_same_v<T, NEVector::Vector4> ||
@@ -206,11 +206,11 @@ namespace Animation {
         return valid ? std::make_optional(total) : std::nullopt;
     }
 
-#define MSumTrackProps(tracks, defaultT, prop) SumTrackProps(tracks, defaultT, [](Track* track) -> std::optional<PropertyValue> const& { return track->properties.prop.value;})
-#define MMultTrackProps(tracks, defaultT, prop) MultiTrackProps(tracks, defaultT, [](Track* track) -> std::optional<PropertyValue> const& { return track->properties.prop.value; })
+#define MSumTrackProps(tracks, defaultT, prop) SumTrackProps(tracks, defaultT, [](Track const* track) -> std::optional<PropertyValue> const& { return track->properties.prop.value;})
+#define MMultTrackProps(tracks, defaultT, prop) MultiTrackProps(tracks, defaultT, [](Track const* track) -> std::optional<PropertyValue> const& { return track->properties.prop.value; })
 
-#define MSumTrackPathProps(tracks, defaultT, prop, time) SumTrackPathProps(tracks, defaultT, time, [](Track* track) -> std::optional<PointDefinitionInterpolation> const& { return track->pathProperties.prop.value; })
-#define MMultTrackPathProps(tracks, defaultT, prop, time) MultiTrackPathProps(tracks, defaultT, time, [](Track* track) -> std::optional<PointDefinitionInterpolation> const& { return track->pathProperties.prop.value; })
+#define MSumTrackPathProps(tracks, defaultT, prop, time) SumTrackPathProps(tracks, defaultT, time, [](Track const* track) -> std::optional<PointDefinitionInterpolation> const& { return track->pathProperties.prop.value; })
+#define MMultTrackPathProps(tracks, defaultT, prop, time) MultiTrackPathProps(tracks, defaultT, time, [](Track const* track) -> std::optional<PointDefinitionInterpolation> const& { return track->pathProperties.prop.value; })
 
 #pragma endregion
 
