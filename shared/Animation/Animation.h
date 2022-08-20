@@ -3,7 +3,7 @@
 #include "../AssociatedData.h"
 
 namespace GlobalNamespace {
-class BeatmapData;
+    class BeatmapData;
 }
 
 namespace Animation {
@@ -70,7 +70,7 @@ namespace Animation {
 
     template<typename T>
     [[nodiscard]] static constexpr std::optional<T>
-    getPathPropertyNullable(Track const*track, std::optional<PointDefinitionInterpolation> const& prop, float time) {
+    getPathPropertyNullable(Track const* track, std::optional<PointDefinitionInterpolation> const& prop, float time) {
         static_assert(std::is_same_v<T, float> ||
                       std::is_same_v<T, NEVector::Vector3> ||
                       std::is_same_v<T, NEVector::Vector4> ||
@@ -106,7 +106,7 @@ namespace Animation {
 
             auto val = Animation::getPropertyNullable<T>(t, prop.value);
             if (val)
-            props.template emplace_back(*val);
+                props.template emplace_back(*val);
         }
 
         if (props.empty()) return std::nullopt;
@@ -119,14 +119,14 @@ namespace Animation {
 
     template<typename T, typename VectorExpression = PathPropertyLambda>
     [[nodiscard]] static std::optional<T> MultiTrackPathProps(std::span<Track const*> tracks, T const &defaultT, float time,
-                                                VectorExpression const &vectorExpression) {
+                                                              VectorExpression const &vectorExpression) {
         if (tracks.empty())
             return std::nullopt;
 
         bool valid = false;
         T total = defaultT;
 
-        for (auto &track: tracks) {
+        for (auto const& track: tracks) {
             std::optional<PointDefinitionInterpolation> const& point = vectorExpression(track);
             auto result = getPathPropertyNullable<T>(track, point, time);
 
@@ -141,14 +141,14 @@ namespace Animation {
 
     template<typename T, typename VectorExpression = PathPropertyLambda>
     [[nodiscard]] static std::optional<T> SumTrackPathProps(std::span<Track const*> tracks, T const &defaultT, float time,
-                                              VectorExpression const &vectorExpression) {
+                                                            VectorExpression const &vectorExpression) {
         if (tracks.empty())
             return std::nullopt;
 
         bool valid = false;
         T total = defaultT;
 
-        for (auto &track: tracks) {
+        for (auto const& track: tracks) {
             std::optional<PointDefinitionInterpolation> const& point = vectorExpression(track);
             auto result = getPathPropertyNullable<T>(track, point, time);
 
@@ -171,7 +171,7 @@ namespace Animation {
         bool valid = false;
         T total = defaultT;
 
-        for (auto &track: tracks) {
+        for (auto const& track: tracks) {
             std::optional<PropertyValue> const& point = vectorExpression(track);
             auto result = getPropertyNullable<T>(track, point);
 
@@ -193,7 +193,7 @@ namespace Animation {
         bool valid = false;
         T total = defaultT;
 
-        for (auto &track: tracks) {
+        for (auto const& track: tracks) {
             std::optional<PropertyValue> const& point = vectorExpression(track);
             auto result = getPropertyNullable<T>(track, point);
 
