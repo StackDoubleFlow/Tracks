@@ -72,33 +72,33 @@ MAKE_HOOK_MATCH(LevelScenesTransitionSetupDataSO_BeforeScenesWillBeActivatedAsyn
 
 
 void InstallStandardLevelScenesTransitionSetupDataSOHooks(Logger& logger){
-
-    std::function<void(System::Threading::Tasks::Task*)> func2 = [](System::Threading::Tasks::Task*) {
-        IL2CPP_CATCH_HANDLER(
-            auto beatmap = gameplayCoreSceneSetupData->transformedBeatmapData;
-
-            TLogger::GetLogger().debug("Casting %p", beatmap);
-            TLogger::GetLogger().debug("Casting %s", il2cpp_utils::ClassStandardName(reinterpret_cast<Il2CppObject*>(beatmap)->klass).c_str());
-
-            auto *beatmapData = il2cpp_utils::cast<CustomBeatmapData>(beatmap);
-            TLogger::GetLogger().debug("Crashing %p", beatmapData);
-            CRASH_UNLESS(beatmapData);
-            TLogger::GetLogger().debug("Did not crash");
-
-            auto& ad = getBeatmapAD(beatmapData->customData);
-            for (auto& [name, track] : ad.tracks) {
-                track.ResetVariables();
-            }
-            ad.leftHanded = gameplayCoreSceneSetupData->playerSpecificSettings->leftHanded;
-            clearEventADs();
-            TLogger::GetLogger().debug("Reset tracks sucessfully");
-        )
-    };
-
-    callbackOther = custom_types::MakeDelegate<
-            System::Action_1<System::Threading::Tasks::Task*>*>(
-            func2
-    );
+//
+//    std::function<void(System::Threading::Tasks::Task*)> func2 = [](System::Threading::Tasks::Task*) {
+//        IL2CPP_CATCH_HANDLER(
+//            auto beatmap = gameplayCoreSceneSetupData->transformedBeatmapData;
+//
+//            TLogger::GetLogger().debug("Casting %p", beatmap);
+//            TLogger::GetLogger().debug("Casting %s", il2cpp_utils::ClassStandardName(reinterpret_cast<Il2CppObject*>(beatmap)->klass).c_str());
+//
+//            auto *beatmapData = il2cpp_utils::cast<CustomBeatmapData>(beatmap);
+//            TLogger::GetLogger().debug("Crashing %p", beatmapData);
+//            CRASH_UNLESS(beatmapData);
+//            TLogger::GetLogger().debug("Did not crash");
+//
+//            auto& ad = getBeatmapAD(beatmapData->customData);
+//            for (auto& [name, track] : ad.tracks) {
+//                track.ResetVariables();
+//            }
+//            ad.leftHanded = gameplayCoreSceneSetupData->playerSpecificSettings->leftHanded;
+//            clearEventADs();
+//            TLogger::GetLogger().debug("Reset tracks sucessfully");
+//        )
+//    };
+//
+//    callbackOther = custom_types::MakeDelegate<
+//            System::Action_1<System::Threading::Tasks::Task*>*>(
+//            func2
+//    );
 
 
 
