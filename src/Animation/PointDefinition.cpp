@@ -118,7 +118,7 @@ PointDefinition::PointDefinition(const rapidjson::Value& value) {
             copiedList.erase(copiedList.end() - 1); // remove time from list
 
             auto& p = tempPointDatas.emplace_back(copiedList, time, easing, spline);
-            p.hsv = true;
+            p.hsv = hsv;
         }
         // if [...]
         else if (rawPoint.IsNumber()) {
