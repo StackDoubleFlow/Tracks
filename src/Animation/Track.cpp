@@ -5,12 +5,39 @@ using namespace TracksAD::Constants;
 
 #include <functional>
 
+std::vector<std::function<PropertiesMap(bool)>> propertyBuilders;
+std::vector<std::function<PathPropertiesMap(bool)>> pathPropertyBuilders;
+
+void TrackRegister::BuildPropertyCallback(std::optional<std::function<PropertiesMap(bool)>> const &propertyBuilder,
+                                          std::optional<std::function<PathPropertiesMap(bool)>> const &pathPropertyBuilder) {
+    if (propertyBuilder) {
+        propertyBuilders.emplace_back(*propertyBuilder);
+    }
+
+    if (pathPropertyBuilder) {
+        pathPropertyBuilders.emplace_back(*pathPropertyBuilder);
+    }
+}
+
+void TrackRegister::BuildProperties(Properties& properties, bool v2) {
+    for (const auto& builderFn : propertyBuilders) {
+        auto builder = builderFn(v2);
+        properties.extraProperties.insert(builder.begin(), builder.end());
+    }
+}
+void TrackRegister::BuildPathProperties(PathProperties& properties, bool v2) {
+    for (const auto& builderFn : pathPropertyBuilders) {
+        auto builder = builderFn(v2);
+        properties.extraProperties.insert(builder.begin(), builder.end());
+    }
+}
+
 #define PROP_GET(jsonName, varName)                                \
     static auto jsonNameHash_##varName = stringViewHash(jsonName); \
     if (nameHash == (jsonNameHash_##varName))                      \
         return &varName;
 
-Property *Properties::FindProperty(std::string_view name) {
+Property* Properties::FindProperty(std::string_view name) {
     static std::hash<std::string_view> stringViewHash;
     auto nameHash = stringViewHash(name);
 
@@ -45,11 +72,14 @@ Property *Properties::FindProperty(std::string_view name) {
         PROP_GET(HEIGHT_FOG_STARTY, heightFogStartY)
         PROP_GET(HEIGHT_FOG_HEIGHT, heightFogHeight)
     }
+    auto it = extraProperties.find(name);
+
+    if (it != extraProperties.end()) return &it->second;
 
     return nullptr;
 }
 
-PathProperty *PathProperties::FindProperty(std::string_view name) {
+PathProperty* PathProperties::FindProperty(std::string_view name) {
     static std::hash<std::string_view> stringViewHash;
     auto nameHash = stringViewHash(name);
 
@@ -77,6 +107,10 @@ PathProperty *PathProperties::FindProperty(std::string_view name) {
         PROP_GET(COLOR, color)
     }
 
+    auto it = extraProperties.find(name);
+
+    if (it != extraProperties.end()) return &it->second;
+
     return nullptr;
 }
 
@@ -101,7 +135,9 @@ void Track::ResetVariables() {
     // pathProperties.cuttable.value = std::nullopt;
     // pathProperties.color.value = std::nullopt;
     properties = Properties(v2);
+    TrackRegister::BuildProperties(properties, v2);
     pathProperties = PathProperties(v2);
+    TrackRegister::BuildPathProperties(pathProperties, v2);
     gameObjects.clear();
     gameObjectModificationEvent.clear();
 }

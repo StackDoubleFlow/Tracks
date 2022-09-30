@@ -45,6 +45,9 @@ struct PathProperty {
     std::optional<PointDefinitionInterpolation> value;
 };
 
+using PropertiesMap = std::unordered_map<std::string_view, Property>;
+using PathPropertiesMap = std::unordered_map<std::string_view, PathProperty>;
+
 class Properties {
 public:
     Properties(bool v2) : v2(v2),
@@ -58,7 +61,7 @@ public:
                    time{Property(PropertyType::linear)},
                    cuttable{Property(PropertyType::linear)},
                    color{Property(PropertyType::vector4)} {};
-    Property *FindProperty(std::string_view name);
+    Property* FindProperty(std::string_view name);
 
     bool v2;
 
@@ -79,6 +82,7 @@ public:
     Property fogOffset{PropertyType::linear};
     Property heightFogStartY{PropertyType::linear};
     Property heightFogHeight{PropertyType::linear};
+    PropertiesMap extraProperties;
 };
 
 class PathProperties {
@@ -94,7 +98,7 @@ public:
                        cuttable{PropertyType::linear},
                        color{PropertyType::vector4} {};
     bool v2;
-    PathProperty *FindProperty(std::string_view name);
+    PathProperty* FindProperty(std::string_view name);
 
     PathProperty position;
     PathProperty rotation;
@@ -106,12 +110,23 @@ public:
     PathProperty dissolveArrow;
     PathProperty cuttable;
     PathProperty color;
+    PathPropertiesMap extraProperties;
 };
+namespace TrackRegister {
+    void BuildPropertyCallback(std::optional<std::function<PropertiesMap(bool v2)>> const &propertyBuilder, std::optional<std::function<PathPropertiesMap(bool v2)>> const &pathPropertyBuilder);
+
+    void BuildProperties(Properties &properties, bool v2);
+
+    void BuildPathProperties(PathProperties &properties, bool v2);
+}
 
 struct Track {
     const bool v2;
 
-    Track(bool v2) : v2(v2), properties(v2), pathProperties(v2) {}
+    Track(bool v2) : v2(v2), properties(v2), pathProperties(v2) {
+        TrackRegister::BuildProperties(properties, v2);
+        TrackRegister::BuildPathProperties(pathProperties, v2);
+    }
 
     Properties properties;
     PathProperties pathProperties;
