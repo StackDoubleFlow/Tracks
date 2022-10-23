@@ -88,12 +88,17 @@ public:
     BeatmapAssociatedData(BeatmapAssociatedData const&) = default;
     bool valid = false;
     bool leftHanded = false;
+    bool v2;
     std::unordered_map<std::string, Track, string_hash, string_equal> tracks;
     std::unordered_map<std::string, PointDefinition, string_hash, string_equal> pointDefinitions;
 
     // anon point defs are just point defs created later
     // for owning the point definition and freeing them
     std::unordered_set<std::shared_ptr<PointDefinition>> anonPointDefinitions;
+
+    inline Track* getTrack(std::string_view name) {
+        return &tracks.try_emplace(name.data(), v2).first->second;
+    }
 
     // BeatmapAssociatedData(const BeatmapAssociatedData&) = delete;
 };

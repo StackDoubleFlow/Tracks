@@ -126,6 +126,9 @@ struct Track {
     Track(bool v2) : v2(v2), properties(v2), pathProperties(v2) {
         TrackRegister::BuildProperties(properties, v2);
         TrackRegister::BuildPathProperties(pathProperties, v2);
+
+        gameObjects = {};
+        gameObjectModificationEvent = {};
     }
 
     Properties properties;

@@ -67,10 +67,10 @@ void LoadTrackEvent(CustomJSONData::CustomEventData const *customEventData, Trac
                 continue;
             }
 
-            tracks.emplace_back(&beatmapAD.tracks.try_emplace(track.GetString(), v2).first->second);
+            tracks.emplace_back(beatmapAD.getTrack(track.GetString()));
         }
     } else if (trackJSON.IsString()) {
-        tracks.emplace_back(&beatmapAD.tracks.try_emplace(trackJSON.GetString(), v2).first->second);
+        tracks.emplace_back(beatmapAD.getTrack(trackJSON.GetString()));
     } else {
         TLogger::GetLogger().debug("Track object is not a string or array, why?");
         eventAD.type = EventType::unknown;
@@ -119,6 +119,8 @@ void TracksAD::readBeatmapDataAD(CustomJSONData::CustomBeatmapData *beatmapData)
         return;
     }
 
+    beatmapAD.v2 = v2;
+
     if (beatmapData->customData->value) {
         rapidjson::Value const& customData = *beatmapData->customData->value;
 
@@ -145,7 +147,6 @@ void TracksAD::readBeatmapDataAD(CustomJSONData::CustomBeatmapData *beatmapData)
         TLogger::GetLogger().debug("Setting point definitions");
         beatmapAD.pointDefinitions = pointDataManager.pointData;
     }
-    auto &tracks = beatmapAD.tracks;
 
 
 
@@ -182,14 +183,12 @@ void TracksAD::readBeatmapDataAD(CustomJSONData::CustomBeatmapData *beatmapData)
                                 break;
 
                             for (auto &trackElement: tracksObject.GetArray()) {
-                                Track *track = &tracks.try_emplace(trackElement.GetString(), v2).first->second;
-                                tracksAD.emplace_back(track);
+                                tracksAD.emplace_back(beatmapAD.getTrack(trackElement.GetString()));
                             }
                             break;
                         }
                         case rapidjson::Type::kStringType: {
-                            Track *track = &tracks.try_emplace(tracksObject.GetString(), v2).first->second;
-                            tracksAD.emplace_back(track);
+                            tracksAD.emplace_back(beatmapAD.getTrack(tracksObject.GetString()));
                             break;
                         }
 
