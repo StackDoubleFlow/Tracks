@@ -86,7 +86,7 @@ void GameObjectTrackController::UpdateData(bool force) {
         Destroy(this);
         return;
     }
-    if (force || true) {
+    if (force) {
         lastCheckedTime = 0;
     }
 
