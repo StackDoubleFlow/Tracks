@@ -18,14 +18,9 @@ namespace Tracks {
     struct GameObjectTrackControllerData {
         std::vector<Track *> const _track;
 
-        float const _noteLinesDistance;
-
         bool const v2;
 
-        GameObjectTrackControllerData(std::vector<Track *> track,
-                                      float noteLinesDistance, bool v2) : _track(std::move(track)),
-                                                                          _noteLinesDistance(noteLinesDistance),
-                                                                          v2(v2) {}
+        GameObjectTrackControllerData(std::vector<Track *> track, bool v2) : _track(std::move(track)), v2(v2) {}
 
           UnorderedEventCallback<> PositionUpdate;
           UnorderedEventCallback<> ScaleUpdate;
@@ -37,10 +32,10 @@ namespace Tracks {
 DECLARE_CLASS_CODEGEN(Tracks, GameObjectTrackController, UnityEngine::MonoBehaviour,
 
 private:
-    inline static int nextId = 0;
+    static int nextId;
 
     // Unity doesn't like copying my data, so we store it and copy the ID.
-    inline static std::unordered_map<int, GameObjectTrackControllerData> _dataMap{};
+    static std::unordered_map<int, GameObjectTrackControllerData> _dataMap;
 
     DECLARE_INSTANCE_FIELD(int, id);
     DECLARE_INSTANCE_FIELD(UnityEngine::Transform*, parent);
@@ -61,8 +56,8 @@ private:
 public:
     GameObjectTrackControllerData& getTrackControllerData();
 
-    inline static bool LeftHanded;
-    void Init(std::vector<Track*> const& track, float noteLinesDistance, bool v2);
+    static bool LeftHanded;
+
 
     static std::optional<GameObjectTrackController*> HandleTrackData(UnityEngine::GameObject* gameObject,
                                 std::vector<Track*> const& track,
