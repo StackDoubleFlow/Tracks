@@ -26,6 +26,14 @@ namespace NEJSON {
         return std::nullopt;
     }
 
+    static std::optional<std::string_view> ReadOptionalString(const rapidjson::Value &object, std::string_view const key) {
+        auto itr = object.FindMember(key.data());
+        if (itr != object.MemberEnd() && itr->value.IsString()) {
+            return itr->value.GetString();
+        }
+        return std::nullopt;
+    }
+
     static std::optional<float> ReadOptionalFloat(const rapidjson::Value &object, std::string_view const key) {
         auto itr = object.FindMember(key.data());
         if (itr != object.MemberEnd()) {
