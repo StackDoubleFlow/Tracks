@@ -33,8 +33,8 @@ void TrackRegister::BuildPathProperties(PathProperties& properties, bool v2) {
 }
 
 #define PROP_GET(jsonName, varName)                                \
-    static auto jsonNameHash_##varName = stringViewHash(jsonName); \
-    if (nameHash == (jsonNameHash_##varName))                      \
+    static auto jsonNameHash_##jsonName = stringViewHash(jsonName); \
+    if (nameHash == (jsonNameHash_##jsonName))                      \
         return &varName;
 
 Property* Properties::FindProperty(std::string_view name) {
@@ -58,7 +58,9 @@ Property* Properties::FindProperty(std::string_view name) {
         PROP_GET(V2_HEIGHT_FOG_HEIGHT, heightFogHeight)
     } else {
         PROP_GET(OFFSET_POSITION, position)
+        PROP_GET(POSITION, position)
         PROP_GET(OFFSET_ROTATION, rotation)
+        PROP_GET(ROTATION, rotation)
         PROP_GET(SCALE, scale)
         PROP_GET(LOCAL_ROTATION, localRotation)
         PROP_GET(LOCAL_POSITION, localPosition)
