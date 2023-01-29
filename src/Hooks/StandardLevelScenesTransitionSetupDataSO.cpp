@@ -23,25 +23,33 @@ using namespace TracksAD;
 using namespace CustomJSONData;
 using namespace GlobalNamespace;
 
-SafePtr<System::Action_1<System::Threading::Tasks::Task*>> callbackOther;
-GameplayCoreSceneSetupData * gameplayCoreSceneSetupData;
+SafePtr<System::Action_1<System::Threading::Tasks::Task *>> callbackOther;
+GameplayCoreSceneSetupData *gameplayCoreSceneSetupData;
 
 //#define MakeDelegate(DelegateType, ...) (il2cpp_utils::MakeDelegate<DelegateType>(classof(DelegateType), __VA_ARGS__))
 
 MAKE_HOOK_MATCH(StandardLevelScenesTransitionSetupDataSO_Init, &StandardLevelScenesTransitionSetupDataSO::Init,
                 void, StandardLevelScenesTransitionSetupDataSO *self, ::StringW gameMode,
-                ::GlobalNamespace::IDifficultyBeatmap* difficultyBeatmap, ::GlobalNamespace::IPreviewBeatmapLevel* previewBeatmapLevel,
-                ::GlobalNamespace::OverrideEnvironmentSettings* overrideEnvironmentSettings,
-                ::GlobalNamespace::ColorScheme* overrideColorScheme, ::GlobalNamespace::GameplayModifiers* gameplayModifiers,
-                ::GlobalNamespace::PlayerSpecificSettings* playerSpecificSettings, ::GlobalNamespace::PracticeSettings* practiceSettings,
-                ::StringW backButtonText, bool useTestNoteCutSoundEffects, bool startPaused) {
-    StandardLevelScenesTransitionSetupDataSO_Init(self, gameMode, difficultyBeatmap, previewBeatmapLevel, overrideEnvironmentSettings, overrideColorScheme,
-                                                  gameplayModifiers, playerSpecificSettings, practiceSettings, backButtonText, useTestNoteCutSoundEffects, startPaused);
+                ::GlobalNamespace::IDifficultyBeatmap *difficultyBeatmap,
+                ::GlobalNamespace::IPreviewBeatmapLevel *previewBeatmapLevel,
+                ::GlobalNamespace::OverrideEnvironmentSettings *overrideEnvironmentSettings,
+                ::GlobalNamespace::ColorScheme *overrideColorScheme,
+                ::GlobalNamespace::GameplayModifiers *gameplayModifiers,
+                ::GlobalNamespace::PlayerSpecificSettings *playerSpecificSettings,
+                ::GlobalNamespace::PracticeSettings *practiceSettings, ::StringW backButtonText,
+                bool useTestNoteCutSoundEffects,
+                bool startPaused, ::GlobalNamespace::BeatmapDataCache *beatmapDataCache) {
+    StandardLevelScenesTransitionSetupDataSO_Init(self, gameMode, difficultyBeatmap, previewBeatmapLevel,
+                                                  overrideEnvironmentSettings, overrideColorScheme,
+                                                  gameplayModifiers, playerSpecificSettings, practiceSettings,
+                                                  backButtonText, useTestNoteCutSoundEffects,
+                                                  startPaused, beatmapDataCache);
 
     TracksStatic::bpmController = nullptr;
 
     clearEventADs();
-    TLogger::GetLogger().debug("Got beatmap %s", il2cpp_utils::ClassStandardName(reinterpret_cast<Il2CppObject*>(difficultyBeatmap)->klass).c_str());
+    TLogger::GetLogger().debug("Got beatmap %s", il2cpp_utils::ClassStandardName(
+            reinterpret_cast<Il2CppObject *>(difficultyBeatmap)->klass).c_str());
 }
 
 MAKE_HOOK_MATCH(LevelScenesTransitionSetupDataSO_BeforeScenesWillBeActivatedAsync,
@@ -70,8 +78,7 @@ MAKE_HOOK_MATCH(LevelScenesTransitionSetupDataSO_BeforeScenesWillBeActivatedAsyn
 }
 
 
-
-void InstallStandardLevelScenesTransitionSetupDataSOHooks(Logger& logger){
+void InstallStandardLevelScenesTransitionSetupDataSOHooks(Logger &logger) {
 //
 //    std::function<void(System::Threading::Tasks::Task*)> func2 = [](System::Threading::Tasks::Task*) {
 //        IL2CPP_CATCH_HANDLER(
@@ -106,4 +113,5 @@ void InstallStandardLevelScenesTransitionSetupDataSOHooks(Logger& logger){
 //    INSTALL_HOOK(logger, StandardLevelScenesTransitionSetupDataSO_Init);
 //    INSTALL_HOOK(logger, GameplayCoreSceneSetupData_GetTransformedBeatmapDataAsync);
 }
+
 TInstallHooks(InstallStandardLevelScenesTransitionSetupDataSOHooks);
