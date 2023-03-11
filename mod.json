@@ -20,6 +20,11 @@
       "downloadIfMissing": "https://github.com/StackDoubleFlow/CustomJSONData/releases/download/v0.19.3/custom-json-data.qmod"
     },
     {
+      "version": "^0.15",
+      "id": "custom-types",
+      "downloadIfMissing": "https://github.com/sc2ad/Il2CppQuestTypePatching/releases/download/v0.15.23/CustomTypes.qmod"
+    },
+    {
       "version": "^1.0.5",
       "id": "paper",
       "downloadIfMissing": "https://github.com/Fernthedev/paperlog/releases/download/v1.2.9/paperlog.qmod"
@@ -34,7 +39,6 @@
     "libtracks.so"
   ],
   "libraryFiles": [
-    "libcustom-types.so",
     "libbeatsaber-hook_3_14_0.so"
   ],
   "fileCopies": [],

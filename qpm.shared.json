@@ -47,7 +47,7 @@
         "id": "custom-types",
         "versionRange": "^0.15",
         "additionalData": {
-          "includeQmod": false
+          "includeQmod": true
         }
       },
       {
