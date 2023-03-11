@@ -10,6 +10,11 @@
   "coverImage": "cover.png",
   "dependencies": [
     {
+      "version": "^0.19.2",
+      "id": "custom-json-data",
+      "downloadIfMissing": "https://github.com/StackDoubleFlow/CustomJSONData/releases/download/v0.19.2/custom-json-data.qmod"
+    },
+    {
       "version": "^1.0.5",
       "id": "paper",
       "downloadIfMissing": "https://github.com/Fernthedev/paperlog/releases/download/v1.2.9/paperlog.qmod"
@@ -25,7 +30,6 @@
   ],
   "libraryFiles": [
     "libcustom-types.so",
-    "libcustom-json-data.so",
     "libbeatsaber-hook_3_14_0.so",
     "libcodegen.so"
   ],
