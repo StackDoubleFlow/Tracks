@@ -10,6 +10,11 @@
   "coverImage": "cover.png",
   "dependencies": [
     {
+      "version": "^0.33.0",
+      "id": "codegen",
+      "downloadIfMissing": "https://github.com/sc2ad/BeatSaber-Quest-Codegen/releases/download/v0.33.0/Codegen.qmod"
+    },
+    {
       "version": "^0.19.3",
       "id": "custom-json-data",
       "downloadIfMissing": "https://github.com/StackDoubleFlow/CustomJSONData/releases/download/v0.19.3/custom-json-data.qmod"
@@ -30,8 +35,7 @@
   ],
   "libraryFiles": [
     "libcustom-types.so",
-    "libbeatsaber-hook_3_14_0.so",
-    "libcodegen.so"
+    "libbeatsaber-hook_3_14_0.so"
   ],
   "fileCopies": [],
   "copyExtensions": []
