@@ -6,7 +6,7 @@
   "author": "StackDoubleFlow, Fernthedev",
   "version": "${version}",
   "packageId": "com.beatgames.beatsaber",
-  "packageVersion": "1.25.0",
+  "packageVersion": "1.28.0",
   "description": "Animation for Noodle and Chroma. Requires CustomJSONData. Don't delete",
   "modFiles": [],
   "dependencies": [],

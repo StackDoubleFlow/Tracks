@@ -3,29 +3,31 @@
   "name": "Tracks",
   "id": "tracks",
   "author": "StackDoubleFlow, Fernthedev",
-  "version": "0.6.0",
+  "version": "0.8.0",
   "packageId": "com.beatgames.beatsaber",
-  "packageVersion": "1.24.0",
+  "packageVersion": "1.28.0",
   "description": "Animation for Noodle and Chroma. Requires CustomJSONData. Don't delete",
   "coverImage": "cover.png",
   "dependencies": [
     {
       "version": "^1.0.5",
       "id": "paper",
-      "downloadIfMissing": "https://github.com/Fernthedev/paperlog/releases/download/v1.2.8/paperlog.qmod"
+      "downloadIfMissing": "https://github.com/Fernthedev/paperlog/releases/download/v1.2.9/paperlog.qmod"
     },
     {
       "version": "^0.10.0",
       "id": "songloader",
-      "downloadIfMissing": "https://github.com/darknight1050/SongLoader/releases/download/v0.10.3/SongLoader.qmod"
+      "downloadIfMissing": "https://github.com/darknight1050/SongLoader/releases/download/v0.10.15/SongLoader.qmod"
     }
   ],
   "modFiles": [
     "libtracks.so"
   ],
   "libraryFiles": [
+    "libcustom-types.so",
     "libcustom-json-data.so",
-    "libbeatsaber-hook_3_10_0.so"
+    "libbeatsaber-hook_3_14_0.so",
+    "libcodegen.so"
   ],
   "fileCopies": [],
   "copyExtensions": []
