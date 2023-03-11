@@ -55,7 +55,7 @@ jobs:
           qpm_debug_bin: true
 
           # Name of qmod in release asset. Assumes exists, same as prior
-          qpm_qmod: ${{env.qmodName}}
+          qpm_qmod: ${{env.qmodName}}.qmod
 
       - name: List Post Restore
         run: |
