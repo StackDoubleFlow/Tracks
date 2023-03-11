@@ -10,9 +10,9 @@
   "coverImage": "cover.png",
   "dependencies": [
     {
-      "version": "^0.19.2",
+      "version": "^0.19.3",
       "id": "custom-json-data",
-      "downloadIfMissing": "https://github.com/StackDoubleFlow/CustomJSONData/releases/download/v0.19.2/custom-json-data.qmod"
+      "downloadIfMissing": "https://github.com/StackDoubleFlow/CustomJSONData/releases/download/v0.19.3/custom-json-data.qmod"
     },
     {
       "version": "^1.0.5",
