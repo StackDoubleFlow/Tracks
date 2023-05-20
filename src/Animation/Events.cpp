@@ -34,15 +34,18 @@ BeatmapObjectSpawnController *spawnController;
 static std::vector<AnimateTrackContext> coroutines;
 static std::vector<AssignPathAnimationContext> pathCoroutines;
 
-MAKE_HOOK_MATCH(BeatmapObjectSpawnController_Start, &BeatmapObjectSpawnController::Start, void, BeatmapObjectSpawnController *self) {
+MAKE_HOOK_MATCH(BeatmapObjectSpawnController_Start, &BeatmapObjectSpawnController::Start, void,
+                BeatmapObjectSpawnController *self) {
     spawnController = self;
     coroutines.clear();
     pathCoroutines.clear();
-    TLogger::GetLogger().debug("coroutines and pathCoroutines capacity: %lu and %lu", coroutines.capacity(), pathCoroutines.capacity());
+    TLogger::GetLogger().debug("coroutines and pathCoroutines capacity: %lu and %lu", coroutines.capacity(),
+                               pathCoroutines.capacity());
     BeatmapObjectSpawnController_Start(self);
 }
 
-bool UpdateCoroutine(AnimateTrackContext const& context, float songTime) {
+template<bool skipToLast = false>
+bool UpdateCoroutine(AnimateTrackContext const &context, float songTime) {
     float elapsedTime = songTime - context.startTime;
     if (elapsedTime < 0) return true;
 
@@ -50,36 +53,46 @@ bool UpdateCoroutine(AnimateTrackContext const& context, float songTime) {
     float time = Easings::Interpolate(normalizedTime, context.easing);
     bool changed = false;
     if (!context.property->value.has_value()) {
-        context.property->value = { 0 };
+        context.property->value = {0};
         changed = true;
     }
     bool last;
+
+    // I'm hoping the compiler will optimize this nicely
+    // short circuitting
+    if (skipToLast) {
+        time = 1;
+        last = true;
+    }
+
+
     switch (context.property->type) {
-    case PropertyType::linear: {
-        auto val = context.points->InterpolateLinear(time, last);
-        changed = changed || !context.property->value || val != context.property->value->linear;
-        context.property->value->linear = val;
-        break;
-    }
-    case PropertyType::vector3: {
-        auto val = context.points->Interpolate(time, last);
-        changed = changed || !context.property->value || val != context.property->value->vector3;
-        context.property->value->vector3 = val;
-        break;
-    }
-    case PropertyType::vector4: {
-        auto val = context.points->InterpolateVector4(time, last);
-        changed |= !context.property->value || val != context.property->value->vector4;
-        context.property->value->vector4 = val;
-        break;
-    }
-    case PropertyType::quaternion: {
-        auto val = context.points->InterpolateQuaternion(time, last);
-        changed = changed ||
-                !context.property->value || NEVector::Quaternion::Dot(context.property->value->quaternion, val) < 1.0f;
-        context.property->value->quaternion = val;
-        break;
-    }
+        case PropertyType::linear: {
+            auto val = context.points->InterpolateLinear(time, last);
+            changed = changed || !context.property->value || val != context.property->value->linear;
+            context.property->value->linear = val;
+            break;
+        }
+        case PropertyType::vector3: {
+            auto val = context.points->Interpolate(time, last);
+            changed = changed || !context.property->value || val != context.property->value->vector3;
+            context.property->value->vector3 = val;
+            break;
+        }
+        case PropertyType::vector4: {
+            auto val = context.points->InterpolateVector4(time, last);
+            changed |= !context.property->value || val != context.property->value->vector4;
+            context.property->value->vector4 = val;
+            break;
+        }
+        case PropertyType::quaternion: {
+            auto val = context.points->InterpolateQuaternion(time, last);
+            changed = changed ||
+                      !context.property->value ||
+                      NEVector::Quaternion::Dot(context.property->value->quaternion, val) < 1.0f;
+            context.property->value->quaternion = val;
+            break;
+        }
     }
     if (changed || context.property->lastUpdated == 0) {
         context.property->lastUpdated = getCurrentTime();
@@ -88,11 +101,12 @@ bool UpdateCoroutine(AnimateTrackContext const& context, float songTime) {
     return last || context.duration <= 0 || elapsedTime < context.duration;
 }
 
-bool UpdatePathCoroutine(AssignPathAnimationContext const& context, float songTime) {
+bool UpdatePathCoroutine(AssignPathAnimationContext const &context, float songTime) {
     float elapsedTime = songTime - context.startTime;
     if (elapsedTime < 0) return true;
 
-    context.property->value->time = Easings::Interpolate(std::min(elapsedTime / context.duration, 1.0f), context.easing);
+    context.property->value->time = Easings::Interpolate(std::min(elapsedTime / context.duration, 1.0f),
+                                                         context.easing);
 
     return context.duration <= 0 || elapsedTime < context.duration || context.property->value;
 }
@@ -133,9 +147,10 @@ void Events::UpdateCoroutines(BeatmapCallbacksController *callbackController) {
 void LoadTrackEvent(CustomJSONData::CustomEventData const *customEventData, TracksAD::BeatmapAssociatedData &beatmapAD,
                     bool v2);
 
-void CustomEventCallback(BeatmapCallbacksController *callbackController, CustomJSONData::CustomEventData *customEventData) {
+void
+CustomEventCallback(BeatmapCallbacksController *callbackController, CustomJSONData::CustomEventData *customEventData) {
     PAPER_IL2CPP_CATCH_HANDLER(
-    bool isType = false;
+            bool isType = false;
 
     auto typeHash = customEventData->typeHash;
 
@@ -156,7 +171,7 @@ void CustomEventCallback(BeatmapCallbacksController *callbackController, CustomJ
     // fail safe, idek why this needs to be done smh
     // CJD you bugger
     if (!eventAD.parsed) {
-        auto *customBeatmapData = (CustomJSONData::CustomBeatmapData *)callbackController->beatmapData;
+        auto *customBeatmapData = (CustomJSONData::CustomBeatmapData *) callbackController->beatmapData;
         TracksAD::BeatmapAssociatedData &beatmapAD = TracksAD::getBeatmapAD(customBeatmapData->customData);
 
         if (!beatmapAD.valid) {
@@ -180,12 +195,14 @@ void CustomEventCallback(BeatmapCallbacksController *callbackController, CustomJ
     auto easing = eventAD.easing;
     auto repeat = eventAD.repeat;
 
-    switch (eventAD.type)
-    {
-        case EventType::animateTrack: {
-            auto const& animateTrackDataList = eventAD.animateTrackData;
+    bool noDuration = duration == 0 || customEventData->time + (duration * (repeat + 1)) <
+                                       TracksStatic::bpmController->beatmapCallbacksController->songTime;
 
-            for (auto const& animateTrackData : animateTrackDataList) {
+    switch (eventAD.type) {
+        case EventType::animateTrack: {
+            auto const &animateTrackDataList = eventAD.animateTrackData;
+
+            for (auto const &animateTrackData: animateTrackDataList) {
 
                 for (auto const &[property, pointData]: animateTrackData.properties) {
                     for (auto it = coroutines.begin(); it != coroutines.end();) {
@@ -197,10 +214,16 @@ void CustomEventCallback(BeatmapCallbacksController *callbackController, CustomJ
                         }
                     }
 
-                    if (pointData) {
-                        float pointDuration = pointData->isSingle() ? 0 : duration;
-                        coroutines.emplace_back(pointData, property, pointDuration, customEventData->time, easing, repeat);
+                    bool skipCoroutine = pointData->isSingle() || noDuration;
+
+                    if (pointData || !skipCoroutine) {
+//                        float pointDuration = pointData->isSingle() || noDuration ? 0 : duration;
+                        coroutines.emplace_back(pointData, property, duration, customEventData->time, easing, repeat);
                     } else {
+                        UpdateCoroutine<true>(
+                                Events::AnimateTrackContext(pointData, property, duration, customEventData->time,
+                                                            easing, repeat),
+                                TracksStatic::bpmController->beatmapCallbacksController->songTime);
                         property->value = std::nullopt;
                     }
                 }
@@ -208,10 +231,10 @@ void CustomEventCallback(BeatmapCallbacksController *callbackController, CustomJ
             break;
         }
         case EventType::assignPathAnimation: {
-            auto const& assignPathAnimationDataList = eventAD.assignPathAnimation;
+            auto const &assignPathAnimationDataList = eventAD.assignPathAnimation;
 
-            for (auto const& assignPathAnimationData : assignPathAnimationDataList) {
-                for (auto const& [property, pointData] : assignPathAnimationData.pathProperties) {
+            for (auto const &assignPathAnimationData: assignPathAnimationDataList) {
+                for (auto const &[property, pointData]: assignPathAnimationData.pathProperties) {
                     for (auto it = pathCoroutines.begin(); it != pathCoroutines.end();) {
                         if (it->property == property) {
                             it = pathCoroutines.erase(it);
@@ -225,7 +248,7 @@ void CustomEventCallback(BeatmapCallbacksController *callbackController, CustomJ
                         if (!property->value.has_value())
                             property->value = PointDefinitionInterpolation();
                         property->value->Init(pointData);
-//                        float pointDuration = pointData->isSingle() ? 0 : duration;
+//                        float pointDuration = pointData->isSingle() || noDuration ? 0 : duration;
                         pathCoroutines.emplace_back(property, duration, customEventData->time, easing, repeat);
                     } else {
                         property->value = std::nullopt;
@@ -240,7 +263,7 @@ void CustomEventCallback(BeatmapCallbacksController *callbackController, CustomJ
     )
 }
 
-void Events::AddEventCallbacks(Logger& logger) {
+void Events::AddEventCallbacks(Logger &logger) {
     CustomJSONData::CustomEventCallbacks::AddCustomEventCallback(&CustomEventCallback);
 
     INSTALL_HOOK(logger, BeatmapObjectSpawnController_Start);

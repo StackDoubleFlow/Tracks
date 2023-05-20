@@ -233,6 +233,10 @@ constexpr static float EaseInOutBounce(float p) {
 }
 
 constexpr static float Interpolate(float p, Functions function) {
+    // Short circuit math
+    if (p >= 1) return 1;
+    if (p <= 0) return 0;
+
     switch (function) {
         default:
         case Functions::easeLinear: return EaseLinear(p);
