@@ -122,8 +122,9 @@ namespace TrackRegister {
 
 struct Track {
     const bool v2;
+    const std::string_view name;
 
-    Track(bool v2) : v2(v2), properties(v2), pathProperties(v2) {
+    Track(bool v2, std::string_view name) : v2(v2), properties(v2), pathProperties(v2), name(name) {
         TrackRegister::BuildProperties(properties, v2);
         TrackRegister::BuildPathProperties(pathProperties, v2);
 

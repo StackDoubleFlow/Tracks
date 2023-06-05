@@ -97,7 +97,7 @@ public:
     std::unordered_set<std::shared_ptr<PointDefinition>> anonPointDefinitions;
 
     inline Track* getTrack(std::string_view name) {
-        return &tracks.try_emplace(name.data(), v2).first->second;
+        return &tracks.try_emplace(name.data(), v2, name).first->second;
     }
 
     // BeatmapAssociatedData(const BeatmapAssociatedData&) = delete;
