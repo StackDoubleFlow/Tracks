@@ -44,9 +44,16 @@ MAKE_HOOK_MATCH(BeatmapObjectSpawnController_Start, &BeatmapObjectSpawnControlle
     BeatmapObjectSpawnController_Start(self);
 }
 
+///
+/// \tparam skipToLast
+/// \param context
+/// \param songTime
+/// \return true if not finished. If false, this coroutine is finished
 template<bool skipToLast = false>
 bool UpdateCoroutine(AnimateTrackContext const &context, float songTime) {
     float elapsedTime = songTime - context.startTime;
+
+    // Wait, the coroutine is too early
     if (elapsedTime < 0) return true;
 
     float normalizedTime = context.duration > 0 ? std::min(elapsedTime / context.duration, 1.0f) : 1;
@@ -59,7 +66,7 @@ bool UpdateCoroutine(AnimateTrackContext const &context, float songTime) {
     bool last;
 
     // I'm hoping the compiler will optimize this nicely
-    // short circuitting
+    // short-circuiting
     // skipping to the last point
     if constexpr (skipToLast) {
         time = 1;
@@ -98,9 +105,17 @@ bool UpdateCoroutine(AnimateTrackContext const &context, float songTime) {
         context.property->lastUpdated = getCurrentTime();
     }
 
-    return last || context.duration <= 0 || elapsedTime < context.duration;
+
+    bool finished = last || context.duration <= 0;
+
+    // continue only if not finished or if elapsedTime is less than duration
+    return !finished && elapsedTime < context.duration;
 }
 
+///
+/// \param context
+/// \param songTime
+/// \return true if continue. False to finish
 bool UpdatePathCoroutine(AssignPathAnimationContext const &context, float songTime) {
     float elapsedTime = songTime - context.startTime;
     if (elapsedTime < 0) return true;
@@ -108,7 +123,7 @@ bool UpdatePathCoroutine(AssignPathAnimationContext const &context, float songTi
     context.property->value->time = Easings::Interpolate(std::min(elapsedTime / context.duration, 1.0f),
                                                          context.easing);
 
-    return context.duration <= 0 || elapsedTime < context.duration || context.property->value;
+    return elapsedTime < context.duration;
 }
 
 void Events::UpdateCoroutines(BeatmapCallbacksController *callbackController) {
@@ -216,7 +231,7 @@ CustomEventCallback(BeatmapCallbacksController *callbackController, CustomJSONDa
 
 
                     if (!pointData) {
-                        property->lastUpdated = 0;
+                        property->lastUpdated = getCurrentTime();
                         property->value = std::nullopt;
                         continue;
                     }
