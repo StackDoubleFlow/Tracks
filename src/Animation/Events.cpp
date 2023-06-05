@@ -60,11 +60,11 @@ bool UpdateCoroutine(AnimateTrackContext const &context, float songTime) {
 
     // I'm hoping the compiler will optimize this nicely
     // short circuitting
-    if (skipToLast) {
+    // skipping to the last point
+    if constexpr (skipToLast) {
         time = 1;
         last = true;
     }
-
 
     switch (context.property->type) {
         case PropertyType::linear: {
@@ -214,17 +214,21 @@ CustomEventCallback(BeatmapCallbacksController *callbackController, CustomJSONDa
                         }
                     }
 
-                    bool skipCoroutine = pointData->isSingle() || noDuration;
 
-                    if (pointData || !skipCoroutine) {
-//                        float pointDuration = pointData->isSingle() || noDuration ? 0 : duration;
-                        coroutines.emplace_back(pointData, property, duration, customEventData->time, easing, repeat);
+                    if (!pointData) {
+                        property->lastUpdated = 0;
+                        property->value = std::nullopt;
+                        continue;
+                    }
+
+                    bool skipCoroutine = pointData->isSingle() || noDuration;
+                    Events::AnimateTrackContext context(pointData, property, duration, customEventData->time, easing, repeat);
+                    if (!skipCoroutine) {
+                        coroutines.emplace_back(context);
                     } else {
                         UpdateCoroutine<true>(
-                                Events::AnimateTrackContext(pointData, property, duration, customEventData->time,
-                                                            easing, repeat),
+                                context,
                                 TracksStatic::bpmController->beatmapCallbacksController->songTime);
-                        property->value = std::nullopt;
                     }
                 }
             }
@@ -247,9 +251,13 @@ CustomEventCallback(BeatmapCallbacksController *callbackController, CustomJSONDa
                     if (pointData) {
                         if (!property->value.has_value())
                             property->value = PointDefinitionInterpolation();
+
                         property->value->Init(pointData);
-//                        float pointDuration = pointData->isSingle() || noDuration ? 0 : duration;
-                        pathCoroutines.emplace_back(property, duration, customEventData->time, easing, repeat);
+                        if (noDuration) {
+                            property->value->Finish();
+                        } else {
+                            pathCoroutines.emplace_back(property, duration, customEventData->time, easing, repeat);
+                        }
                     } else {
                         property->value = std::nullopt;
                     }

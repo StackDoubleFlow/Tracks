@@ -12,11 +12,7 @@ using namespace NEVector;
 
 const PointDefinition PointDefinition::EMPTY_POINT = PointDefinition();
 
-inline constexpr Vector4 v4lerp(Vector4 const& a, Vector4 const& b, float t) {
-    return Vector4(a.x + (b.x - a.x) * t, a.y + (b.y - a.y) * t, a.z + (b.z - a.z) * t, a.w + (b.w - a.w) * t);
-}
-
-constexpr Vector3 SmoothVectorLerp(std::span<PointData> points, int a, int b, float time) {
+constexpr Vector3 SmoothVectorLerp(std::span<PointData> const points, int a, int b, float time) {
     // Catmull-Rom Spline
     Vector3 p0 = a - 1 < 0 ? points[a].toVector3() : points[a - 1].toVector3();
     Vector3 p1 = points[a].toVector3();
@@ -38,7 +34,7 @@ constexpr Vector3 SmoothVectorLerp(std::span<PointData> points, int a, int b, fl
     return c;
 }
 
-constexpr void PointDefinition::SearchIndex(float time, int& l, int& r) const {
+constexpr void PointDefinition::SearchIndex(float time, int &l, int &r) const {
     l = 0;
     r = points.size();
 
@@ -61,7 +57,7 @@ struct TempPointData {
     bool spline = false;
     bool hsv = false;
 
-    TempPointData(TempPointData&&) = default;
+    TempPointData(TempPointData &&) = default;
 
     TempPointData(sbo::small_vector<float, 5> copiedList, float time, Functions easing, bool spline)
             : copiedList(std::move(copiedList)),
@@ -69,15 +65,16 @@ struct TempPointData {
               easing(easing),
               spline(spline) {}
 
-    explicit TempPointData(sbo::small_vector<float, 5> copiedList, float time) : copiedList(std::move(copiedList)), time(time) {}
+    explicit TempPointData(sbo::small_vector<float, 5> copiedList, float time) : copiedList(std::move(copiedList)),
+                                                                                 time(time) {}
 };
 
-PointDefinition::PointDefinition(const rapidjson::Value& value) {
+PointDefinition::PointDefinition(const rapidjson::Value &value) {
     std::vector<TempPointData> tempPointDatas;
     sbo::small_vector<float, 5> alternateList;
 
     for (int i = 0; i < value.Size(); i++) {
-        const rapidjson::Value& rawPoint = value[i];
+        const rapidjson::Value &rawPoint = value[i];
         if (rawPoint.IsNull()) continue;
 
         // if [[...]]
@@ -117,10 +114,10 @@ PointDefinition::PointDefinition(const rapidjson::Value& value) {
             float time = copiedList.back();
             copiedList.erase(copiedList.end() - 1); // remove time from list
 
-            auto& p = tempPointDatas.emplace_back(copiedList, time, easing, spline);
+            auto &p = tempPointDatas.emplace_back(copiedList, time, easing, spline);
             p.hsv = hsv;
         }
-        // if [...]
+            // if [...]
         else if (rawPoint.IsNumber()) {
             alternateList.emplace_back(rawPoint.GetFloat());
         } else {
@@ -158,27 +155,32 @@ PointDefinition::PointDefinition(const rapidjson::Value& value) {
 }
 
 Vector3 PointDefinition::Interpolate(float time, bool &last) const {
-    PointData const* pointL;
-    PointData const* pointR;
+    PointData const *pointL;
+    PointData const *pointR;
     float normalTime;
     int l;
     int r;
 
-    if (InterpolateRaw(time, pointL, pointR, normalTime, l, r, last))
-    {
+    if (InterpolateRaw(time, pointL, pointR, normalTime, l, r, last)) {
         if (pointR->smooth) {
             return SmoothVectorLerp(points, l, r, normalTime);
-        } else {
-            return Vector3::LerpUnclamped(points[l].toVector3(), points[r].toVector3(), normalTime);
         }
+        return Vector3::LerpUnclamped(points[l].toVector3(), points[r].toVector3(), normalTime);
     }
 
-    return pointL ? pointL->toVector3() : NEVector::Vector3::zero();
+    if (pointL) {
+        return pointL->toVector3();
+    }
+    if (pointR) {
+        return pointR->toVector3();
+    }
+
+    return NEVector::Vector3::zero();
 }
 
 Quaternion PointDefinition::InterpolateQuaternion(float time, bool &last) const {
-    PointData const* pointL;
-    PointData const* pointR;
+    PointData const *pointL;
+    PointData const *pointR;
     float normalTime;
     int l;
     int r;
@@ -186,42 +188,63 @@ Quaternion PointDefinition::InterpolateQuaternion(float time, bool &last) const 
     static auto Quaternion_SlerpUnclamped = il2cpp_utils::il2cpp_type_check::FPtrWrapper<&NEVector::Quaternion::SlerpUnclamped>::get();
 
 
-    if (InterpolateRaw(time, pointL, pointR, normalTime, l, r, last))
-    {
+    if (InterpolateRaw(time, pointL, pointR, normalTime, l, r, last)) {
         auto quat1 = pointL->toQuaternion();
         auto quat2 = pointR->toQuaternion();
 
         return Quaternion_SlerpUnclamped(quat1, quat2, normalTime);
     }
 
-    return pointL ? pointL->toQuaternion() : Quaternion::identity();
+    if (pointL) {
+        return pointL->toQuaternion();
+    }
+    if (pointR) {
+        return pointR->toQuaternion();
+    }
+
+    return Quaternion::identity();
 }
 
 float PointDefinition::InterpolateLinear(float time, bool &last) const {
-    PointData const* pointL;
-    PointData const* pointR;
+    PointData const *pointL;
+    PointData const *pointR;
     float normalTime;
     int l;
     int r;
 
-    if (InterpolateRaw(time, pointL, pointR, normalTime, l, r, last))
-    {
+    if (InterpolateRaw(time, pointL, pointR, normalTime, l, r, last)) {
         return std::lerp(pointL->toFloat(), pointR->toFloat(), normalTime);
     }
 
-    return pointL ? pointL->toFloat() : 0;
+    if (pointL) {
+        return pointL->toFloat();
+    }
+    if (pointR) {
+        return pointR->toFloat();
+    }
+
+    return 0;
 }
 
 Vector4 PointDefinition::InterpolateVector4(float time, bool &last) const {
-    PointData const* pointL;
-    PointData const* pointR;
+    PointData const *pointL;
+    PointData const *pointR;
     float normalTime;
     int l;
     int r;
 
-    if (!InterpolateRaw(time, pointL, pointR, normalTime, l, r, last))
-        return pointL ? pointL->toVector4() : NEVector::Vector4(0, 0, 0, 0);
+    if (!InterpolateRaw(time, pointL, pointR, normalTime, l, r, last)) {
+        if (pointL) {
+            return pointL->toVector4();
+        }
+        if (pointR) {
+            return pointR->toVector4();
+        }
 
+        return {0, 0, 0, 0};
+    }
+
+    // HSV Lerp
     if (pointR->hsv) {
         Sombrero::HSBColor pointLData(pointL->toColor());
         Sombrero::HSBColor pointRData(pointR->toColor());
@@ -234,9 +257,10 @@ Vector4 PointDefinition::InterpolateVector4(float time, bool &last) const {
         auto rgbResult = Sombrero::HSBColor(result.x, result.y, result.z, result.w).ToColor();
 
         return {rgbResult.r, rgbResult.g, rgbResult.b, normalTime};
-    } else {
-        return Vector4::LerpUnclamped(pointL->toVector4(), pointR->toVector4(), normalTime);
     }
+
+    // normal lerp
+    return Vector4::LerpUnclamped(pointL->toVector4(), pointR->toVector4(), normalTime);
 }
 
 bool PointDefinition::InterpolateRaw(float time, PointData const *&pointL, PointData const *&pointR, float &normalTime,
@@ -281,9 +305,10 @@ bool PointDefinition::isSingle() const {
     return points.size() == 1;
 }
 
-void PointDefinitionManager::AddPoint(std::string const& pointDataName, PointDefinition const& pointData) {
+void PointDefinitionManager::AddPoint(std::string const &pointDataName, PointDefinition const &pointData) {
     if (this->pointData.contains(pointDataName)) {
-        TLogger::GetLogger().error("Duplicate point definition name, %s could not be registered!", pointDataName.data());
+        TLogger::GetLogger().error("Duplicate point definition name, %s could not be registered!",
+                                   pointDataName.data());
     } else {
         this->pointData.try_emplace(pointDataName, pointData);
     }
@@ -291,7 +316,8 @@ void PointDefinitionManager::AddPoint(std::string const& pointDataName, PointDef
 
 void PointDefinitionManager::AddPoint(std::string const &pointDataName, PointDefinition &&pointData) {
     if (this->pointData.contains(pointDataName)) {
-        TLogger::GetLogger().error("Duplicate point definition name, %s could not be registered!", pointDataName.data());
+        TLogger::GetLogger().error("Duplicate point definition name, %s could not be registered!",
+                                   pointDataName.data());
     } else {
         this->pointData.try_emplace(pointDataName, std::move(pointData));
     }

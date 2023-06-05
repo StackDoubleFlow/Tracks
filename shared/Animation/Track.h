@@ -36,7 +36,7 @@ struct Property {
     Property(PropertyType t) : type{t}, value{std::nullopt} {};
     PropertyType type;
     std::optional<PropertyValue> value;
-    uint64_t lastUpdated;
+    uint64_t lastUpdated; // set to 0 to force update
 };
 
 struct PathProperty {
