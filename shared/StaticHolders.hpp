@@ -3,5 +3,5 @@
 #include "GlobalNamespace/BpmController.hpp"
 
 struct TracksStatic {
-    static SafePtr<GlobalNamespace::BpmController> bpmController;
+  static SafePtr<GlobalNamespace::BpmController> bpmController;
 };

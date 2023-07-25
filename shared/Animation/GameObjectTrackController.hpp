@@ -13,58 +13,47 @@
 #include "custom-types/shared/types.hpp"
 #include "custom-types/shared/macros.hpp"
 
-
 namespace Tracks {
-    struct GameObjectTrackControllerData {
-        std::vector<Track *> const _track;
+struct GameObjectTrackControllerData {
+  std::vector<Track*> const _track;
 
-        bool const v2;
+  bool const v2;
 
-        GameObjectTrackControllerData(std::vector<Track *> track, bool v2) : _track(std::move(track)), v2(v2) {}
+  GameObjectTrackControllerData(std::vector<Track*> track, bool v2) : _track(std::move(track)), v2(v2) {}
 
-          UnorderedEventCallback<> PositionUpdate;
-          UnorderedEventCallback<> ScaleUpdate;
-          UnorderedEventCallback<> RotationUpdate;
-    };
-}
-
+  UnorderedEventCallback<> PositionUpdate;
+  UnorderedEventCallback<> ScaleUpdate;
+  UnorderedEventCallback<> RotationUpdate;
+};
+} // namespace Tracks
 
 DECLARE_CLASS_CODEGEN(Tracks, GameObjectTrackController, UnityEngine::MonoBehaviour,
 
-private:
-    static int nextId;
+                      private
+                      : static int nextId;
 
-    // Unity doesn't like copying my data, so we store it and copy the ID.
-    static std::unordered_map<int, GameObjectTrackControllerData> _dataMap;
+                      // Unity doesn't like copying my data, so we store it and copy the ID.
+                      static std::unordered_map<int, GameObjectTrackControllerData> _dataMap;
 
-    DECLARE_INSTANCE_FIELD(int, id);
-    DECLARE_INSTANCE_FIELD(UnityEngine::Transform*, parent);
-    DECLARE_INSTANCE_FIELD(UnityEngine::Transform*, origin);
+                      DECLARE_INSTANCE_FIELD(int, id); DECLARE_INSTANCE_FIELD(UnityEngine::Transform*, parent);
+                      DECLARE_INSTANCE_FIELD(UnityEngine::Transform*, origin);
 
+                      // This is retrived from the data map since Unity doesn't copy it.
+                      GameObjectTrackControllerData * data; uint64_t lastCheckedTime;
 
+                      void UpdateData(bool force);
 
-    // This is retrived from the data map since Unity doesn't copy it.
-    GameObjectTrackControllerData* data;
-    uint64_t lastCheckedTime;
+                      DECLARE_INSTANCE_METHOD(void, Awake); DECLARE_INSTANCE_METHOD(void, OnEnable);
+                      DECLARE_INSTANCE_METHOD(void, Update); DECLARE_INSTANCE_METHOD(void, OnTransformParentChanged);
+                      public
+                      : GameObjectTrackControllerData & getTrackControllerData();
 
-    void UpdateData(bool force);
+                      static bool LeftHanded;
 
-    DECLARE_INSTANCE_METHOD(void, Awake);
-    DECLARE_INSTANCE_METHOD(void, OnEnable);
-    DECLARE_INSTANCE_METHOD(void, Update);
-    DECLARE_INSTANCE_METHOD(void, OnTransformParentChanged);
-public:
-    GameObjectTrackControllerData& getTrackControllerData();
+                      static std::optional<GameObjectTrackController*> HandleTrackData(
+                          UnityEngine::GameObject * gameObject, std::vector<Track*> const& track,
+                          float noteLinesDistance, bool v2);
 
-    static bool LeftHanded;
+                      static void ClearData();
 
-
-    static std::optional<GameObjectTrackController*> HandleTrackData(UnityEngine::GameObject* gameObject,
-                                std::vector<Track*> const& track,
-                                float noteLinesDistance, bool v2);
-
-    static void ClearData();
-
-    DECLARE_SIMPLE_DTOR();
-    DECLARE_DEFAULT_CTOR();
-)
+                      DECLARE_SIMPLE_DTOR(); DECLARE_DEFAULT_CTOR();)

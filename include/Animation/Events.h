@@ -8,37 +8,36 @@ class BeatmapCallbacksController;
 
 namespace Events {
 
-void AddEventCallbacks(Logger &logger);
-void UpdateCoroutines(GlobalNamespace::BeatmapCallbacksController *callbackController);
-
-
+void AddEventCallbacks(Logger& logger);
+void UpdateCoroutines(GlobalNamespace::BeatmapCallbacksController* callbackController);
 
 struct AnimateTrackContext {
-    PointDefinition *points;
-    Property *property;
-    float duration;
-    Functions easing;
-    float startTime;
-    int repeat;
+  PointDefinition* points;
+  Property* property;
+  float duration;
+  Functions easing;
+  float startTime;
+  int repeat;
 
-    constexpr AnimateTrackContext(PointDefinition *points, Property *aProperty, float duration, float startTime, Functions easing, int repeat)
-    : points(points), property(aProperty), duration(duration), startTime(startTime), easing(easing), repeat(repeat)
-                                                         {}
+  constexpr AnimateTrackContext(PointDefinition* points, Property* aProperty, float duration, float startTime,
+                                Functions easing, int repeat)
+      : points(points), property(aProperty), duration(duration), startTime(startTime), easing(easing), repeat(repeat) {}
 
-    constexpr AnimateTrackContext() = default;
+  constexpr AnimateTrackContext() = default;
 };
 
 struct AssignPathAnimationContext {
-    PathProperty *property;
-    float duration;
-    Functions easing;
-    float startTime;
-    int repeat;
+  PathProperty* property;
+  float duration;
+  Functions easing;
+  float startTime;
+  int repeat;
 
-    constexpr AssignPathAnimationContext() = default;
+  constexpr AssignPathAnimationContext() = default;
 
-    constexpr AssignPathAnimationContext(PathProperty *aProperty, float duration, float startTime, Functions easing, int repeat) : property(
-            aProperty), duration(duration), startTime(startTime), easing(easing), repeat(repeat) {}
+  constexpr AssignPathAnimationContext(PathProperty* aProperty, float duration, float startTime, Functions easing,
+                                       int repeat)
+      : property(aProperty), duration(duration), startTime(startTime), easing(easing), repeat(repeat) {}
 };
 
 } // end namespace Events

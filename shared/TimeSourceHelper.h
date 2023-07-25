@@ -4,6 +4,6 @@
 
 namespace TimeSourceHelper {
 
-float getSongTime(GlobalNamespace::IAudioTimeSource *timeSource);
+float getSongTime(GlobalNamespace::IAudioTimeSource* timeSource);
 
 } // end namespace TimeSourceHelper

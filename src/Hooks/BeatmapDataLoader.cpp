@@ -14,9 +14,8 @@
 using namespace GlobalNamespace;
 using namespace TracksAD;
 
-
-void InstallBeatmapDataLoaderHooks(Logger &logger) {
-//    INSTALL_HOOK(logger, GetBeatmapDataFromBeatmapSaveData);
+void InstallBeatmapDataLoaderHooks(Logger& logger) {
+  //    INSTALL_HOOK(logger, GetBeatmapDataFromBeatmapSaveData);
 }
 
 TInstallHooks(InstallBeatmapDataLoaderHooks);
