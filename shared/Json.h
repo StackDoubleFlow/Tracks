@@ -42,6 +42,14 @@ static std::optional<float> ReadOptionalFloat(rapidjson::Value const& object, st
   return std::nullopt;
 }
 
+static std::optional<int> ReadOptionalInt(rapidjson::Value const& object, std::string_view const key) {
+  auto itr = object.FindMember(key.data());
+  if (itr != object.MemberEnd()) {
+    return itr->value.GetInt();
+  }
+  return std::nullopt;
+}
+
 static std::optional<NEVector::Vector2> ReadOptionalVector2(rapidjson::Value const& object,
                                                             std::string_view const key) {
   auto itr = object.FindMember(key.data());

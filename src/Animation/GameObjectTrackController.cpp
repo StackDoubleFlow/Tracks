@@ -1,6 +1,7 @@
 #include "Animation/GameObjectTrackController.hpp"
 
 #include "Animation/Animation.h"
+#include "TLogger.h"
 
 #include "sombrero/shared/Vector3Utils.hpp"
 #include "sombrero/shared/QuaternionUtils.hpp"

@@ -1,4 +1,5 @@
 #include "Animation/Animation.h"
+#include "AssociatedData.h"
 #include "TLogger.h"
 
 using namespace TracksAD;

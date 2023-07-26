@@ -1,9 +1,15 @@
 #pragma once
 #include "PointDefinition.h"
-#include "../AssociatedData.h"
+#include "Easings.h"
+#include "Track.h"
+#include "PointDefinition.h"
 
 namespace GlobalNamespace {
 class BeatmapData;
+}
+
+namespace TracksAD {
+struct BeatmapAssociatedData;
 }
 
 namespace Animation {

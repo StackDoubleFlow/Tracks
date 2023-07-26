@@ -1,11 +1,15 @@
 #pragma once
 
-#include "custom-json-data/shared/CustomEventData.h"
-#include "custom-json-data/shared/CustomBeatmapData.h"
 #include "Animation/Easings.h"
 #include "Animation/Track.h"
-#include "Vector.h"
+#include "Animation/PointDefinition.h"
+#include "Animation/Animation.h"
 #include "Hash.h"
+#include "Vector.h"
+#include "custom-json-data/shared/CustomBeatmapData.h"
+#include "custom-json-data/shared/CustomEventData.h"
+#include <string_view>
+#include <memory>
 
 namespace UnityEngine {
 class Renderer;
@@ -94,6 +98,17 @@ public:
   // for owning the point definition and freeing them
   std::unordered_set<std::shared_ptr<PointDefinition>> anonPointDefinitions;
 
+  inline PointDefinition* getPointDefinition(rapidjson::Value const& val, std::string_view key) {
+    PointDefinition* anonPointDef = nullptr;
+    PointDefinition* pointData = Animation::TryGetPointData(*this, anonPointDef, val, key);
+
+    if (anonPointDef != nullptr) {
+      anonPointDefinitions.emplace(anonPointDef);
+    }
+
+    return pointData;
+  }
+
   inline Track* getTrack(std::string_view name) {
     return &tracks.try_emplace(name.data(), v2, name).first->second;
   }
@@ -141,3 +156,28 @@ CustomEventAssociatedData& getEventAD(CustomJSONData::CustomEventData const* cus
 
 void clearEventADs();
 } // namespace TracksAD
+
+namespace NEJSON {
+static std::optional<TracksAD::TracksVector> ReadOptionalTracks(rapidjson::Value const& object,
+                                                                std::string_view const key,
+                                                                TracksAD::BeatmapAssociatedData& beatmapAD) {
+  auto tracksIt = object.FindMember(key.data());
+  if (tracksIt != object.MemberEnd()) {
+    TracksAD::TracksVector tracks;
+
+    auto size = tracksIt->value.IsString() ? 1 : tracksIt->value.Size();
+    tracks.reserve(size);
+
+    if (tracksIt->value.IsString()) {
+      tracks.emplace_back(beatmapAD.getTrack(tracksIt->value.GetString()));
+    } else if (tracksIt->value.IsArray()) {
+      for (auto const& it : tracksIt->value.GetArray()) {
+        tracks.emplace_back(beatmapAD.getTrack(it.GetString()));
+      }
+    }
+
+    return tracks;
+  }
+  return std::nullopt;
+}
+} // namespace NEJSON
