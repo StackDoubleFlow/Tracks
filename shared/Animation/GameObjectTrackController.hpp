@@ -29,13 +29,14 @@ struct GameObjectTrackControllerData {
 
 DECLARE_CLASS_CODEGEN(Tracks, GameObjectTrackController, UnityEngine::MonoBehaviour,
 
-                      private
-                      : static int nextId;
+                      private:
+                      static int nextId;
 
                       // Unity doesn't like copying my data, so we store it and copy the ID.
                       static std::unordered_map<int, GameObjectTrackControllerData> _dataMap;
 
-                      DECLARE_INSTANCE_FIELD(int, id); DECLARE_INSTANCE_FIELD(UnityEngine::Transform*, parent);
+                      DECLARE_INSTANCE_FIELD_DEFAULT(int, id, -1);
+                      DECLARE_INSTANCE_FIELD(UnityEngine::Transform*, parent);
                       DECLARE_INSTANCE_FIELD(UnityEngine::Transform*, origin);
 
                       // This is retrived from the data map since Unity doesn't copy it.

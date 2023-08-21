@@ -33,6 +33,10 @@ static constexpr std::optional<T> getPropertyNullable(Track const* track, Proper
 //                            conj.w / norm2};
 // }
 GameObjectTrackControllerData& GameObjectTrackController::getTrackControllerData() {
+  if (id == -1) {
+    return *data;
+  }
+
   if (!data) {
     auto it = _dataMap.find(id);
 
@@ -52,7 +56,7 @@ void GameObjectTrackController::ClearData() {
 }
 
 void GameObjectTrackController::Awake() {
-  //    OnTransformParentChanged();
+  OnTransformParentChanged();
 }
 
 void GameObjectTrackController::OnEnable() {
@@ -73,6 +77,11 @@ void GameObjectTrackController::Update() {
 void GameObjectTrackController::UpdateData(bool force) {
   getTrackControllerData();
 
+  if (id == -1) {
+    // wait for assignment
+    return;
+  }
+  
   if (!data) {
     CJDLogger::Logger.fmtLog<Paper::LogLevel::ERR>(
         "Data {} is null! Should remove component or just early return? {} {}", id, fmt::ptr(this),
@@ -208,11 +217,13 @@ GameObjectTrackController::HandleTrackData(UnityEngine::GameObject* gameObject, 
     auto* trackController = gameObject->AddComponent<GameObjectTrackController*>();
     CRASH_UNLESS(!track.empty());
     CJDLogger::Logger.fmtLog<Paper::LogLevel::INF>("Created track game object with ID {}", nextId);
+    trackController->id = nextId;
     trackController->data = &_dataMap.try_emplace(nextId, track, v2).first->second;
     nextId++;
 
-    for (auto t : track)
+    for (auto* t : track) {
       t->AddGameObject(gameObject);
+    }
 
     return trackController;
   }
