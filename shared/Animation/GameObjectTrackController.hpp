@@ -29,8 +29,8 @@ struct GameObjectTrackControllerData {
 
 DECLARE_CLASS_CODEGEN(Tracks, GameObjectTrackController, UnityEngine::MonoBehaviour,
 
-                      private:
-                      static int nextId;
+                      private
+                      : static int nextId;
 
                       // Unity doesn't like copying my data, so we store it and copy the ID.
                       static std::unordered_map<int, GameObjectTrackControllerData> _dataMap;
@@ -53,7 +53,7 @@ DECLARE_CLASS_CODEGEN(Tracks, GameObjectTrackController, UnityEngine::MonoBehavi
 
                       static std::optional<GameObjectTrackController*> HandleTrackData(
                           UnityEngine::GameObject * gameObject, std::vector<Track*> const& track,
-                          float noteLinesDistance, bool v2);
+                          float noteLinesDistance, bool v2, bool overwrite = false);
 
                       static void ClearData();
 

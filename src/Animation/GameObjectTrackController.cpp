@@ -60,6 +60,7 @@ void GameObjectTrackController::Awake() {
 }
 
 void GameObjectTrackController::OnEnable() {
+  CJDLogger::Logger.fmtLog<Paper::LogLevel::INF>("OnEnable runs");
   OnTransformParentChanged();
 }
 
@@ -78,10 +79,9 @@ void GameObjectTrackController::UpdateData(bool force) {
   getTrackControllerData();
 
   if (id == -1) {
-    // wait for assignment
+    // wait for assignment of an id
     return;
   }
-  
   if (!data) {
     CJDLogger::Logger.fmtLog<Paper::LogLevel::ERR>(
         "Data {} is null! Should remove component or just early return? {} {}", id, fmt::ptr(this),
@@ -207,26 +207,38 @@ void GameObjectTrackController::UpdateData(bool force) {
 
 std::optional<GameObjectTrackController*>
 GameObjectTrackController::HandleTrackData(UnityEngine::GameObject* gameObject, std::vector<Track*> const& track,
-                                           float noteLinesDistance, bool v2) {
+                                           float noteLinesDistance, bool v2, bool overwrite) {
+  // This should never be called with an empty track list
+  if (track.empty()) {
+    CJDLogger::Logger.fmtLog<Paper::LogLevel::WRN>("Track list is empty {}", nextId);
+    return std::nullopt;
+  }
+
   auto* existingTrackController = gameObject->GetComponent<GameObjectTrackController*>();
+
   if (existingTrackController) {
-    Destroy(existingTrackController);
-  }
-
-  if (!track.empty()) {
-    auto* trackController = gameObject->AddComponent<GameObjectTrackController*>();
-    CRASH_UNLESS(!track.empty());
-    CJDLogger::Logger.fmtLog<Paper::LogLevel::INF>("Created track game object with ID {}", nextId);
-    trackController->id = nextId;
-    trackController->data = &_dataMap.try_emplace(nextId, track, v2).first->second;
-    nextId++;
-
-    for (auto* t : track) {
-      t->AddGameObject(gameObject);
+    if (overwrite) {
+      CJDLogger::Logger.fmtLog<Paper::LogLevel::ERR>("Overwriting existing track controller on {}",
+                                                     (std::string)gameObject->get_name());
+      Destroy(existingTrackController);
+    } else {
+      CJDLogger::Logger.fmtLog<Paper::LogLevel::ERR>("Could not create track controller on {}, it already has one",
+                                                     (std::string)gameObject->get_name());
+      return existingTrackController;
     }
-
-    return trackController;
   }
 
-  return std::nullopt;
+  auto* trackController = gameObject->AddComponent<GameObjectTrackController*>();
+  CRASH_UNLESS(!track.empty());
+  CJDLogger::Logger.fmtLog<Paper::LogLevel::INF>("Created track game object with ID {}", nextId);
+  trackController->id = nextId;
+  trackController->data = &_dataMap.try_emplace(nextId, track, v2).first->second;
+  nextId++;
+
+  // Heck does it outside because it is used in other places that add game objects to tracks themselves
+  for (auto* t : track) {
+    t->AddGameObject(gameObject);
+  }
+
+  return trackController;
 }
