@@ -28,33 +28,38 @@ struct GameObjectTrackControllerData {
 } // namespace Tracks
 
 DECLARE_CLASS_CODEGEN(Tracks, GameObjectTrackController, UnityEngine::MonoBehaviour,
-
                       private:
-                      static int nextId;
-
-                      // Unity doesn't like copying my data, so we store it and copy the ID.
-                      static std::unordered_map<int, GameObjectTrackControllerData> _dataMap;
-
                       DECLARE_INSTANCE_FIELD_DEFAULT(int, id, -1);
                       DECLARE_INSTANCE_FIELD(UnityEngine::Transform*, parent);
                       DECLARE_INSTANCE_FIELD(UnityEngine::Transform*, origin);
 
+                      static int nextId;
+                      
+                      static bool LeftHanded;
+
+                      // Unity doesn't like copying my data, so we store it and copy the ID.
+                      static std::unordered_map<int, GameObjectTrackControllerData> _dataMap;
+
                       // This is retrived from the data map since Unity doesn't copy it.
-                      GameObjectTrackControllerData * data; uint64_t lastCheckedTime;
+                      GameObjectTrackControllerData * data;
+                      uint64_t lastCheckedTime;
 
                       void UpdateData(bool force);
 
-                      DECLARE_INSTANCE_METHOD(void, Awake); DECLARE_INSTANCE_METHOD(void, OnEnable);
-                      DECLARE_INSTANCE_METHOD(void, Update); DECLARE_INSTANCE_METHOD(void, OnTransformParentChanged);
-                      public
-                      : GameObjectTrackControllerData & getTrackControllerData();
-
-                      static bool LeftHanded;
+                      public:
+                      GameObjectTrackControllerData & getTrackControllerData();
 
                       static std::optional<GameObjectTrackController*> HandleTrackData(
                           UnityEngine::GameObject * gameObject, std::vector<Track*> const& track,
-                          float noteLinesDistance, bool v2);
+                          float noteLinesDistance, bool v2, bool overwrite);
 
                       static void ClearData();
 
-                      DECLARE_SIMPLE_DTOR(); DECLARE_DEFAULT_CTOR();)
+                      DECLARE_INSTANCE_METHOD(void, Awake);
+                      DECLARE_INSTANCE_METHOD(void, OnEnable);
+                      DECLARE_INSTANCE_METHOD(void, Update);
+                      DECLARE_INSTANCE_METHOD(void, OnTransformParentChanged);
+
+                      DECLARE_SIMPLE_DTOR();
+                      DECLARE_DEFAULT_CTOR();
+                      )

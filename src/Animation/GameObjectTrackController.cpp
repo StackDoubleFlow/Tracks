@@ -207,26 +207,37 @@ void GameObjectTrackController::UpdateData(bool force) {
 
 std::optional<GameObjectTrackController*>
 GameObjectTrackController::HandleTrackData(UnityEngine::GameObject* gameObject, std::vector<Track*> const& track,
-                                           float noteLinesDistance, bool v2) {
+                                           float noteLinesDistance, bool v2, bool overwrite) {
   auto* existingTrackController = gameObject->GetComponent<GameObjectTrackController*>();
-  if (existingTrackController) {
-    Destroy(existingTrackController);
+
+  if (existingTrackController != nullptr)
+  {
+      if (overwrite)
+      {
+          CJDLogger::Logger.fmtLog<Paper::LogLevel::INF>("Overwriting existing TransformController on {}...", std::string(gameObject->get_name()));
+          UnityEngine::Object::Destroy(existingTrackController);
+      }
+      else
+      {
+          CJDLogger::Logger.fmtLog<Paper::LogLevel::INF>("Could not create TransformController, {} already has one.", std::string(gameObject->get_name()));
+          return existingTrackController;
+      }
   }
 
-  if (!track.empty()) {
-    auto* trackController = gameObject->AddComponent<GameObjectTrackController*>();
-    CRASH_UNLESS(!track.empty());
-    CJDLogger::Logger.fmtLog<Paper::LogLevel::INF>("Created track game object with ID {}", nextId);
-    trackController->id = nextId;
-    trackController->data = &_dataMap.try_emplace(nextId, track, v2).first->second;
-    nextId++;
-
-    for (auto* t : track) {
-      t->AddGameObject(gameObject);
-    }
-
-    return trackController;
+  if (track.empty()) {
+    return std::nullopt;
   }
 
-  return std::nullopt;
+  auto* trackController = gameObject->AddComponent<GameObjectTrackController*>();
+  CRASH_UNLESS(!track.empty());
+  CJDLogger::Logger.fmtLog<Paper::LogLevel::INF>("Created track game object with ID {}", nextId);
+  trackController->id = nextId;
+  trackController->data = &_dataMap.try_emplace(nextId, track, v2).first->second;
+  nextId++;
+
+  for (auto* t : track) {
+    t->AddGameObject(gameObject);
+  }
+
+  return trackController;
 }
