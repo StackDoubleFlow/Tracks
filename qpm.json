@@ -4,15 +4,11 @@
   "info": {
     "name": "Tracks",
     "id": "tracks",
-    "version": "0.8.0",
+    "version": "0.9.0",
     "url": "https://github.com/StackDoubleFlow/Tracks",
     "additionalData": {
-      "overrideSoName": "libtracks.so"
-    }
-  },
-  "workspace": {
-    "scripts": {
-      "build": ["pwsh ./build.ps1"]
+      "overrideSoName": "libtracks.so",
+      "cmake": true
     }
   },
   "dependencies": [
@@ -34,7 +30,7 @@
     },
     {
       "id": "custom-json-data",
-      "versionRange": "^0.19.3",
+      "versionRange": "^0.20.0",
       "additionalData": {}
     },
     {
@@ -65,5 +61,11 @@
       "additionalData": {}
     }
   ],
-  "additionalData": {}
+  "workspace": {
+    "scripts": {
+      "build": [
+        "pwsh ./build.ps1"
+      ]
+    }
+  }
 }
