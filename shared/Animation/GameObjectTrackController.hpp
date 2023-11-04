@@ -19,6 +19,8 @@ struct GameObjectTrackControllerData {
 
   bool const v2;
 
+  GameObjectTrackControllerData() = delete;
+  GameObjectTrackControllerData(GameObjectTrackControllerData const&) = delete;
   GameObjectTrackControllerData(std::vector<Track*> track, bool v2) : _track(std::move(track)), v2(v2) {}
 
   UnorderedEventCallback<> PositionUpdate;
@@ -29,24 +31,17 @@ struct GameObjectTrackControllerData {
 
 DECLARE_CLASS_CODEGEN(Tracks, GameObjectTrackController, UnityEngine::MonoBehaviour,
                       private:
-                      DECLARE_INSTANCE_FIELD_DEFAULT(int, id, -1);
                       DECLARE_INSTANCE_FIELD(UnityEngine::Transform*, parent);
                       DECLARE_INSTANCE_FIELD(UnityEngine::Transform*, origin);
-
-                      static int nextId;
-                      
                       static bool LeftHanded;
 
-                      // Unity doesn't like copying my data, so we store it and copy the ID.
-                      static std::unordered_map<int, GameObjectTrackControllerData> _dataMap;
-
+                      private:
                       // This is retrived from the data map since Unity doesn't copy it.
-                      GameObjectTrackControllerData * data;
+                      GameObjectTrackControllerData* data;
                       uint64_t lastCheckedTime;
 
-                      void UpdateData(bool force);
-
                       public:
+                      void UpdateData(bool force);
                       GameObjectTrackControllerData & getTrackControllerData();
 
                       static std::optional<GameObjectTrackController*> HandleTrackData(
@@ -56,6 +51,7 @@ DECLARE_CLASS_CODEGEN(Tracks, GameObjectTrackController, UnityEngine::MonoBehavi
                       static void ClearData();
 
                       DECLARE_INSTANCE_METHOD(void, Awake);
+                      DECLARE_INSTANCE_METHOD(void, OnDestroy);
                       DECLARE_INSTANCE_METHOD(void, OnEnable);
                       DECLARE_INSTANCE_METHOD(void, Update);
                       DECLARE_INSTANCE_METHOD(void, OnTransformParentChanged);

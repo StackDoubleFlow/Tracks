@@ -1,3 +1,4 @@
+#include "AssociatedData.h"
 #include "THooks.h"
 #include "beatsaber-hook/shared/utils/hooking.hpp"
 #include "Animation/Events.h"
@@ -9,6 +10,8 @@
 #include "custom-types/shared/coroutine.hpp"
 #include "UnityEngine/Resources.hpp"
 #include "StaticHolders.hpp"
+
+#include "Animation/GameObjectTrackController.hpp"
 
 using namespace GlobalNamespace;
 
@@ -36,6 +39,14 @@ MAKE_HOOK_MATCH(BeatmapObjectCallbackController_Start, &BeatmapCallbacksControll
   BeatmapObjectCallbackController_Start(self, songTime);
   if (controller != self) {
     controller = self;
+
+    if (auto customBeatmap = il2cpp_utils::try_cast<CustomJSONData::CustomBeatmapData>(self->beatmapData)) {
+      if (customBeatmap.value()->customData) {
+        auto& tracksBeatmapAD = TracksAD::getBeatmapAD(customBeatmap.value()->customData);
+        Tracks::GameObjectTrackController::LeftHanded = tracksBeatmapAD.leftHanded;
+      }
+    }
+
     UnityEngine::Resources::FindObjectsOfTypeAll<BeatmapCallbacksUpdater*>().get(0)->StartCoroutine(
         custom_types::Helpers::CoroutineHelper::New(updateCoroutines(self)));
   }

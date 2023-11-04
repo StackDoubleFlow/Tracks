@@ -8,8 +8,6 @@
 
 using namespace Tracks;
 
-std::unordered_map<int, GameObjectTrackControllerData> GameObjectTrackController::_dataMap = {};
-int GameObjectTrackController::nextId = 0;
 bool GameObjectTrackController::LeftHanded = false;
 
 DEFINE_TYPE(Tracks, GameObjectTrackController)
@@ -33,30 +31,23 @@ static constexpr std::optional<T> getPropertyNullable(Track const* track, Proper
 //                            conj.w / norm2};
 // }
 GameObjectTrackControllerData& GameObjectTrackController::getTrackControllerData() {
-  if (id == -1) {
-    return *data;
-  }
-
-  if (!data) {
-    auto it = _dataMap.find(id);
-
-    if (it != _dataMap.end()) {
-      data = &it->second;
-    }
-  }
-
   return *data;
 }
 
 void GameObjectTrackController::ClearData() {
   CJDLogger::Logger.fmtLog<Paper::LogLevel::INF>("Clearing track game objects");
-
-  _dataMap.clear();
-  nextId = 0;
 }
 
 void GameObjectTrackController::Awake() {
+  CRASH_UNLESS(!data);
+
   OnTransformParentChanged();
+}
+void GameObjectTrackController::OnDestroy() {
+  if (!data) return;
+
+  delete data;
+  data = nullptr;
 }
 
 void GameObjectTrackController::OnEnable() {
@@ -66,7 +57,7 @@ void GameObjectTrackController::OnEnable() {
 void GameObjectTrackController::OnTransformParentChanged() {
   origin = get_transform();
   parent = origin->get_parent();
-  CJDLogger::Logger.fmtLog<Paper::LogLevel::ERR>("Parent changed {}", id);
+  CJDLogger::Logger.fmtLog<Paper::LogLevel::ERR>("Parent changed {}", static_cast<std::string>(this->get_name()));
   UpdateData(true);
 }
 
@@ -75,21 +66,15 @@ void GameObjectTrackController::Update() {
 }
 
 void GameObjectTrackController::UpdateData(bool force) {
-  getTrackControllerData();
-
-  if (id == -1) {
-    // wait for assignment
-    return;
-  }
-  
   if (!data) {
     CJDLogger::Logger.fmtLog<Paper::LogLevel::ERR>(
-        "Data {} is null! Should remove component or just early return? {} {}", id, fmt::ptr(this),
+        "Data is null! Should remove component or just early return? {} {}", fmt::ptr(this),
         static_cast<std::string>(get_gameObject()->get_name()));
     CJDLogger::Logger.Backtrace(10);
     Destroy(this);
     return;
   }
+
   auto const _noteLinesDistance = 0.6f; // StaticBeatmapObjectSpawnMovementData.kNoteLinesDistance
   auto const _track = data->_track;
 
@@ -230,10 +215,9 @@ GameObjectTrackController::HandleTrackData(UnityEngine::GameObject* gameObject, 
 
   auto* trackController = gameObject->AddComponent<GameObjectTrackController*>();
   CRASH_UNLESS(!track.empty());
-  CJDLogger::Logger.fmtLog<Paper::LogLevel::INF>("Created track game object with ID {}", nextId);
-  trackController->id = nextId;
-  trackController->data = &_dataMap.try_emplace(nextId, track, v2).first->second;
-  nextId++;
+  CJDLogger::Logger.fmtLog<Paper::LogLevel::INF>("Created track game object with ID {}", static_cast<std::string>(gameObject->get_name()));
+  // cleaned up on OnDestroy
+  trackController->data = new GameObjectTrackControllerData(track, v2);
 
   for (auto* t : track) {
     t->AddGameObject(gameObject);
