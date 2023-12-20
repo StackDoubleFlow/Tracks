@@ -39,9 +39,10 @@ void GameObjectTrackController::ClearData() {
 }
 
 void GameObjectTrackController::Awake() {
+  attemptedTries = 0;
   CRASH_UNLESS(!data);
 
-  OnTransformParentChanged();
+  // OnTransformParentChanged();
 }
 void GameObjectTrackController::OnDestroy() {
   if (!data) return;
@@ -71,7 +72,12 @@ void GameObjectTrackController::UpdateData(bool force) {
         "Data is null! Should remove component or just early return? {} {}", fmt::ptr(this),
         static_cast<std::string>(get_gameObject()->get_name()));
     CJDLogger::Logger.Backtrace(10);
-    Destroy(this);
+    // Destroy the object if the data is never found
+    if (attemptedTries > 100) {
+      Destroy(this);
+    } else {
+      attemptedTries++;
+    }
     return;
   }
 

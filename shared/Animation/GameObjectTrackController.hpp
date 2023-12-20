@@ -15,13 +15,13 @@
 
 namespace Tracks {
 struct GameObjectTrackControllerData {
-  std::vector<Track*> const _track;
-
-  bool const v2;
-
   GameObjectTrackControllerData() = delete;
   GameObjectTrackControllerData(GameObjectTrackControllerData const&) = delete;
   GameObjectTrackControllerData(std::vector<Track*> track, bool v2) : _track(std::move(track)), v2(v2) {}
+
+  std::vector<Track*> const _track;
+
+  bool const v2;
 
   UnorderedEventCallback<> PositionUpdate;
   UnorderedEventCallback<> ScaleUpdate;
@@ -39,6 +39,7 @@ DECLARE_CLASS_CODEGEN(Tracks, GameObjectTrackController, UnityEngine::MonoBehavi
                       // This is retrived from the data map since Unity doesn't copy it.
                       GameObjectTrackControllerData* data;
                       uint64_t lastCheckedTime;
+                      int attemptedTries;
 
                       public:
                       void UpdateData(bool force);
