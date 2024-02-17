@@ -6,7 +6,6 @@
 #include "GlobalNamespace/BeatmapCallbacksController.hpp"
 #include "GlobalNamespace/BeatmapCallbacksUpdater.hpp"
 #include "GlobalNamespace/BpmController.hpp"
-#include "GlobalNamespace/BpmController_InitData.hpp"
 #include "custom-types/shared/coroutine.hpp"
 #include "UnityEngine/Resources.hpp"
 #include "StaticHolders.hpp"
@@ -40,7 +39,7 @@ MAKE_HOOK_MATCH(BeatmapObjectCallbackController_Start, &BeatmapCallbacksControll
   if (controller != self) {
     controller = self;
 
-    if (auto customBeatmap = il2cpp_utils::try_cast<CustomJSONData::CustomBeatmapData>(self->beatmapData)) {
+    if (auto customBeatmap = il2cpp_utils::try_cast<CustomJSONData::CustomBeatmapData>(self->_beatmapData)) {
       if (customBeatmap.value()->customData) {
         auto& tracksBeatmapAD = TracksAD::getBeatmapAD(customBeatmap.value()->customData);
         Tracks::GameObjectTrackController::LeftHanded = tracksBeatmapAD.leftHanded;

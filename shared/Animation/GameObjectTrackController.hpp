@@ -29,9 +29,6 @@ struct GameObjectTrackControllerData {
 } // namespace Tracks
 
 DECLARE_CLASS_CODEGEN(Tracks, GameObjectTrackController, UnityEngine::MonoBehaviour,
-                      private:
-                      static bool LeftHanded;
-
                       DECLARE_INSTANCE_FIELD(UnityEngine::Transform*, parent);
                       DECLARE_INSTANCE_FIELD(UnityEngine::Transform*, origin);
                       GameObjectTrackControllerData* data;
@@ -39,6 +36,8 @@ DECLARE_CLASS_CODEGEN(Tracks, GameObjectTrackController, UnityEngine::MonoBehavi
                       int attemptedTries;
 
                       public:
+                      static bool LeftHanded;
+
                       static std::optional<GameObjectTrackController*> HandleTrackData(
                         UnityEngine::GameObject * gameObject, std::vector<Track*> const& track,
                         float noteLinesDistance, bool v2, bool overwrite);
@@ -46,7 +45,7 @@ DECLARE_CLASS_CODEGEN(Tracks, GameObjectTrackController, UnityEngine::MonoBehavi
                       static void ClearData();
 
                       void UpdateData(bool force);
-                      GameObjectTrackControllerData  getTrackControllerData();
+                      GameObjectTrackControllerData&  getTrackControllerData();
                       DECLARE_INSTANCE_METHOD(void, Awake);
                       DECLARE_INSTANCE_METHOD(void, OnDestroy);
                       DECLARE_INSTANCE_METHOD(void, OnEnable);

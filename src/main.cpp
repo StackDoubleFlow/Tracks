@@ -2,13 +2,13 @@
 #include "THooks.h"
 #include "Animation/Events.h"
 
-extern "C" void setup(ModInfo& info) {
-  info.id = "Tracks";
-  info.version = VERSION;
-  TLogger::modInfo = info;
+extern "C" void setup(CModInfo* info) {
+  info->id = "Tracks";
+  info->version = VERSION;
+  info->version_long = 0;
 }
 
-extern "C" void load() {
+extern "C" void late_load() {
   Logger& logger = TLogger::GetLogger();
   Hooks::InstallHooks(logger);
   Events::AddEventCallbacks(logger);

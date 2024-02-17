@@ -9,11 +9,13 @@
 #include "GlobalNamespace/GameplayCoreSceneSetupData.hpp"
 #include "GlobalNamespace/IDifficultyBeatmap.hpp"
 #include "GlobalNamespace/PlayerSpecificSettings.hpp"
+#include "GlobalNamespace/RecordingToolManager.hpp"
 
 #include "System/Threading/Tasks/Task.hpp"
 #include "System/Threading/Tasks/Task_1.hpp"
 #include "System/Action_1.hpp"
 #include "System/Func_2.hpp"
+#include "System/Nullable_1.hpp"
 
 #include "AssociatedData.h"
 #include "custom-json-data/shared/CustomBeatmapSaveDatav3.h"
@@ -34,15 +36,17 @@ MAKE_HOOK_MATCH(StandardLevelScenesTransitionSetupDataSO_Init, &StandardLevelSce
                 ::GlobalNamespace::IPreviewBeatmapLevel* previewBeatmapLevel,
                 ::GlobalNamespace::OverrideEnvironmentSettings* overrideEnvironmentSettings,
                 ::GlobalNamespace::ColorScheme* overrideColorScheme,
+                ::GlobalNamespace::ColorScheme* beatmapOverrideColorScheme,
                 ::GlobalNamespace::GameplayModifiers* gameplayModifiers,
                 ::GlobalNamespace::PlayerSpecificSettings* playerSpecificSettings,
                 ::GlobalNamespace::PracticeSettings* practiceSettings, ::StringW backButtonText,
                 bool useTestNoteCutSoundEffects, bool startPaused,
-                ::GlobalNamespace::BeatmapDataCache* beatmapDataCache) {
+                ::GlobalNamespace::BeatmapDataCache* beatmapDataCache,
+                System::Nullable_1<GlobalNamespace::RecordingToolManager::SetupData> recordingToolData) {
   StandardLevelScenesTransitionSetupDataSO_Init(self, gameMode, difficultyBeatmap, previewBeatmapLevel,
-                                                overrideEnvironmentSettings, overrideColorScheme, gameplayModifiers,
-                                                playerSpecificSettings, practiceSettings, backButtonText,
-                                                useTestNoteCutSoundEffects, startPaused, beatmapDataCache);
+                                                overrideEnvironmentSettings, overrideColorScheme, beatmapOverrideColorScheme,
+                                                gameplayModifiers, playerSpecificSettings, practiceSettings, backButtonText,
+                                                useTestNoteCutSoundEffects, startPaused, beatmapDataCache, recordingToolData);
 
   TracksStatic::bpmController = nullptr;
 

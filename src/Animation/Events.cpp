@@ -178,7 +178,7 @@ void CustomEventCallback(BeatmapCallbacksController* callbackController,
       // fail safe, idek why this needs to be done smh
       // CJD you bugger
       if (!eventAD.parsed) {
-        auto* customBeatmapData = (CustomJSONData::CustomBeatmapData*)callbackController->beatmapData;
+        auto* customBeatmapData = (CustomJSONData::CustomBeatmapData*)callbackController->_beatmapData;
         TracksAD::BeatmapAssociatedData& beatmapAD = TracksAD::getBeatmapAD(customBeatmapData->customData);
 
         if (!beatmapAD.valid) {
@@ -202,7 +202,7 @@ void CustomEventCallback(BeatmapCallbacksController* callbackController,
       auto easing = eventAD.easing; auto repeat = eventAD.repeat;
 
       bool noDuration = duration == 0 || customEventData->time + (duration * (repeat + 1)) <
-                                             TracksStatic::bpmController->beatmapCallbacksController->songTime;
+                                             TracksStatic::bpmController->_beatmapCallbacksController->songTime;
 
       switch (eventAD.type) {
         case EventType::animateTrack: {

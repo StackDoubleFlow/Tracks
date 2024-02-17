@@ -29,7 +29,7 @@ constexpr Vector3 SmoothVectorLerp(std::span<PointData> const points, int a, int
   float q2 = (-3.0f * ttt) + (4.0f * tt) + t;
   float q3 = ttt - tt;
 
-  Vector3 c = 0.5f * ((p0 * q0) + (p1 * q1) + (p2 * q2) + (p3 * q3));
+  Vector3 c = ((p0 * q0) + (p1 * q1) + (p2 * q2) + (p3 * q3)) * 0.5f;
 
   return c;
 }

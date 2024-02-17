@@ -17,7 +17,7 @@ using namespace UnityEngine;
 MAKE_HOOK_MATCH(SceneManager_Internal_SceneLoaded, &UnityEngine::SceneManagement::SceneManager::Internal_SceneLoaded,
                 void, UnityEngine::SceneManagement::Scene scene, UnityEngine::SceneManagement::LoadSceneMode mode) {
 
-  if (scene && scene.IsValid() && scene.get_name() == "GameCore") {
+  if (scene.IsValid() && scene.get_name() == "GameCore") {
     Tracks::GameObjectTrackController::ClearData();
   }
 

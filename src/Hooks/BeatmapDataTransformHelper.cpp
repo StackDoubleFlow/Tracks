@@ -228,7 +228,7 @@ MAKE_HOOK_MATCH(BeatmapDataTransformHelper_CreateTransformedBeatmapData,
     LoadTrackEvent(customEventData, beatmapAD, result->v2orEarlier);
   }
 
-  return result->i_IReadonlyBeatmapData();
+  return result->i___GlobalNamespace__IReadonlyBeatmapData();
 }
 
 void InstallBeatmapDataTransformHelperHooks(Logger& logger) {
