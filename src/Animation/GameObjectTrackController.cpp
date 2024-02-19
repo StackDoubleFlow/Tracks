@@ -45,7 +45,9 @@ void GameObjectTrackController::Awake() {
   // OnTransformParentChanged();
 }
 void GameObjectTrackController::OnDestroy() {
-  if (!data) return;
+  if (data == nullptr) {
+    return;
+  }
 
   delete data;
   data = nullptr;
@@ -68,9 +70,9 @@ void GameObjectTrackController::Update() {
 
 void GameObjectTrackController::UpdateData(bool force) {
   if (!data) {
-    CJDLogger::Logger.fmtLog<Paper::LogLevel::ERR>(
-        "Data is null! Should remove component or just early return? {} {}", fmt::ptr(this),
-        static_cast<std::string>(get_gameObject()->get_name()));
+    CJDLogger::Logger.fmtLog<Paper::LogLevel::ERR>("Data is null! Should remove component or just early return? {} {}",
+                                                   fmt::ptr(this),
+                                                   static_cast<std::string>(get_gameObject()->get_name()));
     CJDLogger::Logger.Backtrace(10);
     // Destroy the object if the data is never found
     if (attemptedTries > 100) {
@@ -201,18 +203,16 @@ GameObjectTrackController::HandleTrackData(UnityEngine::GameObject* gameObject, 
                                            float noteLinesDistance, bool v2, bool overwrite) {
   auto* existingTrackController = gameObject->GetComponent<GameObjectTrackController*>();
 
-  if (existingTrackController != nullptr)
-  {
-      if (overwrite)
-      {
-          CJDLogger::Logger.fmtLog<Paper::LogLevel::INF>("Overwriting existing TransformController on {}...", std::string(gameObject->get_name()));
-          UnityEngine::Object::Destroy(existingTrackController);
-      }
-      else
-      {
-          CJDLogger::Logger.fmtLog<Paper::LogLevel::INF>("Could not create TransformController, {} already has one.", std::string(gameObject->get_name()));
-          return existingTrackController;
-      }
+  if (existingTrackController != nullptr) {
+    if (overwrite) {
+      CJDLogger::Logger.fmtLog<Paper::LogLevel::INF>("Overwriting existing TransformController on {}...",
+                                                     std::string(gameObject->get_name()));
+      UnityEngine::Object::Destroy(existingTrackController);
+    } else {
+      CJDLogger::Logger.fmtLog<Paper::LogLevel::INF>("Could not create TransformController, {} already has one.",
+                                                     std::string(gameObject->get_name()));
+      return existingTrackController;
+    }
   }
 
   if (track.empty()) {
@@ -221,7 +221,8 @@ GameObjectTrackController::HandleTrackData(UnityEngine::GameObject* gameObject, 
 
   auto* trackController = gameObject->AddComponent<GameObjectTrackController*>();
   CRASH_UNLESS(!track.empty());
-  CJDLogger::Logger.fmtLog<Paper::LogLevel::INF>("Created track game object with ID {}", static_cast<std::string>(gameObject->get_name()));
+  CJDLogger::Logger.fmtLog<Paper::LogLevel::INF>("Created track game object with ID {}",
+                                                 static_cast<std::string>(gameObject->get_name()));
   // cleaned up on OnDestroy
   trackController->data = new GameObjectTrackControllerData(track, v2);
 

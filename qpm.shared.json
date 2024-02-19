@@ -120,13 +120,13 @@
     {
       "dependency": {
         "id": "sombrero",
-        "versionRange": "=0.1.37",
+        "versionRange": "=0.1.39",
         "additionalData": {
           "headersOnly": true,
-          "branchName": "version-v0.1.37"
+          "branchName": "version/v0_1_39"
         }
       },
-      "version": "0.1.37"
+      "version": "0.1.39"
     },
     {
       "dependency": {
