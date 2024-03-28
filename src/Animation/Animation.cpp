@@ -22,7 +22,7 @@ PointDefinition* TryGetPointData(BeatmapAssociatedData& beatmapAD, PointDefiniti
     if (itr != beatmapAD.pointDefinitions.end()) {
       pointData = &itr->second;
     } else {
-      TLogger::GetLogger().warning("Could not find point definition %s", pointString.GetString());
+      TLogger::Logger.warn("Could not find point definition {}", pointString.GetString());
     }
     break;
   }

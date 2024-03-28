@@ -26,6 +26,9 @@ struct Vector4 : public UnityEngine::Vector4 {
   constexpr operator Vector3() const {
     return Vector3(x, y, z);
   }
+  bool operator==(const Vector4& other) const {
+    return x == other.x && y == other.y && z == other.z && w == other.w;
+  }
 };
 
 struct Vector5 {

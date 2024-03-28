@@ -29,7 +29,7 @@ constexpr Vector3 SmoothVectorLerp(std::span<PointData> const points, int a, int
   float q2 = (-3.0f * ttt) + (4.0f * tt) + t;
   float q3 = ttt - tt;
 
-  Vector3 c = 0.5f * ((p0 * q0) + (p1 * q1) + (p2 * q2) + (p3 * q3));
+  Vector3 c = ((p0 * q0) + (p1 * q1) + (p2 * q2) + (p3 * q3)) * 0.5f;
 
   return c;
 }
@@ -117,7 +117,7 @@ PointDefinition::PointDefinition(rapidjson::Value const& value) {
     else if (rawPoint.IsNumber()) {
       alternateList.emplace_back(rawPoint.GetFloat());
     } else {
-      TLogger::GetLogger().warning("Unknown point type: %i", rawPoint.GetType());
+      TLogger::Logger.warn("Unknown point type: {}", static_cast<int>(rawPoint.GetType()));
     }
   }
 
@@ -143,7 +143,7 @@ PointDefinition::PointDefinition(rapidjson::Value const& value) {
     value.Accept(writer);
     auto str = sb.GetString();
 
-    TLogger::GetLogger().warning("Empty point data: %s", str);
+    TLogger::Logger.warn("Empty point data: {}", str);
   }
 }
 
@@ -300,7 +300,7 @@ bool PointDefinition::isSingle() const {
 
 void PointDefinitionManager::AddPoint(std::string const& pointDataName, PointDefinition const& pointData) {
   if (this->pointData.contains(pointDataName)) {
-    TLogger::GetLogger().error("Duplicate point definition name, %s could not be registered!", pointDataName.data());
+    TLogger::Logger.error("Duplicate point definition name, {} could not be registered!", pointDataName.data());
   } else {
     this->pointData.try_emplace(pointDataName, pointData);
   }
@@ -308,7 +308,7 @@ void PointDefinitionManager::AddPoint(std::string const& pointDataName, PointDef
 
 void PointDefinitionManager::AddPoint(std::string const& pointDataName, PointDefinition&& pointData) {
   if (this->pointData.contains(pointDataName)) {
-    TLogger::GetLogger().error("Duplicate point definition name, %s could not be registered!", pointDataName.data());
+    TLogger::Logger.error("Duplicate point definition name, {} could not be registered!", pointDataName.data());
   } else {
     this->pointData.try_emplace(pointDataName, std::move(pointData));
   }

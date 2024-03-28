@@ -25,7 +25,7 @@ Functions FunctionFromStr(std::string_view str) {
   if (itr != functions.end()) {
     return itr->second;
   } else {
-    TLogger::GetLogger().error("Invalid function with name %s", str.data());
+    TLogger::Logger.error("Invalid function with name {}", str.data());
     // Use linear by default
     return Functions::easeLinear;
   }
