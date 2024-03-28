@@ -24,8 +24,9 @@ MAKE_HOOK_MATCH(SceneManager_Internal_SceneLoaded, &UnityEngine::SceneManagement
   SceneManager_Internal_SceneLoaded(scene, mode);
 }
 
-void SceneManager_Internal(Logger& logger) {
+void InstallSceneManagerHooks() {
+  auto logger = Paper::ConstLoggerContext("Tracks | InstallBeatmapObjectCallbackControllerHooks");
   INSTALL_HOOK(logger, SceneManager_Internal_SceneLoaded);
 }
 
-TInstallHooks(SceneManager_Internal)
+TInstallHooks(InstallSceneManagerHooks)

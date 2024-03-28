@@ -9,7 +9,6 @@ extern "C" void setup(CModInfo* info) {
 }
 
 extern "C" void late_load() {
-  Logger& logger = TLogger::GetLogger();
-  Hooks::InstallHooks(logger);
-  Events::AddEventCallbacks(logger);
+  Hooks::InstallHooks();
+  Events::AddEventCallbacks();
 }

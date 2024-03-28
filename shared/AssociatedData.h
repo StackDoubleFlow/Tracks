@@ -149,6 +149,7 @@ struct CustomEventAssociatedData {
   bool parsed = false;
 };
 
+void LoadTrackEvent(CustomJSONData::CustomEventData const* customEventData, TracksAD::BeatmapAssociatedData& beatmapAD, bool v2);
 void readBeatmapDataAD(CustomJSONData::CustomBeatmapData* beatmapData);
 BeatmapAssociatedData& getBeatmapAD(CustomJSONData::JSONWrapper* customData);
 BeatmapObjectAssociatedData& getAD(CustomJSONData::JSONWrapper* customData);

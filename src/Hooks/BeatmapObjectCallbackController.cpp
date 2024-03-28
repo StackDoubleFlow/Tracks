@@ -57,7 +57,8 @@ MAKE_HOOK_FIND_INSTANCE(BpmController_ctor, classof(BpmController*), ".ctor", vo
   TracksStatic::bpmController = self;
 }
 
-void InstallBeatmapObjectCallbackControllerHooks(Logger& logger) {
+void InstallBeatmapObjectCallbackControllerHooks() {
+  auto logger = Paper::ConstLoggerContext("Tracks | InstallBeatmapObjectCallbackControllerHooks");
   INSTALL_HOOK(logger, BeatmapObjectCallbackController_Start);
   INSTALL_HOOK(logger, BpmController_ctor);
 }

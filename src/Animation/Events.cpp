@@ -39,7 +39,7 @@ MAKE_HOOK_MATCH(BeatmapObjectSpawnController_Start, &BeatmapObjectSpawnControlle
   spawnController = self;
   coroutines.clear();
   pathCoroutines.clear();
-  TLogger::GetLogger().debug("coroutines and pathCoroutines capacity: %lu and %lu", coroutines.capacity(),
+  TLogger::Logger.debug("coroutines and pathCoroutines capacity: {} and {}", coroutines.capacity(),
                              pathCoroutines.capacity());
   BeatmapObjectSpawnController_Start(self);
 }
@@ -154,10 +154,6 @@ void Events::UpdateCoroutines(BeatmapCallbacksController* callbackController) {
   }
 }
 
-// BeatmapDataTransformHelper.cpp
-void LoadTrackEvent(CustomJSONData::CustomEventData const* customEventData, TracksAD::BeatmapAssociatedData& beatmapAD,
-                    bool v2);
-
 void CustomEventCallback(BeatmapCallbacksController* callbackController,
                          CustomJSONData::CustomEventData* customEventData) {
   PAPER_IL2CPP_CATCH_HANDLER(
@@ -178,11 +174,15 @@ void CustomEventCallback(BeatmapCallbacksController* callbackController,
       // fail safe, idek why this needs to be done smh
       // CJD you bugger
       if (!eventAD.parsed) {
+        TLogger::Logger.debug("callbackController {}", fmt::ptr(callbackController));
+        TLogger::Logger.debug("_beatmapData {}", fmt::ptr(callbackController->_beatmapData));
         auto* customBeatmapData = (CustomJSONData::CustomBeatmapData*)callbackController->_beatmapData;
+        TLogger::Logger.debug("customBeatmapData {}", fmt::ptr(customBeatmapData));
+
         TracksAD::BeatmapAssociatedData& beatmapAD = TracksAD::getBeatmapAD(customBeatmapData->customData);
 
         if (!beatmapAD.valid) {
-          TLogger::GetLogger().debug("Beatmap wasn't parsed when event is invoked, what?");
+          TLogger::Logger.debug("Beatmap wasn't parsed when event is invoked, what?");
           TracksAD::readBeatmapDataAD(customBeatmapData);
         }
 
@@ -272,7 +272,8 @@ void CustomEventCallback(BeatmapCallbacksController* callbackController,
       })
 }
 
-void Events::AddEventCallbacks(Logger& logger) {
+void Events::AddEventCallbacks() {
+  auto logger = Paper::ConstLoggerContext("Tracks | AddEventCallbacks");
   CustomJSONData::CustomEventCallbacks::AddCustomEventCallback(&CustomEventCallback);
 
   INSTALL_HOOK(logger, BeatmapObjectSpawnController_Start);

@@ -8,7 +8,7 @@ class BeatmapCallbacksController;
 
 namespace Events {
 
-void AddEventCallbacks(Logger& logger);
+void AddEventCallbacks();
 void UpdateCoroutines(GlobalNamespace::BeatmapCallbacksController* callbackController);
 
 struct AnimateTrackContext {

@@ -4,8 +4,5 @@
 
 class TLogger {
 public:
-  static Logger& GetLogger() {
-    static auto logger = new Logger(modloader::ModInfo{"Tracks", VERSION, 0}, LoggerOptions(false, true));
-    return *logger;
-  }
+  static constexpr auto Logger = Paper::ConstLoggerContext("Tracks");
 };
