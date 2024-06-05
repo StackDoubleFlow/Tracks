@@ -98,7 +98,7 @@ getPathPropertyNullable(Track const* track, std::optional<PointDefinitionInterpo
 }
 
 template <typename T, typename F>
-static std::optional<std::vector<T>> getPropertiesNullable(std::span<Track const*> const tracks, F&& propFn,
+static std::optional<std::vector<T>> getPropertiesNullable(std::span<Track const* const> const tracks, F&& propFn,
                                                            uint32_t lastCheckedTime) {
   if (tracks.empty()) return std::nullopt;
 
@@ -123,8 +123,8 @@ using PathPropertyLambda = std::function<std::optional<PointDefinitionInterpolat
 using PropertyLambda = std::function<std::optional<PropertyValue> const&(Track const*)>;
 
 template <typename T, typename VectorExpression = PathPropertyLambda>
-[[nodiscard]] static std::optional<T> MultiTrackPathProps(std::span<Track const*> tracks, T const& defaultT, float time,
-                                                          VectorExpression const& vectorExpression) {
+[[nodiscard]] static std::optional<T> MultiTrackPathProps(std::span<Track const* const> tracks, T const& defaultT,
+                                                          float time, VectorExpression const& vectorExpression) {
   if (tracks.empty()) return std::nullopt;
 
   bool valid = false;
@@ -144,8 +144,8 @@ template <typename T, typename VectorExpression = PathPropertyLambda>
 }
 
 template <typename T, typename VectorExpression = PathPropertyLambda>
-[[nodiscard]] static std::optional<T> SumTrackPathProps(std::span<Track const*> tracks, T const& defaultT, float time,
-                                                        VectorExpression const& vectorExpression) {
+[[nodiscard]] static std::optional<T> SumTrackPathProps(std::span<Track const* const> tracks, T const& defaultT,
+                                                        float time, VectorExpression const& vectorExpression) {
   if (tracks.empty()) return std::nullopt;
 
   bool valid = false;
@@ -165,7 +165,7 @@ template <typename T, typename VectorExpression = PathPropertyLambda>
 }
 
 template <typename T, typename VectorExpression = PropertyLambda>
-[[nodiscard]] static std::optional<T> MultiTrackProps(std::span<Track const*> tracks, T const& defaultT,
+[[nodiscard]] static std::optional<T> MultiTrackProps(std::span<Track const* const> tracks, T const& defaultT,
                                                       VectorExpression const& vectorExpression) {
 
   if (tracks.empty()) return std::nullopt;
@@ -187,7 +187,7 @@ template <typename T, typename VectorExpression = PropertyLambda>
 }
 
 template <typename T, typename VectorExpression = PropertyLambda>
-[[nodiscard]] static std::optional<T> SumTrackProps(std::span<Track const*> tracks, T const& defaultT,
+[[nodiscard]] static std::optional<T> SumTrackProps(std::span<Track const* const> tracks, T const& defaultT,
                                                     VectorExpression const& vectorExpression) {
   if (tracks.empty()) return std::nullopt;
 
