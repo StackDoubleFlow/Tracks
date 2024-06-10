@@ -16,9 +16,7 @@
       "id": "beatsaber-hook",
       "versionRange": ">5.1.0<5.1.7",
       "additionalData": {
-        "extraFiles": [
-          "src/inline-hook"
-        ]
+        "extraFiles": ["src/inline-hook"]
       }
     },
     {
@@ -63,9 +61,9 @@
   ],
   "workspace": {
     "scripts": {
-      "build": [
-        "pwsh ./build.ps1"
-      ]
-    }
+      "build": ["pwsh ./build.ps1"]
+    },
+    "qmodIncludeDirs": ["./build", "./extern/libs"],
+    "qmodOutput": "Tracks.qmod"
   }
 }
