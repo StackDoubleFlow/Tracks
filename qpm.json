@@ -21,7 +21,7 @@
     },
     {
       "id": "bs-cordl",
-      "versionRange": "3700.*",
+      "versionRange": "^3700.0.0",
       "additionalData": {
         "includeQmod": true
       }
