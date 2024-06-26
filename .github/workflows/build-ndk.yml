@@ -2,7 +2,7 @@ name: NDK build
 
 env:
   module_id: tracks
-  qmodName: tracks
+  qmodName: Tracks
   cache-name: tracks_cache
 
 on:
@@ -49,12 +49,7 @@ jobs:
         run: |
           cd ${GITHUB_WORKSPACE}
           qpm-rust s build
-          qpm-rust qmod build
-
-
-      - name: Create Qmod
-        run: |
-          pwsh -Command ./createqmod.ps1 ${{env.qmodName}}
+          qpm-rust qmod zip
 
       - name: Get Library Name
         id: libname
@@ -63,6 +58,7 @@ jobs:
           pattern="lib${module_id}*.so"
           files=( $pattern )
           echo ::set-output name=NAME::"${files[0]}"
+          
       - name: Upload non-debug artifact
         uses: actions/upload-artifact@v2
         with:

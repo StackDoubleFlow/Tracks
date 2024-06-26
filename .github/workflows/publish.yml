@@ -2,7 +2,7 @@ name: Publish QPM Package
 
 env:
   module_id: tracks
-  qmodName: tracks
+  qmodName: Tracks
   cache-name: tracks_cache
 
 on:
