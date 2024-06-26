@@ -115,7 +115,7 @@ public:
   };
 
   operator std::span<const T>() const {
-    return std::span<T>(this->data(), this->size());
+    return std::span<T const>(this->data(), this->size());
   };
 
   operator std::span<T>() const {

@@ -2,6 +2,6 @@
 
 #include "GlobalNamespace/BpmController.hpp"
 
-struct TracksStatic {
+struct __attribute__((visibility("default"))) TracksStatic {
   static SafePtr<GlobalNamespace::BpmController> bpmController;
 };

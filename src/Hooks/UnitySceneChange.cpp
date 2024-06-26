@@ -17,15 +17,16 @@ using namespace UnityEngine;
 MAKE_HOOK_MATCH(SceneManager_Internal_SceneLoaded, &UnityEngine::SceneManagement::SceneManager::Internal_SceneLoaded,
                 void, UnityEngine::SceneManagement::Scene scene, UnityEngine::SceneManagement::LoadSceneMode mode) {
 
-  if (scene && scene.IsValid() && scene.get_name() == "GameCore") {
+  if (scene.IsValid() && scene.get_name() == "GameCore") {
     Tracks::GameObjectTrackController::ClearData();
   }
 
   SceneManager_Internal_SceneLoaded(scene, mode);
 }
 
-void SceneManager_Internal(Logger& logger) {
+void InstallSceneManagerHooks() {
+  auto logger = Paper::ConstLoggerContext("Tracks | InstallBeatmapObjectCallbackControllerHooks");
   INSTALL_HOOK(logger, SceneManager_Internal_SceneLoaded);
 }
 
-TInstallHooks(SceneManager_Internal)
+TInstallHooks(InstallSceneManagerHooks)

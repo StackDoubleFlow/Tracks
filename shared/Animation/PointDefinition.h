@@ -8,6 +8,7 @@
 #include "UnityEngine/Color.hpp"
 
 struct PointData {
+  public:
   sbo::small_vector<float, 5> pointDatas;
   NEVector::Quaternion quat;
   float time;
@@ -25,22 +26,23 @@ struct PointData {
     convertToQuaternion();
   };
 
+  // Convert ahead of time
   void convertToQuaternion() {
-    if (pointDatas.size() >= 3) {
-      static auto Quaternion_Euler =
-          il2cpp_utils::il2cpp_type_check::FPtrWrapper<static_cast<UnityEngine::Quaternion (*)(UnityEngine::Vector3)>(
-              &UnityEngine::Quaternion::Euler)>::get();
-      quat = Quaternion_Euler(toVector3());
+    if (pointDatas.size() < 3) {
+      return;
     }
+
+    quat = Sombrero::FastQuaternion::Euler(toVector3());
   }
 
   [[nodiscard]] NEVector::Vector4 toVector4() const {
     // reaxt did a _color "_color":[[1,1,1,0]]
     // when it should be "_color":[[1,1,1,0,0]]
-    if (pointDatas.size() >= 4)
+    if (pointDatas.size() >= 4) {
       return { pointDatas[0], pointDatas[1], pointDatas[2], pointDatas[4] };
-    else
-      return {};
+    }
+
+    return {};
   }
   [[nodiscard]] UnityEngine::Color toColor() const {
     auto v = toVector4();
@@ -48,17 +50,19 @@ struct PointData {
   }
 
   [[nodiscard]] constexpr NEVector::Vector3 toVector3() const {
-    if (pointDatas.size() >= 3)
+    if (pointDatas.size() >= 3) {
       return { pointDatas[0], pointDatas[1], pointDatas[2] };
-    else
-      return {};
+    }
+
+    return {};
   }
 
   [[nodiscard]] constexpr float toFloat() const {
-    if (!pointDatas.empty())
+    if (!pointDatas.empty()) {
       return pointDatas[0];
-    else
-      return {};
+    }
+    
+    return {};
   }
 
   [[nodiscard]] constexpr NEVector::Quaternion toQuaternion() const {
@@ -68,13 +72,13 @@ struct PointData {
 
 class PointDefinition {
 public:
-  PointDefinition(rapidjson::Value const& value);
+  explicit PointDefinition(rapidjson::Value const& value);
   [[nodiscard]] NEVector::Vector3 Interpolate(float time, bool& last) const;
   [[nodiscard]] NEVector::Quaternion InterpolateQuaternion(float time, bool& last) const;
   [[nodiscard]] float InterpolateLinear(float time, bool& last) const;
   [[nodiscard]] NEVector::Vector4 InterpolateVector4(float time, bool& last) const;
 
-  static const PointDefinition EMPTY_POINT;
+  static PointDefinition const EMPTY_POINT;
 
   [[nodiscard]] bool isSingle() const;
 

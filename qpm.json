@@ -4,7 +4,7 @@
   "info": {
     "name": "Tracks",
     "id": "tracks",
-    "version": "0.9.0",
+    "version": "1.0.0",
     "url": "https://github.com/StackDoubleFlow/Tracks",
     "additionalData": {
       "overrideSoName": "libtracks.so",
@@ -14,23 +14,21 @@
   "dependencies": [
     {
       "id": "beatsaber-hook",
-      "versionRange": "^3.14.0",
+      "versionRange": ">5.1.0<5.1.7",
       "additionalData": {
-        "extraFiles": [
-          "src/inline-hook"
-        ]
+        "extraFiles": ["src/inline-hook"]
       }
     },
     {
-      "id": "codegen",
-      "versionRange": "^0.33.0",
+      "id": "bs-cordl",
+      "versionRange": "3602.*",
       "additionalData": {
         "includeQmod": true
       }
     },
     {
       "id": "custom-json-data",
-      "versionRange": "^0.20.0",
+      "versionRange": "^0.21.0",
       "additionalData": {}
     },
     {
@@ -39,33 +37,33 @@
       "additionalData": {}
     },
     {
-      "id": "modloader",
+      "id": "scotland2",
       "versionRange": "*",
       "additionalData": {}
     },
     {
       "id": "custom-types",
-      "versionRange": "^0.15",
+      "versionRange": "^0.17.0",
       "additionalData": {
         "includeQmod": true
       }
     },
     {
       "id": "paper",
-      "versionRange": "^1.0.5",
+      "versionRange": "*",
       "additionalData": {}
     },
     {
-      "id": "songloader",
-      "versionRange": "^0.10.0",
+      "id": "songcore",
+      "versionRange": "^1.1.0",
       "additionalData": {}
     }
   ],
   "workspace": {
     "scripts": {
-      "build": [
-        "pwsh ./build.ps1"
-      ]
-    }
+      "build": ["pwsh ./build.ps1"]
+    },
+    "qmodIncludeDirs": ["./build", "./extern/libs"],
+    "qmodOutput": "Tracks.qmod"
   }
 }

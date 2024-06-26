@@ -1,18 +1,19 @@
 #pragma once
 #include "TLogger.h"
+#include <android/log.h>
 
 class Hooks {
 private:
-  static inline std::vector<void (*)(Logger& logger)> installFuncs;
+  static inline std::vector<void (*)()> installFuncs;
 
 public:
-  static inline void AddInstallFunc(void (*installFunc)(Logger& logger)) {
+  static inline void AddInstallFunc(void (*installFunc)()) {
     installFuncs.push_back(installFunc);
   }
 
-  static inline void InstallHooks(Logger& logger) {
+  static inline void InstallHooks() {
     for (auto installFunc : installFuncs) {
-      installFunc(logger);
+      installFunc();
     }
   }
 };
