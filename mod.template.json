@@ -10,6 +10,7 @@
   "description": "Animation for Noodle and Chroma. Requires CustomJSONData. Don't delete",
   "modFiles": [],
   "dependencies": [],
+  "lateModFiles": ["${binary}"],
   "libraryFiles": [],
   "fileCopies": [],
   "copyExtensions": []
