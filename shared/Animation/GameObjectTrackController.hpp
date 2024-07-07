@@ -47,6 +47,7 @@ DECLARE_CLASS_CODEGEN(Tracks, GameObjectTrackController, UnityEngine::MonoBehavi
                       void UpdateData(bool force);
                       GameObjectTrackControllerData&  getTrackControllerData();
                       DECLARE_INSTANCE_METHOD(void, Awake);
+                      DECLARE_INSTANCE_METHOD(void, Start);
                       DECLARE_INSTANCE_METHOD(void, OnDestroy);
                       DECLARE_INSTANCE_METHOD(void, OnEnable);
                       DECLARE_INSTANCE_METHOD(void, Update);

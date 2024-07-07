@@ -40,10 +40,15 @@ void GameObjectTrackController::ClearData() {
 
 void GameObjectTrackController::Awake() {
   attemptedTries = 0;
-  CRASH_UNLESS(!data);
 
   // OnTransformParentChanged();
 }
+
+void GameObjectTrackController::Start() {
+  CJDLogger::Logger.fmtLog<Paper::LogLevel::INF>("Checking data {}", fmt::ptr(data));
+  CRASH_UNLESS(data);
+}
+
 void GameObjectTrackController::OnDestroy() {
   if (data == nullptr) {
     return;
