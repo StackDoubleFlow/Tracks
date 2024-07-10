@@ -9,6 +9,10 @@ extern "C" void setup(CModInfo* info) {
 }
 
 extern "C" void late_load() {
+  // Force load to ensure order
+  auto cjdModInfo = CustomJSONData::modInfo.to_c();
+  modloader_require_mod(&cjdModInfo, CMatchType::MatchType_IdOnly);
+
   Hooks::InstallHooks();
   Events::AddEventCallbacks();
 }
