@@ -75,12 +75,20 @@ void GameObjectTrackController::Update() {
 
 void GameObjectTrackController::UpdateData(bool force) {
   if (!data) {
-    CJDLogger::Logger.fmtLog<Paper::LogLevel::ERR>("Data is null! Should remove component or just early return? {} {}",
-                                                   fmt::ptr(this),
-                                                   static_cast<std::string>(get_gameObject()->get_name()));
+
+    // Wait once just in case
+    if (attemptedTries > 1) {
+      CJDLogger::Logger.fmtLog<Paper::LogLevel::ERR>(
+          "Data is null! Should remove component or just early return? {} {}", fmt::ptr(this),
+          static_cast<std::string>(get_gameObject()->get_name()));
+    }
+    
     CJDLogger::Logger.Backtrace(10);
     // Destroy the object if the data is never found
     if (attemptedTries > 100) {
+      CJDLogger::Logger.fmtLog<Paper::LogLevel::ERR>(
+          "Destroying object", fmt::ptr(this),
+          static_cast<std::string>(get_gameObject()->get_name()));
       Destroy(this);
     } else {
       attemptedTries++;
