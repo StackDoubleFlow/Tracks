@@ -12,24 +12,35 @@
       "cmake": true
     }
   },
+  "workspace": {
+    "scripts": {
+      "build": [
+        "pwsh ./build.ps1"
+      ]
+    },
+    "qmodIncludeDirs": [
+      "./build",
+      "./extern/libs"
+    ],
+    "qmodIncludeFiles": [],
+    "qmodOutput": "Tracks.qmod"
+  },
   "dependencies": [
     {
       "id": "beatsaber-hook",
-      "versionRange": "^5.1.7",
-      "additionalData": {
-        "extraFiles": ["src/inline-hook"]
-      }
+      "versionRange": "^6.1.7",
+      "additionalData": {}
     },
     {
       "id": "bs-cordl",
-      "versionRange": "^3700.0.0",
+      "versionRange": "^4000.0.0",
       "additionalData": {
         "includeQmod": true
       }
     },
     {
       "id": "custom-json-data",
-      "versionRange": "^0.21.0",
+      "versionRange": "^0.22.0",
       "additionalData": {}
     },
     {
@@ -44,27 +55,20 @@
     },
     {
       "id": "custom-types",
-      "versionRange": "^0.17.0",
+      "versionRange": "^0.18.0",
       "additionalData": {
         "includeQmod": true
       }
     },
     {
-      "id": "paper",
-      "versionRange": "*",
-      "additionalData": {}
-    },
-    {
       "id": "songcore",
       "versionRange": "^1.1.0",
       "additionalData": {}
-    }
-  ],
-  "workspace": {
-    "scripts": {
-      "build": ["pwsh ./build.ps1"]
     },
-    "qmodIncludeDirs": ["./build", "./extern/libs"],
-    "qmodOutput": "Tracks.qmod"
-  }
+    {
+      "id": "paper2_scotland2",
+      "versionRange": "^4.4.1",
+      "additionalData": {}
+    }
+  ]
 }

@@ -28,31 +28,31 @@ struct GameObjectTrackControllerData {
 };
 } // namespace Tracks
 
-DECLARE_CLASS_CODEGEN(Tracks, GameObjectTrackController, UnityEngine::MonoBehaviour,
-                      DECLARE_INSTANCE_FIELD(UnityEngine::Transform*, parent);
-                      DECLARE_INSTANCE_FIELD(UnityEngine::Transform*, origin);
-                      GameObjectTrackControllerData* data;
-                      uint64_t lastCheckedTime;
-                      int attemptedTries;
+DECLARE_CLASS_CODEGEN(Tracks, GameObjectTrackController, UnityEngine::MonoBehaviour) {
+  DECLARE_INSTANCE_FIELD(UnityEngine::Transform*, parent);
+  DECLARE_INSTANCE_FIELD(UnityEngine::Transform*, origin);
+  GameObjectTrackControllerData* data;
+  uint64_t lastCheckedTime;
+  int attemptedTries;
 
-                      public:
-                      static bool LeftHanded;
+public:
+  static bool LeftHanded;
 
-                      static std::optional<GameObjectTrackController*> HandleTrackData(
-                        UnityEngine::GameObject * gameObject, std::vector<Track*> const& track,
-                        float noteLinesDistance, bool v2, bool overwrite);
+  static std::optional<GameObjectTrackController*> HandleTrackData(UnityEngine::GameObject * gameObject,
+                                                                   std::vector<Track*> const& track,
+                                                                   float noteLinesDistance, bool v2, bool overwrite);
 
-                      static void ClearData();
+  static void ClearData();
 
-                      void UpdateData(bool force);
-                      GameObjectTrackControllerData&  getTrackControllerData();
-                      DECLARE_INSTANCE_METHOD(void, Awake);
-                      DECLARE_INSTANCE_METHOD(void, Start);
-                      DECLARE_INSTANCE_METHOD(void, OnDestroy);
-                      DECLARE_INSTANCE_METHOD(void, OnEnable);
-                      DECLARE_INSTANCE_METHOD(void, Update);
-                      DECLARE_INSTANCE_METHOD(void, OnTransformParentChanged);
+  void UpdateData(bool force);
+  GameObjectTrackControllerData& getTrackControllerData();
+  DECLARE_INSTANCE_METHOD(void, Awake);
+  DECLARE_INSTANCE_METHOD(void, Start);
+  DECLARE_INSTANCE_METHOD(void, OnDestroy);
+  DECLARE_INSTANCE_METHOD(void, OnEnable);
+  DECLARE_INSTANCE_METHOD(void, Update);
+  DECLARE_INSTANCE_METHOD(void, OnTransformParentChanged);
 
-                      DECLARE_SIMPLE_DTOR();
-                      DECLARE_DEFAULT_CTOR();
-)
+  DECLARE_SIMPLE_DTOR();
+  DECLARE_DEFAULT_CTOR();
+};
