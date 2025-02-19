@@ -226,7 +226,7 @@ void CustomEventCallback(BeatmapCallbacksController* callbackController,
                 continue;
               }
 
-              bool skipCoroutine = pointData->isSingle() || noDuration;
+              bool skipCoroutine = pointData->count() == 1 || noDuration;
               Events::AnimateTrackContext context(pointData, property, duration, customEventData->time, easing, repeat);
               if (!skipCoroutine) {
                 coroutines.emplace_back(context);

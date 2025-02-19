@@ -92,15 +92,15 @@ public:
   bool leftHanded = false;
   bool v2;
   std::unordered_map<std::string, Track, string_hash, string_equal> tracks;
-  std::unordered_map<std::string, PointDefinition, string_hash, string_equal> pointDefinitions;
+  std::unordered_map<std::string, const rapidjson::Value*, string_hash, string_equal> pointDefinitions;
 
   // anon point defs are just point defs created later
   // for owning the point definition and freeing them
   std::unordered_set<std::shared_ptr<PointDefinition>> anonPointDefinitions;
 
-  inline PointDefinition* getPointDefinition(rapidjson::Value const& val, std::string_view key) {
+  inline PointDefinition* getPointDefinition(rapidjson::Value const& val, std::string_view key, PointType type) {
     PointDefinition* anonPointDef = nullptr;
-    PointDefinition* pointData = Animation::TryGetPointData(*this, anonPointDef, val, key);
+    PointDefinition* pointData = Animation::TryGetPointData(*this, anonPointDef, val, key, type);
 
     if (anonPointDef != nullptr) {
       anonPointDefinitions.emplace(anonPointDef);

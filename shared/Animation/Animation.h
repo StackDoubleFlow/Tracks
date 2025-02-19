@@ -15,7 +15,7 @@ struct BeatmapAssociatedData;
 namespace Animation {
 
 PointDefinition* TryGetPointData(TracksAD::BeatmapAssociatedData& beatmapAD, PointDefinition*& anon,
-                                 rapidjson::Value const& customData, std::string_view pointName);
+                                 rapidjson::Value const& customData, std::string_view pointName, PointType type);
 
 #pragma region track_utils
 

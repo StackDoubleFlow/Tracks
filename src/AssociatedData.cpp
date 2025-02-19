@@ -1,6 +1,7 @@
 #include "AssociatedData.h"
 #include "Animation/Animation.h"
 #include "Animation/PointDefinition.h"
+#include "Animation/Track.h"
 #include "custom-json-data/shared/CustomBeatmapData.h"
 #include "TLogger.h"
 
@@ -44,7 +45,26 @@ AnimateTrackData::AnimateTrackData(BeatmapAssociatedData& beatmapAD, rapidjson::
       Property* property = trackProperties.FindProperty(name);
       if (property) {
         PointDefinition* anonPointDef = nullptr;
-        auto pointData = Animation::TryGetPointData(beatmapAD, anonPointDef, customData, name);
+        PointType type;
+        switch (property->type) {
+          case PropertyType::linear: {
+            type = PointType::Float;
+            break;
+          }
+          case PropertyType::vector3: {
+            type = PointType::Vector3;
+            break;
+          }
+          case PropertyType::quaternion: {
+            type = PointType::Quaternion;
+            break;
+          }
+          case PropertyType::vector4: {
+            type = PointType::Vector4;
+            break;
+          }
+        }
+        auto pointData = Animation::TryGetPointData(beatmapAD, anonPointDef, customData, name, type);
 
         if (anonPointDef) beatmapAD.anonPointDefinitions.emplace(anonPointDef);
 
@@ -64,7 +84,26 @@ AssignPathAnimationData::AssignPathAnimationData(BeatmapAssociatedData& beatmapA
       PathProperty* property = trackPathProperties.FindProperty(name);
       if (property) {
         PointDefinition* anonPointDef = nullptr;
-        auto pointData = Animation::TryGetPointData(beatmapAD, anonPointDef, customData, name);
+        PointType type;
+        switch (property->type) {
+          case PropertyType::linear: {
+            type = PointType::Float;
+            break;
+          }
+          case PropertyType::vector3: {
+            type = PointType::Vector3;
+            break;
+          }
+          case PropertyType::quaternion: {
+            type = PointType::Quaternion;
+            break;
+          }
+          case PropertyType::vector4: {
+            type = PointType::Vector4;
+            break;
+          }
+        }
+        auto pointData = Animation::TryGetPointData(beatmapAD, anonPointDef, customData, name, type);
         if (anonPointDef) beatmapAD.anonPointDefinitions.emplace(anonPointDef);
 
         pathProperties.emplace_back(property, pointData);
@@ -169,6 +208,7 @@ void LoadTrackEvent(CustomJSONData::CustomEventData const* customEventData, Trac
 void readBeatmapDataAD(CustomJSONData::CustomBeatmapData* beatmapData) {
   static auto* customObstacleDataClass = classof(CustomJSONData::CustomObstacleData*);
   static auto* customNoteDataClass = classof(CustomJSONData::CustomNoteData*);
+  static auto* customSliderDataClass = classof(CustomJSONData::CustomSliderData*);
 
   BeatmapAssociatedData& beatmapAD = getBeatmapAD(beatmapData->customData);
   bool v2 = beatmapData->v2orEarlier;
@@ -194,14 +234,12 @@ void readBeatmapDataAD(CustomJSONData::CustomBeatmapData* beatmapData) {
       for (rapidjson::Value::ConstValueIterator itr = pointDefinitions.Begin(); itr != pointDefinitions.End(); itr++) {
         if (v2) {
           std::string pointName = (*itr)[Constants::V2_NAME.data()].GetString();
-          PointDefinition pointData((*itr)[Constants::V2_POINTS.data()]);
-          CJDLogger::Logger.fmtLog<Paper::LogLevel::INF>("Constructed point {}", pointName);
-          pointDataManager.AddPoint(pointName, pointData);
+          CJDLogger::Logger.fmtLog<Paper::LogLevel::INF>("Added point {}", pointName);
+          pointDataManager.AddPoint(pointName, (*itr)[Constants::V2_POINTS.data()]);
         } else {
           for (auto const& [name, pointDataVal] : pointDefinitionsIt->value.GetObject()) {
-            PointDefinition pointData(pointDataVal);
-            CJDLogger::Logger.fmtLog<Paper::LogLevel::INF>("Constructed point {}", name.GetString());
-            pointDataManager.AddPoint(name.GetString(), pointData);
+            CJDLogger::Logger.fmtLog<Paper::LogLevel::INF>("Added point {}", name.GetString());
+            pointDataManager.AddPoint(name.GetString(), pointDataVal);
           }
         }
       }
@@ -220,6 +258,9 @@ void readBeatmapDataAD(CustomJSONData::CustomBeatmapData* beatmapData) {
     } else if (beatmapObjectData->klass == customNoteDataClass) {
       auto noteData = (CustomJSONData::CustomNoteData*)beatmapObjectData;
       customDataWrapper = noteData->customData;
+    } else if (beatmapObjectData->klass == customSliderDataClass) {
+      auto sliderData = (CustomJSONData::CustomSliderData*)beatmapObjectData;
+      customDataWrapper = sliderData->customData;
     } else {
       continue;
     }

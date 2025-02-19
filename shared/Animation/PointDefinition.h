@@ -1,110 +1,135 @@
 #pragma once
 #include <utility>
+#include <variant>
 
 #include "beatsaber-hook/shared/config/rapidjson-utils.hpp"
 #include "Easings.h"
 #include "Track.h"
 #include "../Hash.h"
 #include "UnityEngine/Color.hpp"
+#include "beatsaber-hook/shared/rapidjson/include/rapidjson/document.h"
+#include "tracks-rs/shared/bindings.h"
 
-struct PointData {
-  public:
-  sbo::small_vector<float, 5> pointDatas;
-  NEVector::Quaternion quat;
-  float time;
-  Functions easing = Functions::easeLinear;
-  bool smooth = false;
-  bool hsv = false;
+extern Tracks::BaseProviderContext* internal_tracks_context;
 
-  PointData(std::span<float> point, float time, Functions easing = Functions::easeLinear, bool smooth = false)
-      : pointDatas(point.begin(), point.end()), time(time), easing{ easing }, smooth{ smooth } {
-    convertToQuaternion();
-  };
-  PointData(sbo::small_vector<float, 5> point, float time, Functions easing = Functions::easeLinear,
-            bool smooth = false)
-      : pointDatas(std::move(point)), time(time), easing{ easing }, smooth{ smooth } {
-    convertToQuaternion();
-  };
-
-  // Convert ahead of time
-  void convertToQuaternion() {
-    if (pointDatas.size() < 3) {
-      return;
-    }
-
-    quat = Sombrero::FastQuaternion::Euler(toVector3());
-  }
-
-  [[nodiscard]] NEVector::Vector4 toVector4() const {
-    // reaxt did a _color "_color":[[1,1,1,0]]
-    // when it should be "_color":[[1,1,1,0,0]]
-    if (pointDatas.size() >= 4) {
-      return { pointDatas[0], pointDatas[1], pointDatas[2], pointDatas[4] };
-    }
-
-    return {};
-  }
-  [[nodiscard]] UnityEngine::Color toColor() const {
-    auto v = toVector4();
-    return { v.x, v.y, v.z, v.w };
-  }
-
-  [[nodiscard]] constexpr NEVector::Vector3 toVector3() const {
-    if (pointDatas.size() >= 3) {
-      return { pointDatas[0], pointDatas[1], pointDatas[2] };
-    }
-
-    return {};
-  }
-
-  [[nodiscard]] constexpr float toFloat() const {
-    if (!pointDatas.empty()) {
-      return pointDatas[0];
-    }
-    
-    return {};
-  }
-
-  [[nodiscard]] constexpr NEVector::Quaternion toQuaternion() const {
-    return quat;
-  }
+enum class PointType {
+  Float,
+  Vector3,
+  Vector4,
+  Quaternion
 };
 
 class PointDefinition {
 public:
-  explicit PointDefinition(rapidjson::Value const& value);
-  [[nodiscard]] NEVector::Vector3 Interpolate(float time, bool& last) const;
-  [[nodiscard]] NEVector::Quaternion InterpolateQuaternion(float time, bool& last) const;
-  [[nodiscard]] float InterpolateLinear(float time, bool& last) const;
-  [[nodiscard]] NEVector::Vector4 InterpolateVector4(float time, bool& last) const;
+  explicit PointDefinition(rapidjson::Value const& value, PointType type) {
+    rapidjson::StringBuffer buffer;
+    rapidjson::Writer<rapidjson::StringBuffer> writer(buffer);
+    value.Accept(writer);
 
-  static PointDefinition const EMPTY_POINT;
+    auto jsonString = buffer.GetString();
 
-  [[nodiscard]] bool isSingle() const;
+    switch (type) {
+      case PointType::Float:
+        internalPointDefinition = Tracks::tracks_make_float_point_definition(jsonString, internal_tracks_context);
+        break;
+      case PointType::Vector3:
+        internalPointDefinition = Tracks::tracks_make_vector3_point_definition(jsonString, internal_tracks_context);
+        break;
+      case PointType::Vector4:
+        internalPointDefinition = Tracks::tracks_make_vector4_point_definition(jsonString, internal_tracks_context);
+        break;
+      case PointType::Quaternion:
+        internalPointDefinition = Tracks::tracks_make_quat_point_definition(jsonString, internal_tracks_context);
+        break;
+    }
+  }
+
+  NEVector::Vector3 Interpolate(float time, bool& last) const {
+    auto result = Tracks::tracks_interpolate_vector3(std::get<Tracks::Vector3PointDefinition const*>(internalPointDefinition), time, internal_tracks_context);
+    last = result.is_last;
+    return {result.value.x, result.value.y, result.value.z}; 
+  }
+
+  NEVector::Quaternion InterpolateQuaternion(float time, bool& last) const {
+    auto result = Tracks::tracks_interpolate_quat(std::get<Tracks::QuaternionPointDefinition const*>(internalPointDefinition), time, internal_tracks_context);
+    last = result.is_last;
+    return {result.value.x, result.value.y, result.value.z, result.value.w};
+  }
+
+  float InterpolateLinear(float time, bool& last) const {
+    auto result = Tracks::tracks_interpolate_float(std::get<Tracks::FloatPointDefinition const*>(internalPointDefinition), time, internal_tracks_context);
+    last = result.is_last;
+    return result.value;
+  }
+  
+  NEVector::Vector4 InterpolateVector4(float time, bool& last) const {
+    auto result = Tracks::tracks_interpolate_vector4(std::get<Tracks::Vector4PointDefinition const*>(internalPointDefinition), time, internal_tracks_context);
+    last = result.is_last;
+    return {result.value.x, result.value.y, result.value.z, result.value.w};
+  }
+
+  NEVector::Vector3 Interpolate(float time) const {
+    bool last;
+    return Interpolate(time, last);
+  }
+
+  NEVector::Quaternion InterpolateQuaternion(float time) const {
+    bool last;
+    return InterpolateQuaternion(time, last);
+  }
+
+  float InterpolateLinear(float time) const {
+    bool last;
+    return InterpolateLinear(time, last);
+  }
+
+  NEVector::Vector4 InterpolateVector4(float time) const {
+    bool last;
+    return InterpolateVector4(time, last);
+  }
+
+  uintptr_t count() const {
+    uintptr_t count = -1;
+    if (count == -1 && std::holds_alternative<Tracks::FloatPointDefinition const*>(internalPointDefinition)) {
+      count = Tracks::tracks_float_count(std::get<Tracks::FloatPointDefinition const*>(internalPointDefinition));
+    }
+    if (count == -1 && std::holds_alternative<Tracks::Vector3PointDefinition const*>(internalPointDefinition)) {
+      count = Tracks::tracks_vector3_count(std::get<Tracks::Vector3PointDefinition const*>(internalPointDefinition));
+    }
+    if (count == -1 && std::holds_alternative<Tracks::Vector4PointDefinition const*>(internalPointDefinition)) {
+      count = Tracks::tracks_vector4_count(std::get<Tracks::Vector4PointDefinition const*>(internalPointDefinition));
+    }
+    if (count == -1 && std::holds_alternative<Tracks::QuaternionPointDefinition const*>(internalPointDefinition)) {
+      count = Tracks::tracks_quat_count(std::get<Tracks::QuaternionPointDefinition const*>(internalPointDefinition));
+    }
+    return count;
+  }
+
+  bool hasBaseProvider() const {
+    if (std::holds_alternative<Tracks::FloatPointDefinition const*>(internalPointDefinition)) {
+      return Tracks::tracks_float_has_base_provider(std::get<Tracks::FloatPointDefinition const*>(internalPointDefinition));
+    }
+    if (std::holds_alternative<Tracks::Vector3PointDefinition const*>(internalPointDefinition)) {
+      return Tracks::tracks_vector3_has_base_provider(std::get<Tracks::Vector3PointDefinition const*>(internalPointDefinition));
+    }
+    if (std::holds_alternative<Tracks::Vector4PointDefinition const*>(internalPointDefinition)) {
+      return Tracks::tracks_vector4_has_base_provider(std::get<Tracks::Vector4PointDefinition const*>(internalPointDefinition));
+    }
+    if (std::holds_alternative<Tracks::QuaternionPointDefinition const*>(internalPointDefinition)) {
+      return Tracks::tracks_quat_has_base_provider(std::get<Tracks::QuaternionPointDefinition const*>(internalPointDefinition));
+    }
+    return false;
+  }
 
 private:
   constexpr PointDefinition() = default;
 
-  /// <summary>
-  /// Does most of the interpolation magic between points
-  /// </summary>
-  /// <param name="time">time.</param>
-  /// <param name="pointL">If returned false, will be the point with data and no interpolation. If true, will
-  /// interpolate to pointR in normalTime.</param> <param name="pointR">If returned true, will interpolate from pointL
-  /// to pointR in normalTime.</param> <param name="normalTime">interpolation time.</param> <param name="l">left value
-  /// index</param> <param name="r">right value index</param> <returns>True if not interpolating between two
-  /// values</returns>
-  bool InterpolateRaw(float time, PointData const*& pointL, PointData const*& pointR, float& normalTime, int& l, int& r,
-                      bool& last) const;
-
-  constexpr void SearchIndex(float time, int& l, int& r) const;
-  sbo::small_vector<PointData, 8> points;
+  std::variant<Tracks::FloatPointDefinition const*, Tracks::Vector3PointDefinition const*, Tracks::Vector4PointDefinition const*, Tracks::QuaternionPointDefinition const*> internalPointDefinition;
 };
 
 class PointDefinitionManager {
 public:
-  std::unordered_map<std::string, PointDefinition, TracksAD::string_hash, TracksAD::string_equal> pointData;
+  std::unordered_map<std::string, const rapidjson::Value*, TracksAD::string_hash, TracksAD::string_equal> pointData;
 
-  void AddPoint(std::string const& pointDataName, PointDefinition const& pointData);
-  void AddPoint(std::string const& pointDataName, PointDefinition&& pointData);
+  void AddPoint(std::string const& pointDataName, const rapidjson::Value& pointData);
 };

@@ -46,13 +46,14 @@ UnityEngine::Vector4 PointDefinitionInterpolation::InterpolateVector4(float time
   return NEVector::Vector4::LerpUnclamped(a, b, t);
 }
 
-void PointDefinitionInterpolation::Init(PointDefinition const* newPointData) {
+void PointDefinitionInterpolation::Init(const PointDefinition* newPointData) {
   time = 0;
-  if (basePointData) {
-    previousPointData = basePointData;
-  } else {
-    previousPointData = &PointDefinition::EMPTY_POINT;
+  previousPointData = basePointData;
+  if (newPointData == nullptr) {
+    basePointData = nullptr;
+    return;
   }
+
   basePointData = newPointData;
 }
 

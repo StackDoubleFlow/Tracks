@@ -11,7 +11,7 @@ public:
   [[nodiscard]] UnityEngine::Quaternion InterpolateQuaternion(float time) const;
   [[nodiscard]] float InterpolateLinear(float time) const;
   [[nodiscard]] UnityEngine::Vector4 InterpolateVector4(float time) const;
-  void Init(PointDefinition const* newPointData);
+  void Init(const PointDefinition* newPointData);
   void Restart();
   void Finish();
 

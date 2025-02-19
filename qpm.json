@@ -5,7 +5,7 @@
   "info": {
     "name": "Tracks",
     "id": "tracks",
-    "version": "1.0.0",
+    "version": "1.1.0",
     "url": "https://github.com/StackDoubleFlow/Tracks",
     "additionalData": {
       "overrideSoName": "libtracks.so",
@@ -57,6 +57,11 @@
     {
       "id": "songcore",
       "versionRange": "^1.1.0",
+      "additionalData": {}
+    },
+    {
+      "id": "tracks-rs",
+      "versionRange": "^0.1.0",
       "additionalData": {}
     }
   ],
