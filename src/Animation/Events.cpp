@@ -49,7 +49,7 @@ MAKE_HOOK_MATCH(BeatmapObjectSpawnController_Start, &BeatmapObjectSpawnControlle
 /// \param context
 /// \param songTime
 /// \return true if not finished. If false, this coroutine is finished
-template <bool skipToLast = false> bool UpdateCoroutine(AnimateTrackContext const& context, float songTime) {
+template <bool skipToLast = false> bool UpdateCoroutine(AnimateTrackContext const& context, float songTime, bool hasBase) {
   float elapsedTime = songTime - context.startTime;
 
   // Wait, the coroutine is too early
@@ -103,7 +103,7 @@ template <bool skipToLast = false> bool UpdateCoroutine(AnimateTrackContext cons
     context.property->lastUpdated = getCurrentTime();
   }
 
-  bool finished = last || context.duration <= 0;
+  bool finished = (!hasBase && last) || context.duration <= 0;
 
   // continue only if not finished or if elapsedTime is less than duration
   return !finished && elapsedTime < context.duration;
@@ -125,7 +125,7 @@ bool UpdatePathCoroutine(AssignPathAnimationContext const& context, float songTi
 void Events::UpdateCoroutines(BeatmapCallbacksController* callbackController) {
   auto songTime = callbackController->songTime;
   for (auto it = coroutines.begin(); it != coroutines.end();) {
-    if (UpdateCoroutine(*it, songTime)) {
+    if (UpdateCoroutine(*it, songTime, it->points->hasBaseProvider())) {
       it++;
     } else {
 
@@ -225,13 +225,12 @@ void CustomEventCallback(BeatmapCallbacksController* callbackController,
                 property->value = std::nullopt;
                 continue;
               }
-
-              bool skipCoroutine = pointData->count() == 1 || noDuration;
+              bool skipCoroutine = noDuration || (!pointData->hasBaseProvider() && pointData->count() == 1);
               Events::AnimateTrackContext context(pointData, property, duration, customEventData->time, easing, repeat);
               if (!skipCoroutine) {
                 coroutines.emplace_back(context);
               } else {
-                UpdateCoroutine<true>(context, customEventData->time + duration + bpm);
+                UpdateCoroutine<true>(context, customEventData->time + duration + bpm, pointData->hasBaseProvider());
               }
             }
           }
