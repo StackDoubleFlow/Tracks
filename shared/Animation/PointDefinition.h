@@ -19,27 +19,25 @@ enum class PointType {
   Quaternion
 };
 
+extern const Tracks::FFIJsonValue* convert_rapidjson(rapidjson::Value const& value);
+
 class PointDefinition {
 public:
   explicit PointDefinition(rapidjson::Value const& value, PointType type) {
-    rapidjson::StringBuffer buffer;
-    rapidjson::Writer<rapidjson::StringBuffer> writer(buffer);
-    value.Accept(writer);
-
-    auto jsonString = buffer.GetString();
+    auto json = convert_rapidjson(value);
 
     switch (type) {
       case PointType::Float:
-        internalPointDefinition = Tracks::tracks_make_float_point_definition(jsonString, internal_tracks_context);
+        internalPointDefinition = Tracks::tracks_make_float_point_definition(json, internal_tracks_context);
         break;
       case PointType::Vector3:
-        internalPointDefinition = Tracks::tracks_make_vector3_point_definition(jsonString, internal_tracks_context);
+        internalPointDefinition = Tracks::tracks_make_vector3_point_definition(json, internal_tracks_context);
         break;
       case PointType::Vector4:
-        internalPointDefinition = Tracks::tracks_make_vector4_point_definition(jsonString, internal_tracks_context);
+        internalPointDefinition = Tracks::tracks_make_vector4_point_definition(json, internal_tracks_context);
         break;
       case PointType::Quaternion:
-        internalPointDefinition = Tracks::tracks_make_quat_point_definition(jsonString, internal_tracks_context);
+        internalPointDefinition = Tracks::tracks_make_quat_point_definition(json, internal_tracks_context);
         break;
     }
   }
