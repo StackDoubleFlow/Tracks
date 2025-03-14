@@ -11,31 +11,32 @@
 
 using namespace NEVector;
 
-Tracks::BaseProviderContext* internal_tracks_context = Tracks::tracks_make_base_provider_context();
+Tracks::ffi::BaseProviderContext* internal_tracks_context = Tracks::ffi::tracks_make_base_provider_context();
 
-const Tracks::FFIJsonValue* convert_rapidjson(rapidjson::Value const& value) {
+// TODO: Make a recursive cleanup method
+const Tracks::ffi::FFIJsonValue* convert_rapidjson(rapidjson::Value const& value) {
     // Handle different types of rapidjson values
     if (value.IsNumber()) {
-        return new Tracks::FFIJsonValue{Tracks::JsonValueType::Number, {.number_value = value.GetDouble()}};
+        return new Tracks::ffi::FFIJsonValue{Tracks::ffi::JsonValueType::Number, {.number_value = value.GetDouble()}};
     } else if (value.IsNull()) {
-        return new Tracks::FFIJsonValue{Tracks::JsonValueType::Null, {}};
+        return new Tracks::ffi::FFIJsonValue{Tracks::ffi::JsonValueType::Null, {}};
     } else if (value.IsString()) {
-        return new Tracks::FFIJsonValue{Tracks::JsonValueType::String, {.string_value = value.GetString()}};
+        return new Tracks::ffi::FFIJsonValue{Tracks::ffi::JsonValueType::String, {.string_value = value.GetString()}};
     } else if (value.IsArray()) {
         // Create array of FFIJsonValue for each element in the array
         auto size = value.Size();
-        auto elements = new Tracks::FFIJsonValue[size];
+        auto *elements = new Tracks::ffi::FFIJsonValue[size];
         
         for (size_t i = 0; i < size; i++) {
             elements[i] = *convert_rapidjson(value[i]);
         }
         
-        auto jsonArray = new Tracks::JsonArray{elements, size};
-        return new Tracks::FFIJsonValue{Tracks::JsonValueType::Array, {.array = jsonArray}};
+        auto jsonArray = new Tracks::ffi::JsonArray{elements, size};
+        return new Tracks::ffi::FFIJsonValue{Tracks::ffi::JsonValueType::Array, {.array = jsonArray}};
     } else {
         TLogger::Logger.error("Unsupported JSON value type in conversion");
         // Return null as fallback
-        return new Tracks::FFIJsonValue{Tracks::JsonValueType::Null, {}};
+        return new Tracks::ffi::FFIJsonValue{Tracks::ffi::JsonValueType::Null, {}};
     }
 }
 

@@ -7,41 +7,9 @@
 #include <cmath>
 #include <unordered_map>
 
-enum struct Functions {
-  easeLinear,
-  easeStep,
-  easeInQuad,
-  easeOutQuad,
-  easeInOutQuad,
-  easeInCubic,
-  easeOutCubic,
-  easeInOutCubic,
-  easeInQuart,
-  easeOutQuart,
-  easeInOutQuart,
-  easeInQuint,
-  easeOutQuint,
-  easeInOutQuint,
-  easeInSine,
-  easeOutSine,
-  easeInOutSine,
-  easeInCirc,
-  easeOutCirc,
-  easeInOutCirc,
-  easeInExpo,
-  easeOutExpo,
-  easeInOutExpo,
-  easeInElastic,
-  easeOutElastic,
-  easeInOutElastic,
-  easeInBack,
-  easeOutBack,
-  easeInOutBack,
-  easeInBounce,
-  easeOutBounce,
-  easeInOutBounce,
-};
+#include "tracks-rs/shared/bindings.h"
 
+using Functions = Tracks::ffi::Functions;
 namespace Easings {
 
 constexpr static float EaseLinear(float p) {

@@ -19,6 +19,7 @@
           "pwsh ./build.ps1"
         ]
       },
+      "ndk": "^27.1.12297006",
       "qmodIncludeDirs": [
         "./build",
         "./extern/libs"

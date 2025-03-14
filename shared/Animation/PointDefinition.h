@@ -2,6 +2,7 @@
 #include <utility>
 #include <variant>
 
+#include "Vector.h"
 #include "beatsaber-hook/shared/config/rapidjson-utils.hpp"
 #include "Easings.h"
 #include "Track.h"
@@ -10,65 +11,52 @@
 #include "beatsaber-hook/shared/rapidjson/include/rapidjson/document.h"
 #include "tracks-rs/shared/bindings.h"
 
-extern Tracks::BaseProviderContext* internal_tracks_context;
+extern Tracks::ffi::BaseProviderContext* internal_tracks_context;
 
-enum class PointType {
-  Float,
-  Vector3,
-  Vector4,
-  Quaternion
-};
-
-extern const Tracks::FFIJsonValue* convert_rapidjson(rapidjson::Value const& value);
+extern Tracks::ffi::FFIJsonValue const* convert_rapidjson(rapidjson::Value const& value);
 
 class PointDefinition {
 public:
-  explicit PointDefinition(rapidjson::Value const& value, PointType type) {
-    auto json = convert_rapidjson(value);
+  explicit PointDefinition(rapidjson::Value const& value, Tracks::ffi::WrapBaseValueType type) {
+    auto *json = convert_rapidjson(value);
 
-    switch (type) {
-      case PointType::Float:
-        internalPointDefinition = Tracks::tracks_make_float_point_definition(json, internal_tracks_context);
-        break;
-      case PointType::Vector3:
-        internalPointDefinition = Tracks::tracks_make_vector3_point_definition(json, internal_tracks_context);
-        break;
-      case PointType::Vector4:
-        internalPointDefinition = Tracks::tracks_make_vector4_point_definition(json, internal_tracks_context);
-        break;
-      case PointType::Quaternion:
-        internalPointDefinition = Tracks::tracks_make_quat_point_definition(json, internal_tracks_context);
-        break;
-    }
+    internalPointDefinition = Tracks::ffi::tracks_make_base_point_definition(json, type, internal_tracks_context);
   }
 
-  NEVector::Vector3 Interpolate(float time, bool& last) const {
-    auto result = Tracks::tracks_interpolate_vector3(std::get<Tracks::Vector3PointDefinition const*>(internalPointDefinition), time, internal_tracks_context);
-    last = result.is_last;
-    return {result.value.x, result.value.y, result.value.z}; 
+  Tracks::ffi::WrapBaseValue Interpolate(float time) const {
+    bool last;
+    return Interpolate(time, last);
+  }
+
+  Tracks::ffi::WrapBaseValue Interpolate(float time, bool& last) const {
+    auto result = Tracks::ffi::tracks_interpolate_base_point_definition(internalPointDefinition, time, &last,
+                                                                        internal_tracks_context);
+
+    return result;
+  }
+  NEVector::Vector3 InterpolateVec3(float time, bool& last) const {
+    auto result = Interpolate(time, last);
+    return { result.value.vec3.x, result.value.vec3.y, result.value.vec3.z };
   }
 
   NEVector::Quaternion InterpolateQuaternion(float time, bool& last) const {
-    auto result = Tracks::tracks_interpolate_quat(std::get<Tracks::QuaternionPointDefinition const*>(internalPointDefinition), time, internal_tracks_context);
-    last = result.is_last;
-    return {result.value.x, result.value.y, result.value.z, result.value.w};
+    auto result = Interpolate(time, last);
+    return { result.value.quat.x, result.value.quat.y, result.value.quat.z, result.value.quat.w };
   }
 
   float InterpolateLinear(float time, bool& last) const {
-    auto result = Tracks::tracks_interpolate_float(std::get<Tracks::FloatPointDefinition const*>(internalPointDefinition), time, internal_tracks_context);
-    last = result.is_last;
-    return result.value;
-  }
-  
-  NEVector::Vector4 InterpolateVector4(float time, bool& last) const {
-    auto result = Tracks::tracks_interpolate_vector4(std::get<Tracks::Vector4PointDefinition const*>(internalPointDefinition), time, internal_tracks_context);
-    last = result.is_last;
-    return {result.value.x, result.value.y, result.value.z, result.value.w};
+    auto result = Interpolate(time, last);
+    return result.value.float_v;
   }
 
-  NEVector::Vector3 Interpolate(float time) const {
+  NEVector::Vector4 InterpolateVector4(float time, bool& last) const {
+    auto result = Interpolate(time, last);
+    return { result.value.vec4.x, result.value.vec4.y, result.value.vec4.z, result.value.vec4.w };
+  }
+
+  NEVector::Vector3 InterpolateVec3(float time) const {
     bool last;
-    return Interpolate(time, last);
+    return InterpolateVec3(time, last);
   }
 
   NEVector::Quaternion InterpolateQuaternion(float time) const {
@@ -87,47 +75,22 @@ public:
   }
 
   uintptr_t count() const {
-    uintptr_t count = -1;
-    if (count == -1 && std::holds_alternative<Tracks::FloatPointDefinition const*>(internalPointDefinition)) {
-      count = Tracks::tracks_float_count(std::get<Tracks::FloatPointDefinition const*>(internalPointDefinition));
-    }
-    if (count == -1 && std::holds_alternative<Tracks::Vector3PointDefinition const*>(internalPointDefinition)) {
-      count = Tracks::tracks_vector3_count(std::get<Tracks::Vector3PointDefinition const*>(internalPointDefinition));
-    }
-    if (count == -1 && std::holds_alternative<Tracks::Vector4PointDefinition const*>(internalPointDefinition)) {
-      count = Tracks::tracks_vector4_count(std::get<Tracks::Vector4PointDefinition const*>(internalPointDefinition));
-    }
-    if (count == -1 && std::holds_alternative<Tracks::QuaternionPointDefinition const*>(internalPointDefinition)) {
-      count = Tracks::tracks_quat_count(std::get<Tracks::QuaternionPointDefinition const*>(internalPointDefinition));
-    }
-    return count;
+    return Tracks::ffi::tracks_base_point_definition_count(internalPointDefinition);
   }
 
   bool hasBaseProvider() const {
-    if (std::holds_alternative<Tracks::FloatPointDefinition const*>(internalPointDefinition)) {
-      return Tracks::tracks_float_has_base_provider(std::get<Tracks::FloatPointDefinition const*>(internalPointDefinition));
-    }
-    if (std::holds_alternative<Tracks::Vector3PointDefinition const*>(internalPointDefinition)) {
-      return Tracks::tracks_vector3_has_base_provider(std::get<Tracks::Vector3PointDefinition const*>(internalPointDefinition));
-    }
-    if (std::holds_alternative<Tracks::Vector4PointDefinition const*>(internalPointDefinition)) {
-      return Tracks::tracks_vector4_has_base_provider(std::get<Tracks::Vector4PointDefinition const*>(internalPointDefinition));
-    }
-    if (std::holds_alternative<Tracks::QuaternionPointDefinition const*>(internalPointDefinition)) {
-      return Tracks::tracks_quat_has_base_provider(std::get<Tracks::QuaternionPointDefinition const*>(internalPointDefinition));
-    }
-    return false;
+    return Tracks::ffi::tracks_base_point_definition_has_base_provider(internalPointDefinition);
   }
 
 private:
   constexpr PointDefinition() = default;
 
-  std::variant<Tracks::FloatPointDefinition const*, Tracks::Vector3PointDefinition const*, Tracks::Vector4PointDefinition const*, Tracks::QuaternionPointDefinition const*> internalPointDefinition;
+  Tracks::ffi::BasePointDefinition const* internalPointDefinition;
 };
 
 class PointDefinitionManager {
 public:
-  std::unordered_map<std::string, const rapidjson::Value*, TracksAD::string_hash, TracksAD::string_equal> pointData;
+  std::unordered_map<std::string, rapidjson::Value const*, TracksAD::string_hash, TracksAD::string_equal> pointData;
 
-  void AddPoint(std::string const& pointDataName, const rapidjson::Value& pointData);
+  void AddPoint(std::string const& pointDataName, rapidjson::Value const& pointData);
 };
