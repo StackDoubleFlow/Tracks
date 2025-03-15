@@ -45,6 +45,8 @@ void PointDefinitionManager::AddPoint(std::string const& pointDataName, const ra
     TLogger::Logger.error("Duplicate point definition name, {} could not be registered!", pointDataName.data());
   } else {
     auto x = &pointData;
-    this->pointData.try_emplace(pointDataName, &pointData);
+
+    PointDefinitionW pointDef = PointDefinitionW(pointData, "idk"/* TODO: */, internal_tracks_context);
+    this->pointData.try_emplace(pointDataName, &pointDef);
   }
 }

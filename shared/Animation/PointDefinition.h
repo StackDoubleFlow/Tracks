@@ -26,6 +26,8 @@ public:
   PointDefinitionW(Tracks::ffi::BasePointDefinition const* pointDefinition)
       : internalPointDefinition(pointDefinition) {}
 
+  PointDefinitionW(PointDefinitionW const& other) = default;
+
   Tracks::ffi::WrapBaseValue Interpolate(float time) const {
     bool last;
     return Interpolate(time, last);

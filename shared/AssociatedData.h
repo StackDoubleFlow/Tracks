@@ -91,7 +91,10 @@ public:
     Tracks::ffi::tracks_context_destroy(internal_tracks_context);
   }
 
-  [[deprecated("Don't copy this!")]] BeatmapAssociatedData(BeatmapAssociatedData const&) = delete;
+
+  // [[deprecated("Don't copy this!")]]
+  BeatmapAssociatedData(BeatmapAssociatedData const&) = delete;
+
   BeatmapAssociatedData(BeatmapAssociatedData&& o)
       : valid(o.valid), leftHanded(o.leftHanded), v2(o.v2), tracks(std::move(o.tracks)),
         pointDefinitions(std::move(o.pointDefinitions)), internal_tracks_context(o.internal_tracks_context) {
