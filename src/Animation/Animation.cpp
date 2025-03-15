@@ -31,9 +31,10 @@ PointDefinitionW TryGetPointData(BeatmapAssociatedData& beatmapAD, rapidjson::Va
   }
   default:
     auto json = convert_rapidjson(pointString);
-    auto baseProviderContext = Tracks::ffi::tracks_context_get_base_provider_context(beatmapAD.internal_tracks_context);
+    auto tracksContext = beatmapAD.internal_tracks_context.get()->internal_tracks_context;
+    auto baseProviderContext = Tracks::ffi::tracks_context_get_base_provider_context(tracksContext);
     auto pointDataAnon = Tracks::ffi::tracks_make_base_point_definition(json, type, baseProviderContext);
-    pointData = Tracks::ffi::tracks_context_add_point_definition(beatmapAD.internal_tracks_context, pointDataAnon);
+    pointData = Tracks::ffi::tracks_context_add_point_definition(tracksContext, pointDataAnon);
   }
 
   return pointData;

@@ -40,10 +40,12 @@ MAKE_HOOK_MATCH(BeatmapObjectSpawnController_Start, &BeatmapObjectSpawnControlle
 void Events::UpdateCoroutines(BeatmapCallbacksController* callbackController) {
   auto songTime = callbackController->songTime;
   auto* customBeatmapData = (CustomJSONData::CustomBeatmapData*)callbackController->_beatmapData;
-  auto& context = getBeatmapAD(customBeatmapData->customData);
+  auto& beatmapAD = getBeatmapAD(customBeatmapData->customData);
 
-  auto coroutine = Tracks::ffi::tracks_context_get_coroutine_manager(context.internal_tracks_context);
-  auto baseManager = Tracks::ffi::tracks_context_get_base_provider_context(context.internal_tracks_context);
+  auto tracksContext = beatmapAD.internal_tracks_context.get()->internal_tracks_context;
+
+  auto coroutine = Tracks::ffi::tracks_context_get_coroutine_manager(tracksContext);
+  auto baseManager = Tracks::ffi::tracks_context_get_base_provider_context(tracksContext);
   Tracks::ffi::poll_events(coroutine, songTime, baseManager);
 }
 

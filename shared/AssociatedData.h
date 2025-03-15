@@ -82,31 +82,45 @@ using TracksVector = sbo::small_vector<TrackW, 1>;
 
 enum class EventType { animateTrack, assignPathAnimation, unknown };
 
-class BeatmapAssociatedData {
+class TracksContext {
 public:
-  BeatmapAssociatedData() {
+  TracksContext() {
     internal_tracks_context = Tracks::ffi::tracks_context_create();
   }
-  ~BeatmapAssociatedData() {
+  TracksContext(TracksContext const&) = delete;
+
+  TracksContext(TracksContext&& o) noexcept : internal_tracks_context(o.internal_tracks_context) {
+    o.internal_tracks_context = nullptr;
+  }
+  ~TracksContext() {
+    if (!internal_tracks_context) return;
     Tracks::ffi::tracks_context_destroy(internal_tracks_context);
   }
 
+  Tracks::ffi::TracksContext* internal_tracks_context = nullptr;
+  operator Tracks::ffi::TracksContext const*() const {
+    return internal_tracks_context;
+  }
+  operator Tracks::ffi::TracksContext*() {
+    return internal_tracks_context;
+  }
+};
 
-  // [[deprecated("Don't copy this!")]]
-  BeatmapAssociatedData(BeatmapAssociatedData const&) = delete;
+class BeatmapAssociatedData {
+public:
+  BeatmapAssociatedData() = default;
+  ~BeatmapAssociatedData() = default;
 
-  BeatmapAssociatedData(BeatmapAssociatedData&& o)
-      : valid(o.valid), leftHanded(o.leftHanded), v2(o.v2), tracks(std::move(o.tracks)),
-        pointDefinitions(std::move(o.pointDefinitions)), internal_tracks_context(o.internal_tracks_context) {
-    o.internal_tracks_context = nullptr;
-  };
+
+  [[deprecated("Don't copy this!")]]
+  BeatmapAssociatedData(BeatmapAssociatedData const&) = default;
 
   bool valid = false;
   bool leftHanded = false;
   bool v2;
   std::unordered_map<std::string, TrackW, string_hash, string_equal> tracks;
   std::unordered_map<std::string, PointDefinitionW, string_hash, string_equal> pointDefinitions;
-  Tracks::ffi::TracksContext* internal_tracks_context = nullptr;
+  std::shared_ptr < TracksContext> internal_tracks_context = nullptr;
 
   inline PointDefinitionW getPointDefinition(rapidjson::Value const& val, std::string_view key,
                                                               Tracks::ffi::WrapBaseValueType type) {
