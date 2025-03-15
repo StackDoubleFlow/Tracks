@@ -38,73 +38,37 @@ inline bool IsStringProperties(std::string_view n) {
 }
 
 AnimateTrackData::AnimateTrackData(BeatmapAssociatedData& beatmapAD, rapidjson::Value const& customData,
-                                   Properties& trackProperties) {
+                                   TrackW trackProperties) {
   for (auto const& member : customData.GetObject()) {
     char const* name = member.name.GetString();
-    if (IsStringProperties(name)) {
-      Property* property = trackProperties.FindProperty(name);
-      if (property) {
-        PointDefinition* anonPointDef = nullptr;
-        PointType type;
-        switch (property->type) {
-          case PropertyType::linear: {
-            type = PointType::Float;
-            break;
-          }
-          case PropertyType::vector3: {
-            type = PointType::Vector3;
-            break;
-          }
-          case PropertyType::quaternion: {
-            type = PointType::Quaternion;
-            break;
-          }
-          case PropertyType::vector4: {
-            type = PointType::Vector4;
-            break;
-          }
-        }
-        auto pointData = Animation::TryGetPointData(beatmapAD, anonPointDef, customData, name, type);
+    if (!IsStringProperties(name)) {
+      continue;
+    }
+    auto property = trackProperties.GetProperty(name);
+    if (property) {
+      auto type = property.GetType();
 
-        if (anonPointDef) beatmapAD.anonPointDefinitions.emplace(anonPointDef);
+      auto pointData = Animation::TryGetPointData(beatmapAD, customData, name, type);
 
-        this->properties.emplace_back(property, pointData);
-      } else {
-        TLogger::Logger.warn("Could not find track property with name {}", name);
-      }
+
+
+      this->properties.emplace_back(property, pointData);
+    } else {
+      TLogger::Logger.warn("Could not find track property with name {}", name);
     }
   }
 }
 
 AssignPathAnimationData::AssignPathAnimationData(BeatmapAssociatedData& beatmapAD, rapidjson::Value const& customData,
-                                                 PathProperties& trackPathProperties) {
+                                                 TrackW trackPathProperties) {
   for (auto const& member : customData.GetObject()) {
     char const* name = member.name.GetString();
     if (IsStringProperties(name)) {
-      PathProperty* property = trackPathProperties.FindProperty(name);
+      auto property = Tracks::ffi::track_get_path_property(trackPathProperties, name);
       if (property) {
-        PointDefinition* anonPointDef = nullptr;
-        PointType type;
-        switch (property->type) {
-          case PropertyType::linear: {
-            type = PointType::Float;
-            break;
-          }
-          case PropertyType::vector3: {
-            type = PointType::Vector3;
-            break;
-          }
-          case PropertyType::quaternion: {
-            type = PointType::Quaternion;
-            break;
-          }
-          case PropertyType::vector4: {
-            type = PointType::Vector4;
-            break;
-          }
-        }
-        auto pointData = Animation::TryGetPointData(beatmapAD, anonPointDef, customData, name, type);
-        if (anonPointDef) beatmapAD.anonPointDefinitions.emplace(anonPointDef);
+        auto type = Tracks::ffi::path_property_get_type(property);
+
+        auto pointData = Animation::TryGetPointData(beatmapAD, customData, name, type);
 
         pathProperties.emplace_back(property, pointData);
       } else {
@@ -155,7 +119,7 @@ void LoadTrackEvent(CustomJSONData::CustomEventData const* customEventData, Trac
   auto const& trackJSON = eventData[(v2 ? TracksAD::Constants::V2_TRACK : TracksAD::Constants::TRACK).data()];
   unsigned int trackSize = trackJSON.IsArray() ? trackJSON.Size() : 1;
 
-  sbo::small_vector<Track*, 1> tracks;
+  sbo::small_vector<TrackW, 1> tracks;
   tracks.reserve(trackSize);
 
   if (trackJSON.IsArray()) {
@@ -184,19 +148,18 @@ void LoadTrackEvent(CustomJSONData::CustomEventData const* customEventData, Trac
   eventAD.duration = durationIt != eventData.MemberEnd() ? getFloat(durationIt->value) : 0;
   eventAD.repeat = eventAD.duration > 0 && repeatIt != eventData.MemberEnd() ? repeatIt->value.GetInt() : 0;
   eventAD.easing =
-      easingIt != eventData.MemberEnd() ? FunctionFromStr(easingIt->value.GetString()) : Functions::easeLinear;
+      easingIt != eventData.MemberEnd() ? FunctionFromStr(easingIt->value.GetString()) : Functions::EaseLinear;
 
   for (auto const& track : eventAD.tracks) {
-    auto& properties = track->properties;
-    auto& pathProperties = track->pathProperties;
+
 
     switch (eventAD.type) {
     case EventType::animateTrack: {
-      eventAD.animateTrackData.emplace_back(beatmapAD, eventData, properties);
+      eventAD.animateTrackData.emplace_back(beatmapAD, eventData, track);
       break;
     }
     case EventType::assignPathAnimation: {
-      eventAD.assignPathAnimation.emplace_back(beatmapAD, eventData, pathProperties);
+      eventAD.assignPathAnimation.emplace_back(beatmapAD, eventData, track);
       break;
     }
     default:

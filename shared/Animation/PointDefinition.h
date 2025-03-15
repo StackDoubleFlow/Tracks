@@ -15,13 +15,16 @@ extern Tracks::ffi::BaseProviderContext* internal_tracks_context;
 
 extern Tracks::ffi::FFIJsonValue const* convert_rapidjson(rapidjson::Value const& value);
 
-class PointDefinition {
+class PointDefinitionW {
 public:
-  explicit PointDefinition(rapidjson::Value const& value, Tracks::ffi::WrapBaseValueType type) {
+  explicit PointDefinitionW(rapidjson::Value const& value, Tracks::ffi::WrapBaseValueType type) {
     auto *json = convert_rapidjson(value);
 
     internalPointDefinition = Tracks::ffi::tracks_make_base_point_definition(json, type, internal_tracks_context);
   }
+
+  PointDefinitionW(Tracks::ffi::BasePointDefinition const* pointDefinition)
+      : internalPointDefinition(pointDefinition) {}
 
   Tracks::ffi::WrapBaseValue Interpolate(float time) const {
     bool last;
@@ -82,15 +85,23 @@ public:
     return Tracks::ffi::tracks_base_point_definition_has_base_provider(internalPointDefinition);
   }
 
+  operator Tracks::ffi::BasePointDefinition const*() const {
+    return internalPointDefinition;
+  }
+
+  // operator Tracks::ffi::BasePointDefinition*() {
+  //   return internalPointDefinition;
+  // }
+
 private:
-  constexpr PointDefinition() = default;
+  constexpr PointDefinitionW() = default;
 
   Tracks::ffi::BasePointDefinition const* internalPointDefinition;
 };
 
 class PointDefinitionManager {
 public:
-  std::unordered_map<std::string, rapidjson::Value const*, TracksAD::string_hash, TracksAD::string_equal> pointData;
+  std::unordered_map<std::string, PointDefinitionW, TracksAD::string_hash, TracksAD::string_equal> pointData;
 
   void AddPoint(std::string const& pointDataName, rapidjson::Value const& pointData);
 };

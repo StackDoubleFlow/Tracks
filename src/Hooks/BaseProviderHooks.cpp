@@ -39,17 +39,17 @@ MAKE_HOOK_MATCH(GameplayCoreInstaller_InstallBindings, &GlobalNamespace::Gamepla
   auto baseSaberAColor = colorScheme->saberAColor;
   auto baseSaberBColor = colorScheme->saberBColor;
   
-  Tracks::tracks_set_base_provider(context, "baseEnvironmentColor0", new float[4] {baseEnvironmentColor0.r, baseEnvironmentColor0.g, baseEnvironmentColor0.b, baseEnvironmentColor0.a}, 4, false);
-  Tracks::tracks_set_base_provider(context, "baseEnvironmentColor0Boost", new float[4] {baseEnvironmentColor0Boost.r, baseEnvironmentColor0Boost.g, baseEnvironmentColor0Boost.b, baseEnvironmentColor0Boost.a}, 4, false);
-  Tracks::tracks_set_base_provider(context, "baseEnvironmentColor1", new float[4] {baseEnvironmentColor1.r, baseEnvironmentColor1.g, baseEnvironmentColor1.b, baseEnvironmentColor1.a}, 4, false);
-  Tracks::tracks_set_base_provider(context, "baseEnvironmentColor1Boost", new float[4] {baseEnvironmentColor1Boost.r, baseEnvironmentColor1Boost.g, baseEnvironmentColor1Boost.b, baseEnvironmentColor1Boost.a}, 4, false);
-  Tracks::tracks_set_base_provider(context, "baseEnvironmentColorW", new float[4] {baseEnvironmentColorW.r, baseEnvironmentColorW.g, baseEnvironmentColorW.b, baseEnvironmentColorW.a}, 4, false);
-  Tracks::tracks_set_base_provider(context, "baseEnvironmentColorWBoost", new float[4] {baseEnvironmentColorWBoost.r, baseEnvironmentColorWBoost.g, baseEnvironmentColorWBoost.b, baseEnvironmentColorWBoost.a}, 4, false);
-  Tracks::tracks_set_base_provider(context, "baseNote0Color", new float[4] {baseNoteColor0.r, baseNoteColor0.g, baseNoteColor0.b, baseNoteColor0.a}, 4, false);
-  Tracks::tracks_set_base_provider(context, "baseNote1Color", new float[4] {baseNoteColor1.r, baseNoteColor1.g, baseNoteColor1.b, baseNoteColor1.a}, 4, false);
-  Tracks::tracks_set_base_provider(context, "baseObstaclesColor", new float[4] {baseObstaclesColor.r, baseObstaclesColor.g, baseObstaclesColor.b, baseObstaclesColor.a}, 4, false);
-  Tracks::tracks_set_base_provider(context, "baseSaberAColor", new float[4] {baseSaberAColor.r, baseSaberAColor.g, baseSaberAColor.b, baseSaberAColor.a}, 4, false);
-  Tracks::tracks_set_base_provider(context, "baseSaberBColor", new float[4] {baseSaberBColor.r, baseSaberBColor.g, baseSaberBColor.b, baseSaberBColor.a}, 4, false);
+  Tracks::ffi::tracks_set_base_provider(context, "baseEnvironmentColor0", new float[4] {baseEnvironmentColor0.r, baseEnvironmentColor0.g, baseEnvironmentColor0.b, baseEnvironmentColor0.a}, 4, false);
+  Tracks::ffi::tracks_set_base_provider(context, "baseEnvironmentColor0Boost", new float[4] {baseEnvironmentColor0Boost.r, baseEnvironmentColor0Boost.g, baseEnvironmentColor0Boost.b, baseEnvironmentColor0Boost.a}, 4, false);
+  Tracks::ffi::tracks_set_base_provider(context, "baseEnvironmentColor1", new float[4] {baseEnvironmentColor1.r, baseEnvironmentColor1.g, baseEnvironmentColor1.b, baseEnvironmentColor1.a}, 4, false);
+  Tracks::ffi::tracks_set_base_provider(context, "baseEnvironmentColor1Boost", new float[4] {baseEnvironmentColor1Boost.r, baseEnvironmentColor1Boost.g, baseEnvironmentColor1Boost.b, baseEnvironmentColor1Boost.a}, 4, false);
+  Tracks::ffi::tracks_set_base_provider(context, "baseEnvironmentColorW", new float[4] {baseEnvironmentColorW.r, baseEnvironmentColorW.g, baseEnvironmentColorW.b, baseEnvironmentColorW.a}, 4, false);
+  Tracks::ffi::tracks_set_base_provider(context, "baseEnvironmentColorWBoost", new float[4] {baseEnvironmentColorWBoost.r, baseEnvironmentColorWBoost.g, baseEnvironmentColorWBoost.b, baseEnvironmentColorWBoost.a}, 4, false);
+  Tracks::ffi::tracks_set_base_provider(context, "baseNote0Color", new float[4] {baseNoteColor0.r, baseNoteColor0.g, baseNoteColor0.b, baseNoteColor0.a}, 4, false);
+  Tracks::ffi::tracks_set_base_provider(context, "baseNote1Color", new float[4] {baseNoteColor1.r, baseNoteColor1.g, baseNoteColor1.b, baseNoteColor1.a}, 4, false);
+  Tracks::ffi::tracks_set_base_provider(context, "baseObstaclesColor", new float[4] {baseObstaclesColor.r, baseObstaclesColor.g, baseObstaclesColor.b, baseObstaclesColor.a}, 4, false);
+  Tracks::ffi::tracks_set_base_provider(context, "baseSaberAColor", new float[4] {baseSaberAColor.r, baseSaberAColor.g, baseSaberAColor.b, baseSaberAColor.a}, 4, false);
+  Tracks::ffi::tracks_set_base_provider(context, "baseSaberBColor", new float[4] {baseSaberBColor.r, baseSaberBColor.g, baseSaberBColor.b, baseSaberBColor.a}, 4, false);
 }
 
 MAKE_HOOK_MATCH(PlayerTransforms_Update, &GlobalNamespace::PlayerTransforms::Update,
@@ -79,21 +79,21 @@ MAKE_HOOK_MATCH(PlayerTransforms_Update, &GlobalNamespace::PlayerTransforms::Upd
   auto baseRightHandPosition = rightHand->position;
   auto baseRightHandRotation = rightHand->rotation;
 
-  Tracks::tracks_set_base_provider(context, "baseHeadLocalPosition", new float[3] {baseHeadLocalPosition.x, baseHeadLocalPosition.y, baseHeadLocalPosition.z}, 3, false);
-  Tracks::tracks_set_base_provider(context, "baseHeadLocalRotation", new float[4] {baseHeadLocalRotation.x, baseHeadLocalRotation.y, baseHeadLocalRotation.z, baseHeadLocalRotation.w}, 4, true);
-  Tracks::tracks_set_base_provider(context, "baseHeadLocalScale", new float[3] {baseHeadLocalScale.x, baseHeadLocalScale.y, baseHeadLocalScale.z}, 3, false);
-  Tracks::tracks_set_base_provider(context, "baseHeadPosition", new float[3] {baseHeadPosition.x, baseHeadPosition.y, baseHeadPosition.z}, 3, false);
-  Tracks::tracks_set_base_provider(context, "baseHeadRotation", new float[4] {baseHeadRotation.x, baseHeadRotation.y, baseHeadRotation.z, baseHeadRotation.w}, 4, true);
-  Tracks::tracks_set_base_provider(context, "baseLeftHandLocalPosition", new float[3] {baseLeftHandLocalPosition.x, baseLeftHandLocalPosition.y, baseLeftHandLocalPosition.z}, 3, false);
-  Tracks::tracks_set_base_provider(context, "baseLeftHandLocalRotation", new float[4] {baseLeftHandLocalRotation.x, baseLeftHandLocalRotation.y, baseLeftHandLocalRotation.z, baseLeftHandLocalRotation.w}, 4, true);
-  Tracks::tracks_set_base_provider(context, "baseLeftHandLocalScale", new float[3] {baseLeftHandLocalScale.x, baseLeftHandLocalScale.y, baseLeftHandLocalScale.z}, 3, false);
-  Tracks::tracks_set_base_provider(context, "baseLeftHandPosition", new float[3] {baseLeftHandPosition.x, baseLeftHandPosition.y, baseLeftHandPosition.z}, 3, false);
-  Tracks::tracks_set_base_provider(context, "baseLeftHandRotation", new float[4] {baseLeftHandRotation.x, baseLeftHandRotation.y, baseLeftHandRotation.z, baseLeftHandRotation.w}, 4, true);
-  Tracks::tracks_set_base_provider(context, "baseRightHandLocalPosition", new float[3] {baseRightHandLocalPosition.x, baseRightHandLocalPosition.y, baseRightHandLocalPosition.z}, 3, false);
-  Tracks::tracks_set_base_provider(context, "baseRightHandLocalRotation", new float[4] {baseRightHandLocalRotation.x, baseRightHandLocalRotation.y, baseRightHandLocalRotation.z, baseRightHandLocalRotation.w}, 4, true);
-  Tracks::tracks_set_base_provider(context, "baseRightHandLocalScale", new float[3] {baseRightHandLocalScale.x, baseRightHandLocalScale.y, baseRightHandLocalScale.z}, 3, false);
-  Tracks::tracks_set_base_provider(context, "baseRightHandPosition", new float[3] {baseRightHandPosition.x, baseRightHandPosition.y, baseRightHandPosition.z}, 3, false);
-  Tracks::tracks_set_base_provider(context, "baseRightHandRotation", new float[4] {baseRightHandRotation.x, baseRightHandRotation.y, baseRightHandRotation.z, baseRightHandRotation.w}, 4, true);
+  Tracks::ffi::tracks_set_base_provider(context, "baseHeadLocalPosition", new float[3] {baseHeadLocalPosition.x, baseHeadLocalPosition.y, baseHeadLocalPosition.z}, 3, false);
+  Tracks::ffi::tracks_set_base_provider(context, "baseHeadLocalRotation", new float[4] {baseHeadLocalRotation.x, baseHeadLocalRotation.y, baseHeadLocalRotation.z, baseHeadLocalRotation.w}, 4, true);
+  Tracks::ffi::tracks_set_base_provider(context, "baseHeadLocalScale", new float[3] {baseHeadLocalScale.x, baseHeadLocalScale.y, baseHeadLocalScale.z}, 3, false);
+  Tracks::ffi::tracks_set_base_provider(context, "baseHeadPosition", new float[3] {baseHeadPosition.x, baseHeadPosition.y, baseHeadPosition.z}, 3, false);
+  Tracks::ffi::tracks_set_base_provider(context, "baseHeadRotation", new float[4] {baseHeadRotation.x, baseHeadRotation.y, baseHeadRotation.z, baseHeadRotation.w}, 4, true);
+  Tracks::ffi::tracks_set_base_provider(context, "baseLeftHandLocalPosition", new float[3] {baseLeftHandLocalPosition.x, baseLeftHandLocalPosition.y, baseLeftHandLocalPosition.z}, 3, false);
+  Tracks::ffi::tracks_set_base_provider(context, "baseLeftHandLocalRotation", new float[4] {baseLeftHandLocalRotation.x, baseLeftHandLocalRotation.y, baseLeftHandLocalRotation.z, baseLeftHandLocalRotation.w}, 4, true);
+  Tracks::ffi::tracks_set_base_provider(context, "baseLeftHandLocalScale", new float[3] {baseLeftHandLocalScale.x, baseLeftHandLocalScale.y, baseLeftHandLocalScale.z}, 3, false);
+  Tracks::ffi::tracks_set_base_provider(context, "baseLeftHandPosition", new float[3] {baseLeftHandPosition.x, baseLeftHandPosition.y, baseLeftHandPosition.z}, 3, false);
+  Tracks::ffi::tracks_set_base_provider(context, "baseLeftHandRotation", new float[4] {baseLeftHandRotation.x, baseLeftHandRotation.y, baseLeftHandRotation.z, baseLeftHandRotation.w}, 4, true);
+  Tracks::ffi::tracks_set_base_provider(context, "baseRightHandLocalPosition", new float[3] {baseRightHandLocalPosition.x, baseRightHandLocalPosition.y, baseRightHandLocalPosition.z}, 3, false);
+  Tracks::ffi::tracks_set_base_provider(context, "baseRightHandLocalRotation", new float[4] {baseRightHandLocalRotation.x, baseRightHandLocalRotation.y, baseRightHandLocalRotation.z, baseRightHandLocalRotation.w}, 4, true);
+  Tracks::ffi::tracks_set_base_provider(context, "baseRightHandLocalScale", new float[3] {baseRightHandLocalScale.x, baseRightHandLocalScale.y, baseRightHandLocalScale.z}, 3, false);
+  Tracks::ffi::tracks_set_base_provider(context, "baseRightHandPosition", new float[3] {baseRightHandPosition.x, baseRightHandPosition.y, baseRightHandPosition.z}, 3, false);
+  Tracks::ffi::tracks_set_base_provider(context, "baseRightHandRotation", new float[4] {baseRightHandRotation.x, baseRightHandRotation.y, baseRightHandRotation.z, baseRightHandRotation.w}, 4, true);
 }
 
 void InstallBaseProviderHooks() {

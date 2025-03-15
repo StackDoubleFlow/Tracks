@@ -11,7 +11,7 @@
 
 using namespace NEVector;
 
-Tracks::ffi::BaseProviderContext* internal_tracks_context = Tracks::ffi::tracks_make_base_provider_context();
+
 
 // TODO: Make a recursive cleanup method
 const Tracks::ffi::FFIJsonValue* convert_rapidjson(rapidjson::Value const& value) {

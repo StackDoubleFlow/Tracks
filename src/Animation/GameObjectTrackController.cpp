@@ -14,15 +14,6 @@ DEFINE_TYPE(Tracks, GameObjectTrackController)
 
 using namespace Tracks;
 
-template <typename T>
-static constexpr std::optional<T> getPropertyNullable(Track const* track, Property const& prop,
-                                                      uint32_t lastCheckedTime) {
-  if (lastCheckedTime != 0 && prop.lastUpdated != 0 && prop.lastUpdated < lastCheckedTime) return std::nullopt;
-
-  auto ret = Animation::getPropertyNullable<T>(track, prop.value);
-
-  return ret;
-}
 
 // static NEVector::Quaternion QuatInverse(const NEVector::Quaternion &a) {
 //         NEVector::Quaternion conj = {-a.x, -a.y, -a.z, a.w};
@@ -97,9 +88,9 @@ void GameObjectTrackController::UpdateData(bool force) {
   }
 
   auto const _noteLinesDistance = 0.6f; // StaticBeatmapObjectSpawnMovementData.kNoteLinesDistance
-  auto const _track = data->_track;
+  auto const& tracks = data->_track;
 
-  if (_track.empty()) {
+  if (tracks.empty()) {
     CJDLogger::Logger.fmtLog<Paper::LogLevel::ERR>("Track is null! Should remove component or just early return? {} {}",
                                                    fmt::ptr(this),
                                                    static_cast<std::string>(get_gameObject()->get_name()));
@@ -116,8 +107,6 @@ void GameObjectTrackController::UpdateData(bool force) {
   std::optional<NEVector::Vector3> localPosition;
   std::optional<NEVector::Vector3> scale;
 
-  // I hate this
-  auto tracks = std::span<Track const*>(const_cast<Track const**>(&*_track.begin()), _track.size());
 
   if (tracks.size() == 1) {
     auto track = tracks.front();

@@ -7,9 +7,9 @@ using namespace TracksAD;
 
 namespace Animation {
 
-PointDefinition* TryGetPointData(BeatmapAssociatedData& beatmapAD, PointDefinition*& anon,
-                                 rapidjson::Value const& customData, std::string_view pointName, PointType type) {
-  PointDefinition* pointData = nullptr;
+PointDefinitionW TryGetPointData(BeatmapAssociatedData& beatmapAD, rapidjson::Value const& customData,
+                                 std::string_view pointName, Tracks::ffi::WrapBaseValueType type) {
+  PointDefinitionW pointData = nullptr;
 
   auto customDataItr = customData.FindMember(pointName.data());
   if (customDataItr == customData.MemberEnd()) return pointData;
@@ -19,17 +19,21 @@ PointDefinition* TryGetPointData(BeatmapAssociatedData& beatmapAD, PointDefiniti
   case rapidjson::kNullType:
     return pointData;
   case rapidjson::kStringType: {
+
     auto itr = beatmapAD.pointDefinitions.find(pointString.GetString());
-    if (itr != beatmapAD.pointDefinitions.end()) {
-      pointData = new PointDefinition(*itr->second, type);
-    } else {
+    if (itr == beatmapAD.pointDefinitions.end()) {
       TLogger::Logger.warn("Could not find point definition {}", pointString.GetString());
+    } else {
+      pointData = itr->second;
     }
+
     break;
   }
   default:
-    anon = new PointDefinition(pointString, type);
-    pointData = anon;
+    auto json = convert_rapidjson(pointString);
+    auto baseProviderContext = Tracks::ffi::tracks_context_get_base_provider_context(beatmapAD.internal_tracks_context);
+    auto pointDataAnon = Tracks::ffi::tracks_make_base_point_definition(json, type, baseProviderContext);
+    pointData = Tracks::ffi::tracks_context_add_point_definition(beatmapAD.internal_tracks_context, pointDataAnon);
   }
 
   return pointData;

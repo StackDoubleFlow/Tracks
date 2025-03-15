@@ -12,14 +12,14 @@ void AddEventCallbacks();
 void UpdateCoroutines(GlobalNamespace::BeatmapCallbacksController* callbackController);
 
 struct AnimateTrackContext {
-  PointDefinition* points;
-  Property* property;
+  PointDefinitionW points;
+  PropertyW property;
   float duration;
   Functions easing;
   float startTime;
   int repeat;
 
-  constexpr AnimateTrackContext(PointDefinition* points, Property* aProperty, float duration, float startTime,
+  constexpr AnimateTrackContext(PointDefinitionW points, PropertyW aProperty, float duration, float startTime,
                                 Functions easing, int repeat)
       : points(points), property(aProperty), duration(duration), startTime(startTime), easing(easing), repeat(repeat) {}
 
@@ -27,7 +27,7 @@ struct AnimateTrackContext {
 };
 
 struct AssignPathAnimationContext {
-  PathProperty* property;
+  PathPropertyW property;
   float duration;
   Functions easing;
   float startTime;
@@ -35,7 +35,7 @@ struct AssignPathAnimationContext {
 
   constexpr AssignPathAnimationContext() = default;
 
-  constexpr AssignPathAnimationContext(PathProperty* aProperty, float duration, float startTime, Functions easing,
+  constexpr AssignPathAnimationContext(PathPropertyW aProperty, float duration, float startTime, Functions easing,
                                        int repeat)
       : property(aProperty), duration(duration), startTime(startTime), easing(easing), repeat(repeat) {}
 };
