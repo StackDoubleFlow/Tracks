@@ -64,9 +64,9 @@ AssignPathAnimationData::AssignPathAnimationData(BeatmapAssociatedData& beatmapA
   for (auto const& member : customData.GetObject()) {
     char const* name = member.name.GetString();
     if (IsStringProperties(name)) {
-      auto property = Tracks::ffi::track_get_path_property(trackPathProperties, name);
+      auto property = trackPathProperties.GetPathProperty(name);
       if (property) {
-        auto type = Tracks::ffi::path_property_get_type(property);
+        auto type = property.GetType();
 
         auto pointData = Animation::TryGetPointData(beatmapAD, customData, name, type);
 
