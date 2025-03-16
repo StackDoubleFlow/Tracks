@@ -28,6 +28,9 @@ struct PropertyW {
   operator Tracks::ffi::ValueProperty const*() const {
     return property;
   }
+  operator bool() const {
+    return property != nullptr;
+  }
 
   Tracks::ffi::WrapBaseValueType GetType() const {
     return Tracks::ffi::property_get_type(property);
@@ -43,8 +46,14 @@ struct PathPropertyW {
 
   constexpr PathPropertyW() = default;
   constexpr PathPropertyW(Tracks::ffi::PathProperty* property) : property(property) {}
+  operator Tracks::ffi::PathProperty*() const {
+    return property;
+  }
   operator Tracks::ffi::PathProperty const*() const {
     return property;
+  }
+  operator bool() const {
+    return property != nullptr;
   }
 
   Tracks::ffi::WrapBaseValue Interpolate(float time, bool& last, Tracks::ffi::BaseProviderContext* context) const {
@@ -54,22 +63,21 @@ struct PathPropertyW {
   }
   NEVector::Vector3 InterpolateVec3(float time, bool& last, Tracks::ffi::BaseProviderContext* context) const {
     auto result = Interpolate(time, last, context);
-    return {result.value.vec3.x, result.value.vec3.y, result.value.vec3.z};
+    return { result.value.vec3.x, result.value.vec3.y, result.value.vec3.z };
   }
   NEVector::Vector4 InterpolateVec4(float time, bool& last, Tracks::ffi::BaseProviderContext* context) const {
     auto result = Interpolate(time, last, context);
-    return {result.value.vec4.x, result.value.vec4.y, result.value.vec4.z, result.value.vec4.w};
+    return { result.value.vec4.x, result.value.vec4.y, result.value.vec4.z, result.value.vec4.w };
   }
   NEVector::Quaternion InterpolateQuat(float time, bool& last, Tracks::ffi::BaseProviderContext* context) const {
     auto result = Interpolate(time, last, context);
-    return {result.value.quat.x, result.value.quat.y, result.value.quat.z, result.value.quat.w};
+    return { result.value.quat.x, result.value.quat.y, result.value.quat.z, result.value.quat.w };
   }
 
   float InterpolateLinear(float time, bool& last, Tracks::ffi::BaseProviderContext* context) const {
     auto result = Interpolate(time, last, context);
     return result.value.float_v;
   }
-
 
   Tracks::ffi::WrapBaseValueType GetType() const {
     return Tracks::ffi::path_property_get_type(property);
@@ -103,6 +111,10 @@ struct TrackW {
     return track;
   }
 
+  operator bool() const {
+    return track != nullptr;
+  }
+
   PropertyW GetProperty(std::string_view name) const {
     auto prop = Tracks::ffi::track_get_property(track, name.data());
     return PropertyW(prop);
@@ -111,5 +123,32 @@ struct TrackW {
   PathPropertyW GetPathProperty(std::string_view name) const {
     auto prop = Tracks::ffi::track_get_path_property(track, name.data());
     return PathPropertyW(prop);
+  }
+
+  void MarkUpdated() {
+    Tracks::ffi::track_mark_updated(track);
+  }
+
+  void RegisterGameObject(UnityEngine::GameObject* gameObject) {
+    Tracks::ffi::track_register_game_object(track, (Tracks::ffi::GameObject*)gameObject);
+  }
+
+  void RegisterProperty(std::string_view id, PropertyW property) {
+    Tracks::ffi::track_register_property(track, id.data(), const_cast<Tracks::ffi::ValueProperty*>(property.property));
+  }
+  void RegisterPathProperty(std::string_view id, PathPropertyW property) {
+    Tracks::ffi::track_register_path_property(track, id.data(), property);
+  }
+
+  Tracks::ffi::CPropertiesMap GetPropertiesMap() const {
+    return Tracks::ffi::track_get_properties_map(track);
+  }
+
+  Tracks::ffi::CPathPropertiesMap GetPathPropertiesMap() const {
+    return Tracks::ffi::track_get_path_properties_map(track);
+  }
+
+  std::string GetName() const {
+    return Tracks::ffi::track_get_name(track);
   }
 };
