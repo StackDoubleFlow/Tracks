@@ -1,5 +1,6 @@
 #pragma once
 #include <map>
+#include <optional>
 #include <string>
 #include "../Vector.h"
 #include "../sv/small_vector.h"
@@ -19,6 +20,8 @@ struct AnimateTrackContext;
 struct PropertyW;
 struct PathPropertyW;
 
+using PropertyNames = Tracks::ffi::PropertyNames;
+
 struct PropertyW {
   Tracks::ffi::ValueProperty const* property;
 
@@ -32,12 +35,44 @@ struct PropertyW {
     return property != nullptr;
   }
 
+  [[nodiscard]]
   Tracks::ffi::WrapBaseValueType GetType() const {
     return Tracks::ffi::property_get_type(property);
   }
-
+  [[nodiscard]]
   Tracks::ffi::CValueProperty GetValue() const {
     return Tracks::ffi::property_get_value(property);
+  }
+
+  [[nodiscard]]
+  std::optional<NEVector::Quaternion> GetQuat() const {
+    auto value = GetValue();
+    if (!value.has_value) return std::nullopt;
+    if (value.value.ty != Tracks::ffi::WrapBaseValueType::Quat) return std::nullopt;
+    return NEVector::Quaternion{ value.value.value.quat.x, value.value.value.quat.y, value.value.value.quat.z,
+                                 value.value.value.quat.w };
+  }
+  [[nodiscard]]
+  std::optional<NEVector::Vector3> GetVec3() const {
+    auto value = GetValue();
+    if (!value.has_value) return std::nullopt;
+    if (value.value.ty != Tracks::ffi::WrapBaseValueType::Vec3) return std::nullopt;
+    return NEVector::Vector3{ value.value.value.vec3.x, value.value.value.vec3.y, value.value.value.vec3.z };
+  }
+  [[nodiscard]]
+  std::optional<NEVector::Vector4> GetVec4() const {
+    auto value = GetValue();
+    if (!value.has_value) return std::nullopt;
+    if (value.value.ty != Tracks::ffi::WrapBaseValueType::Vec4) return std::nullopt;
+    return NEVector::Vector4{ value.value.value.vec4.x, value.value.value.vec4.y, value.value.value.vec4.z,
+                              value.value.value.vec4.w };
+  }
+  [[nodiscard]]
+  std::optional<float> GetFloat() const {
+    auto value = GetValue();
+    if (!value.has_value) return std::nullopt;
+    if (value.value.ty != Tracks::ffi::WrapBaseValueType::Float) return std::nullopt;
+    return value.value.value.float_v;
   }
 };
 
@@ -119,9 +154,17 @@ struct TrackW {
     auto prop = Tracks::ffi::track_get_property(track, name.data());
     return PropertyW(prop);
   }
+  PropertyW GetPropertyNamed(Tracks::ffi::PropertyNames name) const {
+    auto prop = Tracks::ffi::track_get_property_by_name(track, name);
+    return PropertyW(prop);
+  }
 
   PathPropertyW GetPathProperty(std::string_view name) const {
     auto prop = Tracks::ffi::track_get_path_property(track, name.data());
+    return PathPropertyW(prop);
+  }
+  PathPropertyW GetPathPropertyNamed(Tracks::ffi::PropertyNames name) const {
+    auto prop = Tracks::ffi::track_get_path_property_by_name(track, name);
     return PathPropertyW(prop);
   }
 

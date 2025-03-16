@@ -17,7 +17,7 @@ namespace Tracks {
 struct GameObjectTrackControllerData {
   GameObjectTrackControllerData() = delete;
   GameObjectTrackControllerData(GameObjectTrackControllerData const&) = delete;
-  GameObjectTrackControllerData(std::vector<TrackW> track, bool v2) : _track(std::move(track)), v2(v2) {}
+  GameObjectTrackControllerData(std::span<TrackW const> track, bool v2) : _track(track.begin(), track.end()), v2(v2) {}
 
   std::vector<TrackW> const _track;
   bool const v2;
@@ -39,7 +39,7 @@ DECLARE_CLASS_CODEGEN(Tracks, GameObjectTrackController, UnityEngine::MonoBehavi
                       static bool LeftHanded;
 
                       static std::optional<GameObjectTrackController*> HandleTrackData(
-                        UnityEngine::GameObject * gameObject, std::vector<TrackW> const& track,
+                        UnityEngine::GameObject * gameObject, std::span<TrackW const> track,
                         float noteLinesDistance, bool v2, bool overwrite);
 
                       static void ClearData();

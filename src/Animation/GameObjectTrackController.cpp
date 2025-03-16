@@ -14,7 +14,6 @@ DEFINE_TYPE(Tracks, GameObjectTrackController)
 
 using namespace Tracks;
 
-
 // static NEVector::Quaternion QuatInverse(const NEVector::Quaternion &a) {
 //         NEVector::Quaternion conj = {-a.x, -a.y, -a.z, a.w};
 //          float norm2 = NEVector::Quaternion::Dot(a, a);
@@ -76,9 +75,8 @@ void GameObjectTrackController::UpdateData(bool force) {
 
     // Destroy the object if the data is never found
     if (attemptedTries > 100) {
-      CJDLogger::Logger.fmtLog<Paper::LogLevel::ERR>(
-          "Destroying object", fmt::ptr(this),
-          static_cast<std::string>(get_gameObject()->get_name()));
+      CJDLogger::Logger.fmtLog<Paper::LogLevel::ERR>("Destroying object", fmt::ptr(this),
+                                                     static_cast<std::string>(get_gameObject()->get_name()));
       Destroy(this);
       CJDLogger::Logger.Backtrace(10);
     } else {
@@ -107,38 +105,29 @@ void GameObjectTrackController::UpdateData(bool force) {
   std::optional<NEVector::Vector3> localPosition;
   std::optional<NEVector::Vector3> scale;
 
-
   if (tracks.size() == 1) {
     auto track = tracks.front();
-    auto const& properties = track->properties;
 
-    rotation = getPropertyNullable<NEVector::Quaternion>(track, properties.rotation, lastCheckedTime);
-    localRotation = getPropertyNullable<NEVector::Quaternion>(track, properties.localRotation, lastCheckedTime);
-    position = getPropertyNullable<NEVector::Vector3>(track, properties.position, lastCheckedTime);
-    localPosition = getPropertyNullable<NEVector::Vector3>(track, properties.localPosition, lastCheckedTime);
-    scale = getPropertyNullable<NEVector::Vector3>(track, properties.scale, lastCheckedTime);
+    // after
+    rotation = track.GetPropertyNamed(PropertyNames::Rotation).GetQuat();
+    rotation = track.GetPropertyNamed(PropertyNames::LocalRotation).GetQuat();
+    position = track.GetPropertyNamed(PropertyNames::Position).GetVec3();
+    localPosition = track.GetPropertyNamed(PropertyNames::LocalPosition).GetVec3();
+    scale = track.GetPropertyNamed(PropertyNames::Scale).GetVec3();
 
   } else {
 
-#define combine(target, list, op)                                                                                      \
-  if (list)                                                                                                            \
-    for (auto const& i : *list) {                                                                                      \
-      if (!target)                                                                                                     \
-        target = i;                                                                                                    \
-      else                                                                                                             \
-        target = *target op i;                                                                                         \
-    }
+    // now
+    auto localRotations = Animation::getPropertiesQuat(tracks, PropertyNames::LocalRotation, lastCheckedTime);
+    auto rotations = Animation::getPropertiesQuat(tracks, PropertyNames::Rotation, lastCheckedTime);
+    auto positions = Animation::getPropertiesVec3(tracks, PropertyNames::Position, lastCheckedTime);
+    auto localPositions = Animation::getPropertiesVec3(tracks, PropertyNames::LocalPosition, lastCheckedTime);
+    auto scales = Animation::getPropertiesVec3(tracks, PropertyNames::Scale, lastCheckedTime);
 
-    auto localRotations = Animation::getPropertiesNullable<NEVector::Quaternion>(
-        tracks, [](Properties const& p) { return p.localRotation; }, lastCheckedTime);
-    auto rotations = Animation::getPropertiesNullable<NEVector::Quaternion>(
-        tracks, [](Properties const& p) { return p.rotation; }, lastCheckedTime);
-    auto positions = Animation::getPropertiesNullable<NEVector::Vector3>(
-        tracks, [](Properties const& p) { return p.position; }, lastCheckedTime);
-    auto localPositions = Animation::getPropertiesNullable<NEVector::Vector3>(
-        tracks, [](Properties const& p) { return p.localPosition; }, lastCheckedTime);
-    auto scales = Animation::getPropertiesNullable<NEVector::Vector3>(
-        tracks, [](Properties const& p) { return p.scale; }, lastCheckedTime);
+#define combine(target, list, op)                                                                                      \
+    for (auto const& i : list) {                                                                                      \
+      target = *target op i;                                                                                           \
+    }
 
     combine(localRotation, localRotations, *);
     combine(rotation, rotations, *);
@@ -197,11 +186,11 @@ void GameObjectTrackController::UpdateData(bool force) {
     data->ScaleUpdate.invoke();
   }
 
-  lastCheckedTime = getCurrentTime();
+  lastCheckedTime = Animation::getCurrentTime();
 }
 
 std::optional<GameObjectTrackController*>
-GameObjectTrackController::HandleTrackData(UnityEngine::GameObject* gameObject, std::vector<Track*> const& track,
+GameObjectTrackController::HandleTrackData(UnityEngine::GameObject* gameObject, std::span<TrackW const> track,
                                            float noteLinesDistance, bool v2, bool overwrite) {
   auto* existingTrackController = gameObject->GetComponent<GameObjectTrackController*>();
 
@@ -228,8 +217,8 @@ GameObjectTrackController::HandleTrackData(UnityEngine::GameObject* gameObject, 
   // cleaned up on OnDestroy
   trackController->data = new GameObjectTrackControllerData(track, v2);
 
-  for (auto* t : track) {
-    t->AddGameObject(gameObject);
+  for (auto t : track) {
+    t.RegisterGameObject(gameObject);
   }
 
   return trackController;
