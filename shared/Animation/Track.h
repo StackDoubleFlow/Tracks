@@ -3,6 +3,7 @@
 #include <string>
 #include "../Vector.h"
 #include "../sv/small_vector.h"
+#include "Animation/PointDefinition.h"
 #include "UnityEngine/GameObject.hpp"
 
 #include "beatsaber-hook/shared/utils/typedefs-wrappers.hpp"
@@ -31,6 +32,10 @@ struct PropertyW {
   Tracks::ffi::WrapBaseValueType GetType() const {
     return Tracks::ffi::property_get_type(property);
   }
+
+  Tracks::ffi::CValueProperty GetValue() const {
+    return Tracks::ffi::property_get_value(property);
+  }
 };
 
 struct PathPropertyW {
@@ -42,14 +47,48 @@ struct PathPropertyW {
     return property;
   }
 
-  NEVector::Vector3 Interpolate(float time, bool& last, Tracks::ffi::BaseProviderContext* context) const {
+  Tracks::ffi::WrapBaseValue Interpolate(float time, bool& last, Tracks::ffi::BaseProviderContext* context) const {
     auto result = Tracks::ffi::path_property_interpolate(property, time, context);
     last = result.has_value;
-    return { result.value.value.vec3.x, result.value.value.vec3.y, result.value.value.vec3.z };
+    return result.value;
   }
+  NEVector::Vector3 InterpolateVec3(float time, bool& last, Tracks::ffi::BaseProviderContext* context) const {
+    auto result = Interpolate(time, last, context);
+    return {result.value.vec3.x, result.value.vec3.y, result.value.vec3.z};
+  }
+  NEVector::Vector4 InterpolateVec4(float time, bool& last, Tracks::ffi::BaseProviderContext* context) const {
+    auto result = Interpolate(time, last, context);
+    return {result.value.vec4.x, result.value.vec4.y, result.value.vec4.z, result.value.vec4.w};
+  }
+  NEVector::Quaternion InterpolateQuat(float time, bool& last, Tracks::ffi::BaseProviderContext* context) const {
+    auto result = Interpolate(time, last, context);
+    return {result.value.quat.x, result.value.quat.y, result.value.quat.z, result.value.quat.w};
+  }
+
+  float InterpolateLinear(float time, bool& last, Tracks::ffi::BaseProviderContext* context) const {
+    auto result = Interpolate(time, last, context);
+    return result.value.float_v;
+  }
+
 
   Tracks::ffi::WrapBaseValueType GetType() const {
     return Tracks::ffi::path_property_get_type(property);
+  }
+
+  float GetTime() const {
+    return Tracks::ffi::path_property_get_time(property);
+  }
+
+  void SetTime(float time) {
+    Tracks::ffi::path_property_set_time(property, time);
+  }
+
+  void Finish() {
+    Tracks::ffi::path_property_finish(property);
+  }
+
+  void Init(std::optional<PointDefinitionW> newPointData) {
+    Tracks::ffi::path_property_init(property, newPointData.value_or(nullptr));
   }
 };
 

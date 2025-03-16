@@ -5,7 +5,6 @@
 #include "Vector.h"
 #include "beatsaber-hook/shared/config/rapidjson-utils.hpp"
 #include "Easings.h"
-#include "Track.h"
 #include "../Hash.h"
 #include "UnityEngine/Color.hpp"
 #include "beatsaber-hook/shared/rapidjson/include/rapidjson/document.h"
