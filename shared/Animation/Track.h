@@ -1,4 +1,5 @@
 #pragma once
+#include <cstdint>
 #include <map>
 #include <optional>
 #include <string>
@@ -21,6 +22,52 @@ struct PropertyW;
 struct PathPropertyW;
 
 using PropertyNames = Tracks::ffi::PropertyNames;
+
+struct TimeUnit {
+  Tracks::ffi::CTimeUnit time;
+
+  constexpr TimeUnit(Tracks::ffi::CTimeUnit time) : time(time) {}
+  constexpr TimeUnit() = default;
+  constexpr TimeUnit(TimeUnit const&) = default;
+
+  [[nodiscard]] constexpr operator Tracks::ffi::CTimeUnit() const {
+    return time;
+  }
+
+  // get seconds
+  constexpr uint64_t get_seconds() const {
+    return time._0;
+  }
+
+  // get nanoseconds
+  constexpr uint64_t get_nanoseconds() const {
+    return time._1;
+  }
+
+  constexpr bool operator<(TimeUnit o) const {
+    return get_seconds() < o.get_seconds() || (o.get_seconds() == get_seconds() && get_nanoseconds() < o.get_nanoseconds());
+  }
+
+  constexpr bool operator>(TimeUnit o) const {
+    return get_seconds() > o.get_seconds() || (o.get_seconds() == get_seconds() && get_nanoseconds() > o.get_nanoseconds());
+  }
+
+  constexpr bool operator==(TimeUnit o) const {
+    return get_seconds() == o.get_seconds() && get_nanoseconds() == o.get_nanoseconds();
+  }
+
+  constexpr bool operator!=(TimeUnit o) const {
+    return get_seconds() != o.get_seconds() || get_nanoseconds() != o.get_nanoseconds();
+  }
+
+  constexpr bool operator<=(TimeUnit o) const {
+    return o == *this || *this < o;
+  }
+
+  constexpr bool operator>=(TimeUnit o) const {
+    return o == *this || *this > o;
+  }
+};
 
 struct PropertyW {
   Tracks::ffi::ValueProperty const* property;
@@ -47,32 +94,33 @@ struct PropertyW {
   [[nodiscard]]
   std::optional<NEVector::Quaternion> GetQuat() const {
     auto value = GetValue();
-    if (!value.has_value) return std::nullopt;
-    if (value.value.ty != Tracks::ffi::WrapBaseValueType::Quat) return std::nullopt;
-    return NEVector::Quaternion{ value.value.value.quat.x, value.value.value.quat.y, value.value.value.quat.z,
-                                 value.value.value.quat.w };
+    if (!value.value.has_value) return std::nullopt;
+    if (value.value.value.ty != Tracks::ffi::WrapBaseValueType::Quat) return std::nullopt;
+    auto v = value.value.value.value;
+    return NEVector::Quaternion{ v.quat.x, v.quat.y, v.quat.z, v.quat.w };
   }
   [[nodiscard]]
   std::optional<NEVector::Vector3> GetVec3() const {
     auto value = GetValue();
-    if (!value.has_value) return std::nullopt;
-    if (value.value.ty != Tracks::ffi::WrapBaseValueType::Vec3) return std::nullopt;
-    return NEVector::Vector3{ value.value.value.vec3.x, value.value.value.vec3.y, value.value.value.vec3.z };
+    if (!value.value.has_value) return std::nullopt;
+    if (value.value.value.ty != Tracks::ffi::WrapBaseValueType::Vec3) return std::nullopt;
+    auto v = value.value.value.value;
+    return NEVector::Vector3{ v.vec3.x, v.vec3.y, v.vec3.z };
   }
   [[nodiscard]]
   std::optional<NEVector::Vector4> GetVec4() const {
     auto value = GetValue();
-    if (!value.has_value) return std::nullopt;
-    if (value.value.ty != Tracks::ffi::WrapBaseValueType::Vec4) return std::nullopt;
-    return NEVector::Vector4{ value.value.value.vec4.x, value.value.value.vec4.y, value.value.value.vec4.z,
-                              value.value.value.vec4.w };
+    if (!value.value.has_value) return std::nullopt;
+    if (value.value.value.ty != Tracks::ffi::WrapBaseValueType::Vec4) return std::nullopt;
+    auto v = value.value.value.value;
+    return NEVector::Vector4{ v.vec4.x, v.vec4.y, v.vec4.z, v.vec4.w };
   }
   [[nodiscard]]
   std::optional<float> GetFloat() const {
     auto value = GetValue();
-    if (!value.has_value) return std::nullopt;
-    if (value.value.ty != Tracks::ffi::WrapBaseValueType::Float) return std::nullopt;
-    return value.value.value.float_v;
+    if (!value.value.has_value) return std::nullopt;
+    if (value.value.value.ty != Tracks::ffi::WrapBaseValueType::Float) return std::nullopt;
+    return value.value.value.value.float_v;
   }
 };
 
@@ -166,10 +214,6 @@ struct TrackW {
   PathPropertyW GetPathPropertyNamed(Tracks::ffi::PropertyNames name) const {
     auto prop = Tracks::ffi::track_get_path_property_by_name(track, name);
     return PathPropertyW(prop);
-  }
-
-  void MarkUpdated() {
-    Tracks::ffi::track_mark_updated(track);
   }
 
   void RegisterGameObject(UnityEngine::GameObject* gameObject) {

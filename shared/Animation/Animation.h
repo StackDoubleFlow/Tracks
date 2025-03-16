@@ -4,6 +4,14 @@
 #include "Track.h"
 #include "PointDefinition.h"
 
+#define TRACKS_LIST_OPERATE_MULTIPLE(target, list, op)                                                                 \
+  if (!list.empty()) {                                                                                                 \
+    target.emplace();                                                                                                  \
+    for (auto const& i : list) {                                                                                       \
+      target = *target op i;                                                                                           \
+    }                                                                                                                  \
+  }
+
 namespace GlobalNamespace {
 class BeatmapData;
 }
@@ -16,7 +24,7 @@ namespace Animation {
 
 [[nodiscard]]
 static auto getCurrentTime() {
-  return std::chrono::high_resolution_clock::now().time_since_epoch().count();
+  return Tracks::ffi::get_time();
 }
 
 PointDefinitionW TryGetPointData(TracksAD::BeatmapAssociatedData& beatmapAD, rapidjson::Value const& customData,
@@ -72,14 +80,15 @@ MirrorQuaternionNullable(std::optional<NEVector::Quaternion> const& quaternion) 
 // Base versions that return WrapBaseValue
 [[nodiscard]]
 constexpr static std::vector<Tracks::ffi::WrapBaseValue> getProperties(std::span<TrackW const> tracks,
-                                                                       PropertyNames name, uint64_t time) {
+                                                                       PropertyNames name, TimeUnit time) {
   std::vector<Tracks::ffi::WrapBaseValue> properties;
   properties.reserve(tracks.size());
   for (auto const& track : tracks) {
     auto property = track.GetPropertyNamed(name);
     auto value = property.GetValue();
-    if (!value.has_value) continue;
-    properties.push_back(value.value);
+    if (TimeUnit(value.last_updated) <= time) continue;
+    if (!value.value.has_value) continue;
+    properties.push_back(value.value.value);
   }
 
   return properties;
@@ -108,14 +117,15 @@ getPathProperties(std::span<TrackW const> tracks, PropertyNames name, Tracks::ff
 #define GENERATE_PROPERTY_GETTERS(ReturnType, Suffix, Conversion)                                                      \
   [[nodiscard]]                                                                                                        \
   constexpr static std::vector<ReturnType> getProperties##Suffix(std::span<TrackW const> tracks, PropertyNames name,   \
-                                                                 uint64_t time) {                                      \
+                                                                 TimeUnit time) {                                      \
     std::vector<ReturnType> properties;                                                                                \
     properties.reserve(tracks.size());                                                                                 \
     for (auto const& track : tracks) {                                                                                 \
       auto property = track.GetPropertyNamed(name);                                                                    \
       auto value = property.GetValue();                                                                                \
-      if (!value.has_value) continue;                                                                                  \
-      properties.push_back(Conversion(value.value));                                                                   \
+      if (!value.value.has_value) continue;                                                                            \
+      if (TimeUnit(value.last_updated) <= time) continue;                                                              \
+      properties.push_back(Conversion(value.value.value));                                                             \
     }                                                                                                                  \
     return properties;                                                                                                 \
   }                                                                                                                    \
@@ -141,6 +151,50 @@ GENERATE_PROPERTY_GETTERS(NEVector::Vector3, Vec3, ToVector3)
 GENERATE_PROPERTY_GETTERS(NEVector::Vector4, Vec4, ToVector4)
 GENERATE_PROPERTY_GETTERS(NEVector::Quaternion, Quat, ToQuaternion)
 GENERATE_PROPERTY_GETTERS(float, Float, ToFloat)
+
+// Macro to generate addition functions for spans
+#define GENERATE_ADD_FUNCTIONS(Type, TypeName)                                                     \
+  [[nodiscard]]                                                                                   \
+  constexpr static Type add##TypeName##s(std::span<Type const> values) {                          \
+    if (values.empty()) return Type{};                                                            \
+    Type result = values[0];                                                                     \
+    for (size_t i = 1; i < values.size(); ++i) {                                                 \
+      result = result + values[i];                                                               \
+    }                                                                                             \
+    return result;                                                                               \
+  }
+
+// Macro to generate multiplication functions for spans
+#define GENERATE_MUL_FUNCTIONS(Type, TypeName)                                                     \
+  [[nodiscard]]                                                                                   \
+  constexpr static Type multiply##TypeName##s(std::span<Type const> values) {                     \
+    if (values.empty()) return Type{};                                                            \
+    Type result = values[0];                                                                     \
+    for (size_t i = 1; i < values.size(); ++i) {                                                 \
+      result = result * values[i];                                                               \
+    }                                                                                             \
+    return result;                                                                               \
+  }
+
+// Generate addition functions for different types
+GENERATE_ADD_FUNCTIONS(NEVector::Vector3, Vector3)
+[[nodiscard]] constexpr static NEVector ::Vector4 addVector4s(std ::span<NEVector ::Vector4 const> values) {
+  if (values.empty()) return NEVector ::Vector4{};
+  NEVector ::Vector4 result = values[0];
+  for (size_t i = 1; i < values.size(); ++i) {
+    result = result + values[i];
+  }
+  return result;
+}
+// GENERATE_ADD_FUNCTIONS(NEVector::Vector4, Vector4)
+GENERATE_ADD_FUNCTIONS(float, Float)
+
+// Generate multiplication functions for different types
+GENERATE_MUL_FUNCTIONS(NEVector::Vector3, Vector3)
+GENERATE_MUL_FUNCTIONS(NEVector::Vector4, Vector4)
+GENERATE_MUL_FUNCTIONS(NEVector::Quaternion, Quaternion)
+GENERATE_MUL_FUNCTIONS(float, Float)
+
 
 #pragma endregion // property_utils
 

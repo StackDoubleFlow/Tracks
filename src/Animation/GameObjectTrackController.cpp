@@ -96,7 +96,7 @@ void GameObjectTrackController::UpdateData(bool force) {
     return;
   }
   if (force) {
-    lastCheckedTime = 0;
+    lastCheckedTime = TimeUnit();
   }
 
   std::optional<NEVector::Quaternion> rotation;
@@ -124,16 +124,11 @@ void GameObjectTrackController::UpdateData(bool force) {
     auto localPositions = Animation::getPropertiesVec3(tracks, PropertyNames::LocalPosition, lastCheckedTime);
     auto scales = Animation::getPropertiesVec3(tracks, PropertyNames::Scale, lastCheckedTime);
 
-#define combine(target, list, op)                                                                                      \
-    for (auto const& i : list) {                                                                                      \
-      target = *target op i;                                                                                           \
-    }
-
-    combine(localRotation, localRotations, *);
-    combine(rotation, rotations, *);
-    combine(scale, scales, *);
-    combine(position, positions, +);
-    combine(localPosition, localPositions, +);
+    TRACKS_LIST_OPERATE_MULTIPLE(localRotation, localRotations, *);
+    TRACKS_LIST_OPERATE_MULTIPLE(rotation, rotations, *);
+    TRACKS_LIST_OPERATE_MULTIPLE(scale, scales, *);
+    TRACKS_LIST_OPERATE_MULTIPLE(position, positions, +);
+    TRACKS_LIST_OPERATE_MULTIPLE(localPosition, localPositions, +);
   }
 
   if (GameObjectTrackController::LeftHanded) {

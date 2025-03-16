@@ -32,7 +32,7 @@ DECLARE_CLASS_CODEGEN(Tracks, GameObjectTrackController, UnityEngine::MonoBehavi
                       DECLARE_INSTANCE_FIELD(UnityEngine::Transform*, parent);
                       DECLARE_INSTANCE_FIELD(UnityEngine::Transform*, origin);
                       GameObjectTrackControllerData* data;
-                      uint64_t lastCheckedTime;
+                      TimeUnit lastCheckedTime;
                       int attemptedTries;
 
                       public:
