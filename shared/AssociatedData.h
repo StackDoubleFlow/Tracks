@@ -104,6 +104,14 @@ public:
   operator Tracks::ffi::TracksContext*() {
     return internal_tracks_context;
   }
+
+  Tracks::ffi::CoroutineManager* GetCoroutineManager() {
+    return Tracks::ffi::tracks_context_get_coroutine_manager(internal_tracks_context);
+  }
+
+  Tracks::ffi::BaseProviderContext* GetBaseProviderContext() {
+    return Tracks::ffi::tracks_context_get_base_provider_context(internal_tracks_context);
+  }
 };
 
 class BeatmapAssociatedData {
@@ -156,7 +164,7 @@ struct CustomEventAssociatedData {
   float duration;
   Functions easing;
   EventType type;
-  int repeat;
+  uint32_t repeat;
 
   // probably not a set, this might be ordered. Oh how much I hate tracks
   sbo::small_vector<AnimateTrackData, 1> animateTrackData;

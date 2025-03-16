@@ -38,13 +38,13 @@ inline bool IsStringProperties(std::string_view n) {
 }
 
 AnimateTrackData::AnimateTrackData(BeatmapAssociatedData& beatmapAD, rapidjson::Value const& customData,
-                                   TrackW trackProperties) {
+                                   TrackW track) {
   for (auto const& member : customData.GetObject()) {
     char const* name = member.name.GetString();
     if (!IsStringProperties(name)) {
       continue;
     }
-    auto property = trackProperties.GetProperty(name);
+    auto property = track.GetProperty(name);
     if (property) {
       auto type = property.GetType();
 
@@ -60,11 +60,11 @@ AnimateTrackData::AnimateTrackData(BeatmapAssociatedData& beatmapAD, rapidjson::
 }
 
 AssignPathAnimationData::AssignPathAnimationData(BeatmapAssociatedData& beatmapAD, rapidjson::Value const& customData,
-                                                 TrackW trackPathProperties) {
+                                                 TrackW track) {
   for (auto const& member : customData.GetObject()) {
     char const* name = member.name.GetString();
     if (IsStringProperties(name)) {
-      auto property = trackPathProperties.GetPathProperty(name);
+      auto property = track.GetPathProperty(name);
       if (property) {
         auto type = property.GetType();
 

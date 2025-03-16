@@ -42,13 +42,61 @@ void Events::UpdateCoroutines(BeatmapCallbacksController* callbackController) {
   auto* customBeatmapData = (CustomJSONData::CustomBeatmapData*)callbackController->_beatmapData;
   auto& beatmapAD = getBeatmapAD(customBeatmapData->customData);
 
-  auto tracksContext = beatmapAD.internal_tracks_context.get()->internal_tracks_context;
+  auto tracksContext = beatmapAD.internal_tracks_context;
 
-  auto coroutine = Tracks::ffi::tracks_context_get_coroutine_manager(tracksContext);
-  auto baseManager = Tracks::ffi::tracks_context_get_base_provider_context(tracksContext);
+  auto coroutine = tracksContext->GetCoroutineManager();
+  auto baseManager = tracksContext->GetBaseProviderContext();
   Tracks::ffi::poll_events(coroutine, songTime, baseManager);
 }
 
+[[nodiscard]]
+Tracks::ffi::EventData* makeEvent(float eventTime, CustomEventAssociatedData const& eventAD,
+                                  TrackW track,
+                                  PathPropertyW pathProperty, PointDefinitionW pointData) {
+  auto eventType = Tracks::ffi::CEventType {
+                  .ty = Tracks::ffi::CEventTypeEnum::AssignPathAnimation,
+                  .data = {
+                    .path_property = pathProperty,
+                  },
+                };
+
+  Tracks::ffi::CEventData cEventData = {
+    .raw_duration = eventAD.duration,
+    .easing = eventAD.easing,
+    .repeat = eventAD.repeat,
+    .start_time = eventTime,
+    .event_type = eventType,
+    .track_ptr = track,
+    .point_data_ptr = pointData,
+  };
+  auto eventData = Tracks::ffi::event_data_to_rust(&cEventData);
+
+  return eventData;
+}
+[[nodiscard]]
+Tracks::ffi::EventData* makeEvent(float eventTime, CustomEventAssociatedData const& eventAD,
+                TrackW const& track, PropertyW const& property, PointDefinitionW const& pointData) {
+  auto eventType = Tracks::ffi::CEventType {
+                  .ty = Tracks::ffi::CEventTypeEnum::AnimateTrack,
+                  .data = {
+                    .property = property,
+                  },
+                };
+
+  Tracks::ffi::CEventData cEventData = {
+    .raw_duration = eventAD.duration,
+    .easing = eventAD.easing,
+    .repeat = eventAD.repeat,
+    .start_time = eventTime,
+    .event_type = eventType,
+    .track_ptr = track,
+    .point_data_ptr = pointData,
+  };
+
+  auto eventData = Tracks::ffi::event_data_to_rust(&cEventData);
+
+  return eventData;
+}
 void CustomEventCallback(BeatmapCallbacksController* callbackController,
                          CustomJSONData::CustomEventData* customEventData) {
   PAPER_IL2CPP_CATCH_HANDLER(
@@ -66,15 +114,15 @@ void CustomEventCallback(BeatmapCallbacksController* callbackController,
 
       CustomEventAssociatedData const& eventAD = getEventAD(customEventData);
 
+      auto* customBeatmapData = (CustomJSONData::CustomBeatmapData*)callbackController->_beatmapData;
+      TracksAD::BeatmapAssociatedData& beatmapAD = TracksAD::getBeatmapAD(customBeatmapData->customData);
+
       // fail safe, idek why this needs to be done smh
       // CJD you bugger
       if (!eventAD.parsed) {
         TLogger::Logger.debug("callbackController {}", fmt::ptr(callbackController));
         TLogger::Logger.debug("_beatmapData {}", fmt::ptr(callbackController->_beatmapData));
-        auto* customBeatmapData = (CustomJSONData::CustomBeatmapData*)callbackController->_beatmapData;
         TLogger::Logger.debug("customBeatmapData {}", fmt::ptr(customBeatmapData));
-
-        TracksAD::BeatmapAssociatedData& beatmapAD = TracksAD::getBeatmapAD(customBeatmapData->customData);
 
         if (!beatmapAD.valid) {
           TLogger::Logger.debug("Beatmap wasn't parsed when event is invoked, what?");
@@ -99,7 +147,40 @@ void CustomEventCallback(BeatmapCallbacksController* callbackController,
       bool noDuration = duration == 0 || customEventData->time + (duration * (repeat + 1)) <
                                              TracksStatic::bpmController->_beatmapCallbacksController->songTime;
 
-      // TODO: Enqueue event
+      auto tracksContext = beatmapAD.internal_tracks_context;
+
+      auto coroutineManager = tracksContext->GetCoroutineManager();
+      auto baseManager = tracksContext->GetBaseProviderContext();
+      auto eventTime = customEventData->time;
+      auto songTime = callbackController->_songTime;
+
+      for (auto const& track
+           : eventAD.tracks) {
+        switch (eventAD.type) {
+        case EventType::animateTrack: {
+          for (auto const& animateTrackData : eventAD.animateTrackData) {
+            for (auto const& [property, pointData] : animateTrackData.properties) {
+
+              auto event = makeEvent(eventTime, eventAD, track, property, pointData);
+              Tracks::ffi::start_event_coroutine(coroutineManager, bpm, songTime, baseManager, event);
+            }
+          }
+          break;
+        }
+        case EventType::assignPathAnimation: {
+          for (auto const& assignPathAnimationData : eventAD.assignPathAnimation) {
+            for (auto const& [pathProperty, pointData] : assignPathAnimationData.pathProperties) {
+              auto event = makeEvent(eventTime, eventAD, track, pathProperty, pointData);
+              Tracks::ffi::start_event_coroutine(coroutineManager, bpm, songTime, baseManager, event);
+            }
+          }
+          break;
+        }
+        default:
+          break;
+        }
+      }
+
   )
 }
 
