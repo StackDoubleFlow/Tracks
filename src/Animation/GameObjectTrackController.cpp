@@ -131,7 +131,7 @@ void GameObjectTrackController::UpdateData(bool force) {
 
     combine(localRotation, localRotations, *);
     combine(rotation, rotations, *);
-    combine(scale, scales, +);
+    combine(scale, scales, *);
     combine(position, positions, +);
     combine(localPosition, localPositions, +);
   }
