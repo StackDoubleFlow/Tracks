@@ -93,7 +93,9 @@ public:
     o.internal_tracks_context = nullptr;
   }
   ~TracksContext() {
-    if (!internal_tracks_context) return;
+    if (!internal_tracks_context) {
+      return;
+    }
     Tracks::ffi::tracks_context_destroy(internal_tracks_context);
   }
 
@@ -105,12 +107,36 @@ public:
     return internal_tracks_context;
   }
 
-  Tracks::ffi::CoroutineManager* GetCoroutineManager() {
+  [[nodiscard]] Tracks::ffi::CoroutineManager* GetCoroutineManager() const {
     return Tracks::ffi::tracks_context_get_coroutine_manager(internal_tracks_context);
   }
 
-  Tracks::ffi::BaseProviderContext* GetBaseProviderContext() {
+  [[nodiscard]] Tracks::ffi::BaseProviderContext* GetBaseProviderContext() const {
     return Tracks::ffi::tracks_context_get_base_provider_context(internal_tracks_context);
+  }
+
+  PointDefinitionW AddPointDefinition(std::optional<std::string_view> id,
+                                      Tracks::ffi::BasePointDefinition* pointDefinition) const {
+    auto ptr = Tracks::ffi::tracks_context_add_point_definition(internal_tracks_context, id.value_or("").data(),
+                                                                pointDefinition);
+
+    return { ptr, GetBaseProviderContext() };
+  }
+
+  [[nodiscard]] std::optional<PointDefinitionW> GetPointDefinition(std::string_view name,
+                                                                   Tracks::ffi::WrapBaseValueType ty) const {
+    auto pointDefinition = Tracks::ffi::tracks_context_get_point_definition(internal_tracks_context, name.data(), ty);
+    if (!pointDefinition) {
+      return std::nullopt;
+    }
+
+    return PointDefinitionW(pointDefinition, GetBaseProviderContext());
+  }
+
+  TrackW AddTrack(TrackW track) const {
+    auto ptr = Tracks::ffi::tracks_context_add_track(internal_tracks_context, track);
+
+    return TrackW(const_cast<Tracks::ffi::Track*>(ptr), track.v2);
   }
 };
 
@@ -119,25 +145,39 @@ public:
   BeatmapAssociatedData() = default;
   ~BeatmapAssociatedData() = default;
 
-
-  [[deprecated("Don't copy this!")]]
-  BeatmapAssociatedData(BeatmapAssociatedData const&) = default;
+  [[deprecated("Don't copy this!")]] BeatmapAssociatedData(BeatmapAssociatedData const&) = default;
 
   bool valid = false;
   bool leftHanded = false;
   bool v2;
   std::unordered_map<std::string, TrackW, string_hash, string_equal> tracks;
+  std::unordered_map<std::string, rapidjson::Value const*, string_hash, string_equal> pointDefinitionsRaw;
+
+  // TODO: Use this to cache instead of Animation::TryGetPointData
   std::unordered_map<std::string, PointDefinitionW, string_hash, string_equal> pointDefinitions;
-  std::shared_ptr < TracksContext> internal_tracks_context = nullptr;
+
+  std::shared_ptr<TracksContext> internal_tracks_context = nullptr;
 
   inline PointDefinitionW getPointDefinition(rapidjson::Value const& val, std::string_view key,
-                                                              Tracks::ffi::WrapBaseValueType type) {
+                                             Tracks::ffi::WrapBaseValueType type) {
     PointDefinitionW pointData = Animation::TryGetPointData(*this, val, key, type);
 
     return pointData;
   }
 
-  TrackW getTrack(std::string_view name);
+  // get or create
+  TrackW getTrack(std::string_view name) {
+    auto it = tracks.find(name);
+    if (it != tracks.end()) {
+      return it->second;
+    }
+
+    auto freeTrack = Tracks::ffi::track_create();
+    auto ownedTrack = internal_tracks_context->AddTrack(TrackW(freeTrack, v2));
+    tracks.emplace(name, ownedTrack);
+
+    return ownedTrack;
+  }
 };
 
 struct BeatmapObjectAssociatedData {

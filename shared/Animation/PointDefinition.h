@@ -1,4 +1,5 @@
 #pragma once
+#include <cstddef>
 #include <utility>
 #include <variant>
 
@@ -22,10 +23,11 @@ public:
     this->internal_tracks_context = internal_tracks_context;
   }
 
-  PointDefinitionW(Tracks::ffi::BasePointDefinition const* pointDefinition)
-      : internalPointDefinition(pointDefinition) {}
+  PointDefinitionW(Tracks::ffi::BasePointDefinition const* pointDefinition, Tracks::ffi::BaseProviderContext* context)
+      : internalPointDefinition(pointDefinition), internal_tracks_context(context) {}
 
   PointDefinitionW(PointDefinitionW const& other) = default;
+  explicit PointDefinitionW(std::nullptr_t) : internalPointDefinition(nullptr) {};
 
   Tracks::ffi::WrapBaseValue Interpolate(float time) const {
     bool last;
@@ -103,13 +105,7 @@ private:
 
 class PointDefinitionManager {
 public:
-  Tracks::ffi::BaseProviderContext* internal_tracks_context;
-  explicit PointDefinitionManager(Tracks::ffi::BaseProviderContext* internal_tracks_context)
-      : internal_tracks_context(internal_tracks_context) {
-    
-  }
-
-  std::unordered_map<std::string, PointDefinitionW, TracksAD::string_hash, TracksAD::string_equal> pointData;
+  std::unordered_map<std::string, rapidjson::Value const*, TracksAD::string_hash, TracksAD::string_equal> pointData;
 
   void AddPoint(std::string const& pointDataName, rapidjson::Value const& pointData);
 };

@@ -162,24 +162,24 @@ struct PathPropertyW {
     return result.value.float_v;
   }
 
-  Tracks::ffi::WrapBaseValueType GetType() const {
+  [[nodiscard]] Tracks::ffi::WrapBaseValueType GetType() const {
     return Tracks::ffi::path_property_get_type(property);
   }
 
-  float GetTime() const {
+  [[nodiscard]] float GetTime() const {
     return Tracks::ffi::path_property_get_time(property);
   }
 
-  void SetTime(float time) {
+  void SetTime(float time) const {
     Tracks::ffi::path_property_set_time(property, time);
   }
 
-  void Finish() {
+  void Finish() const {
     Tracks::ffi::path_property_finish(property);
   }
 
-  void Init(std::optional<PointDefinitionW> newPointData) {
-    Tracks::ffi::path_property_init(property, newPointData.value_or(nullptr));
+  void Init(std::optional<PointDefinitionW> newPointData) const {
+    Tracks::ffi::path_property_init(property, newPointData.value_or(PointDefinitionW(nullptr)));
   }
 };
 

@@ -9,10 +9,12 @@ namespace Animation {
 
 PointDefinitionW TryGetPointData(BeatmapAssociatedData& beatmapAD, rapidjson::Value const& customData,
                                  std::string_view pointName, Tracks::ffi::WrapBaseValueType type) {
-  PointDefinitionW pointData = nullptr;
+  PointDefinitionW pointData = PointDefinitionW(nullptr);
 
   auto customDataItr = customData.FindMember(pointName.data());
-  if (customDataItr == customData.MemberEnd()) return pointData;
+  if (customDataItr == customData.MemberEnd()) {
+    return pointData;
+  }
   rapidjson::Value const& pointString = customDataItr->value;
 
   switch (pointString.GetType()) {
@@ -20,21 +22,26 @@ PointDefinitionW TryGetPointData(BeatmapAssociatedData& beatmapAD, rapidjson::Va
     return pointData;
   case rapidjson::kStringType: {
 
-    auto itr = beatmapAD.pointDefinitions.find(pointString.GetString());
-    if (itr == beatmapAD.pointDefinitions.end()) {
+    auto id = pointString.GetString();
+    auto itr = beatmapAD.pointDefinitionsRaw.find(id);
+    if (itr == beatmapAD.pointDefinitionsRaw.end()) {
       TLogger::Logger.warn("Could not find point definition {}", pointString.GetString());
     } else {
-      pointData = itr->second;
+      auto json = convert_rapidjson(*itr->second);
+      auto tracksContext = beatmapAD.internal_tracks_context;
+      auto baseProviderContext = tracksContext->GetBaseProviderContext();
+      auto pointDataAnon = Tracks::ffi::tracks_make_base_point_definition(json, type, baseProviderContext);
+      pointData = tracksContext->AddPointDefinition(id, pointDataAnon);
     }
 
     break;
   }
   default:
     auto json = convert_rapidjson(pointString);
-    auto tracksContext = beatmapAD.internal_tracks_context.get()->internal_tracks_context;
-    auto baseProviderContext = Tracks::ffi::tracks_context_get_base_provider_context(tracksContext);
+    auto tracksContext = beatmapAD.internal_tracks_context;
+    auto baseProviderContext = tracksContext->GetBaseProviderContext();
     auto pointDataAnon = Tracks::ffi::tracks_make_base_point_definition(json, type, baseProviderContext);
-    pointData = Tracks::ffi::tracks_context_add_point_definition(tracksContext, pointDataAnon);
+    pointData = tracksContext->AddPointDefinition("", pointDataAnon);
   }
 
   return pointData;

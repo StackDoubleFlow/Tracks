@@ -37,8 +37,7 @@ inline bool IsStringProperties(std::string_view n) {
          n != REPEAT;
 }
 
-AnimateTrackData::AnimateTrackData(BeatmapAssociatedData& beatmapAD, rapidjson::Value const& customData,
-                                   TrackW track) {
+AnimateTrackData::AnimateTrackData(BeatmapAssociatedData& beatmapAD, rapidjson::Value const& customData, TrackW track) {
   for (auto const& member : customData.GetObject()) {
     char const* name = member.name.GetString();
     if (!IsStringProperties(name)) {
@@ -49,8 +48,6 @@ AnimateTrackData::AnimateTrackData(BeatmapAssociatedData& beatmapAD, rapidjson::
       auto type = property.GetType();
 
       auto pointData = Animation::TryGetPointData(beatmapAD, customData, name, type);
-
-
 
       this->properties.emplace_back(property, pointData);
     } else {
@@ -152,7 +149,6 @@ void LoadTrackEvent(CustomJSONData::CustomEventData const* customEventData, Trac
 
   for (auto const& track : eventAD.tracks) {
 
-
     switch (eventAD.type) {
     case EventType::animateTrack: {
       eventAD.animateTrackData.emplace_back(beatmapAD, eventData, track);
@@ -208,7 +204,7 @@ void readBeatmapDataAD(CustomJSONData::CustomBeatmapData* beatmapData) {
       }
     }
     TLogger::Logger.debug("Setting point definitions");
-    beatmapAD.pointDefinitions = pointDataManager.pointData;
+    beatmapAD.pointDefinitionsRaw = pointDataManager.pointData;
   }
 
   for (auto* beatmapObjectData : beatmapData->beatmapObjectDatas) {
