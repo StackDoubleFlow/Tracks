@@ -9,7 +9,7 @@
 #include "../Hash.h"
 #include "UnityEngine/Color.hpp"
 #include "beatsaber-hook/shared/rapidjson/include/rapidjson/document.h"
-#include "tracks-rs/shared/bindings.h"
+#include "../bindings.h"
 
 extern Tracks::ffi::FFIJsonValue const* convert_rapidjson(rapidjson::Value const& value);
 

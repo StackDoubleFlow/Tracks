@@ -7,7 +7,7 @@
 #include "TLogger.h"
 #include "custom-json-data/shared/CJDLogger.h"
 #include "sombrero/shared/HSBColor.hpp"
-#include "tracks-rs/shared/bindings.h"
+#include "bindings.h"
 
 using namespace NEVector;
 

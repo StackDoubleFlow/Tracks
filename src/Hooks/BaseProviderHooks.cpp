@@ -13,7 +13,7 @@
 #include "UnityEngine/Transform.hpp"
 
 #include "Animation/PointDefinition.h"
-#include "tracks-rs/shared/bindings.h"
+#include "bindings.h"
 
 using namespace CustomJSONData;
 using namespace GlobalNamespace;

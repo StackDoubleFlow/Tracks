@@ -29,12 +29,33 @@ add_compile_definitions(USE_CODEGEN_FIELDS)
 RECURSE_FILES(cpp_file_list ${SOURCE_DIR}/*.cpp)
 RECURSE_FILES(c_file_list ${SOURCE_DIR}/*.c)
 
+include(FetchContent)
+
+set(CMAKE_ANDROID_ARCH_ABI arm64-v8a)
+set(Rust_TOOLCHAIN nightly)
+FetchContent_Declare(
+        Corrosion
+        GIT_REPOSITORY https://github.com/corrosion-rs/corrosion.git
+        GIT_TAG v0.5 # Optionally specify a commit hash, version tag or branch here
+)
+
+FetchContent_MakeAvailable(Corrosion)
+
+corrosion_import_crate(MANIFEST_PATH tracks_rs_link/Cargo.toml)
+
+# Import targets defined in a package or workspace manifest `Cargo.toml` file
+# corrosion_experimental_cbindgen(
+#         TARGET tracks_rs_link
+#         HEADER_NAME ./shared/bindings.h
+# )
+
 # add all src files to compile
 add_library(
         ${COMPILE_ID}
         SHARED
         ${cpp_file_list}
         ${c_file_list}
+        tracks_rs_link
 )
 
 # add src dir as include dir

@@ -12,7 +12,7 @@
 
 #include <chrono>
 
-#include "tracks-rs/shared/bindings.h"
+#include "../bindings.h"
 
 namespace Events {
 struct AnimateTrackContext;

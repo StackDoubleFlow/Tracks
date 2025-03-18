@@ -6,7 +6,7 @@
 #include <string>
 #include <cmath>
 
-#include "tracks-rs/shared/bindings.h"
+#include "../bindings.h"
 
 using Functions = Tracks::ffi::Functions;
 namespace Easings {

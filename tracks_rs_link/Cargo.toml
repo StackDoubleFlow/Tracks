@@ -1,0 +1,16 @@
+[package]
+name = "tracks_rs_link"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+# todo: use version
+tracks_rs = { git = "https://github.com/Futuremappermydud/tracks-rs.git", branch = "tracks", features = [
+    "ffi",
+] }
+
+[lib]
+crate-type = ["staticlib"]
+
+[build-dependencies]
+cbindgen = { version = "0.28.0", default-features = false }
