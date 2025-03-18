@@ -10,13 +10,13 @@
 #include "beatsaber-hook/shared/rapidjson/include/rapidjson/document.h"
 #include "tracks-rs/shared/bindings.h"
 
-
 extern Tracks::ffi::FFIJsonValue const* convert_rapidjson(rapidjson::Value const& value);
 
 class PointDefinitionW {
 public:
-  explicit PointDefinitionW(rapidjson::Value const& value, Tracks::ffi::WrapBaseValueType type, Tracks::ffi::BaseProviderContext* internal_tracks_context) {
-    auto *json = convert_rapidjson(value);
+  explicit PointDefinitionW(rapidjson::Value const& value, Tracks::ffi::WrapBaseValueType type,
+                            Tracks::ffi::BaseProviderContext* internal_tracks_context) {
+    auto* json = convert_rapidjson(value);
 
     internalPointDefinition = Tracks::ffi::tracks_make_base_point_definition(json, type, internal_tracks_context);
     this->internal_tracks_context = internal_tracks_context;
@@ -103,6 +103,12 @@ private:
 
 class PointDefinitionManager {
 public:
+  Tracks::ffi::BaseProviderContext* internal_tracks_context;
+  explicit PointDefinitionManager(Tracks::ffi::BaseProviderContext* internal_tracks_context)
+      : internal_tracks_context(internal_tracks_context) {
+    
+  }
+
   std::unordered_map<std::string, PointDefinitionW, TracksAD::string_hash, TracksAD::string_equal> pointData;
 
   void AddPoint(std::string const& pointDataName, rapidjson::Value const& pointData);
