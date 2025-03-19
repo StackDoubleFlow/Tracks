@@ -60,7 +60,7 @@ jobs:
       - name: Setup Rust
         run: |
           rustup install nightly
-          rustup target add aarch64-linux-android
+          rustup target add aarch64-linux-android --toolchain nightly
           cargo install --locked --git https://github.com/bbqsrc/cargo-ndk.git cargo-ndk
 
       - name: Build
