@@ -75,11 +75,6 @@
         "id": "songcore",
         "versionRange": "^1.1.0",
         "additionalData": {}
-      },
-      {
-        "id": "tracks-rs",
-        "versionRange": "^0.1.0",
-        "additionalData": {}
       }
     ]
   },
@@ -165,18 +160,6 @@
         }
       },
       "version": "0.21.5"
-    },
-    {
-      "dependency": {
-        "id": "tracks-rs",
-        "versionRange": "=0.1.0",
-        "additionalData": {
-          "overrideSoName": "libtracks_rs.so",
-          "compileOptions": {},
-          "cmake": false
-        }
-      },
-      "version": "0.1.0"
     },
     {
       "dependency": {
