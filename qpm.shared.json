@@ -30,23 +30,19 @@
     "dependencies": [
       {
         "id": "beatsaber-hook",
-        "versionRange": "^5.1.7",
-        "additionalData": {
-          "extraFiles": [
-            "src/inline-hook"
-          ]
-        }
+        "versionRange": "^6.1.7",
+        "additionalData": {}
       },
       {
         "id": "bs-cordl",
-        "versionRange": "^3700.0.0",
+        "versionRange": "^4000.0.0",
         "additionalData": {
           "includeQmod": true
         }
       },
       {
         "id": "custom-json-data",
-        "versionRange": "^0.21.0",
+        "versionRange": "^0.22.0",
         "additionalData": {}
       },
       {
@@ -61,19 +57,19 @@
       },
       {
         "id": "custom-types",
-        "versionRange": "^0.17.0",
+        "versionRange": "^0.18.0",
         "additionalData": {
           "includeQmod": true
         }
       },
       {
-        "id": "paper",
-        "versionRange": "*",
+        "id": "songcore",
+        "versionRange": "^1.1.0",
         "additionalData": {}
       },
       {
-        "id": "songcore",
-        "versionRange": "^1.1.0",
+        "id": "paper2_scotland2",
+        "versionRange": "^4.4.1",
         "additionalData": {}
       }
     ]
@@ -102,24 +98,29 @@
     {
       "dependency": {
         "id": "libil2cpp",
-        "versionRange": "=0.3.2",
+        "versionRange": "=0.4.0",
         "additionalData": {
           "headersOnly": true,
-          "cmake": false
+          "compileOptions": {
+            "systemIncludes": [
+              "il2cpp/external/baselib/Include",
+              "il2cpp/external/baselib/Platforms/Android/Include"
+            ]
+          }
         }
       },
-      "version": "0.3.2"
+      "version": "0.4.0"
     },
     {
       "dependency": {
         "id": "custom-types",
-        "versionRange": "=0.17.10",
+        "versionRange": "=0.18.2",
         "additionalData": {
-          "soLink": "https://github.com/QuestPackageManager/Il2CppQuestTypePatching/releases/download/v0.17.10/libcustom-types.so",
-          "debugSoLink": "https://github.com/QuestPackageManager/Il2CppQuestTypePatching/releases/download/v0.17.10/debug_libcustom-types.so",
+          "soLink": "https://github.com/QuestPackageManager/Il2CppQuestTypePatching/releases/download/v0.18.2/libcustom-types.so",
+          "debugSoLink": "https://github.com/QuestPackageManager/Il2CppQuestTypePatching/releases/download/v0.18.2/debug_libcustom-types.so",
           "overrideSoName": "libcustom-types.so",
-          "modLink": "https://github.com/QuestPackageManager/Il2CppQuestTypePatching/releases/download/v0.17.10/CustomTypes.qmod",
-          "branchName": "version/v0_17_10",
+          "modLink": "https://github.com/QuestPackageManager/Il2CppQuestTypePatching/releases/download/v0.18.2/CustomTypes.qmod",
+          "branchName": "version/v0_18_2",
           "compileOptions": {
             "cppFlags": [
               "-Wno-invalid-offsetof"
@@ -128,7 +129,7 @@
           "cmake": true
         }
       },
-      "version": "0.17.10"
+      "version": "0.18.2"
     },
     {
       "dependency": {
@@ -144,13 +145,9 @@
     {
       "dependency": {
         "id": "custom-json-data",
-        "versionRange": "=0.21.5",
+        "versionRange": "=0.22.0",
         "additionalData": {
-          "soLink": "https://github.com/StackDoubleFlow/CustomJSONData/releases/download/v0.21.5/libcustom-json-data.so",
-          "debugSoLink": "https://github.com/StackDoubleFlow/CustomJSONData/releases/download/v0.21.5/debug_libcustom-json-data.so",
           "overrideSoName": "libcustom-json-data.so",
-          "modLink": "https://github.com/StackDoubleFlow/CustomJSONData/releases/download/v0.21.5/custom-json-data.qmod",
-          "branchName": "version/v0_21_5",
           "compileOptions": {
             "cppFlags": [
               "-DRAPIDJSON_NEON"
@@ -159,15 +156,15 @@
           "cmake": true
         }
       },
-      "version": "0.21.5"
+      "version": "0.22.0"
     },
     {
       "dependency": {
         "id": "bs-cordl",
-        "versionRange": "=3700.0.0",
+        "versionRange": "=4000.1.1",
         "additionalData": {
           "headersOnly": true,
-          "branchName": "version/v3700_0_0",
+          "branchName": "version/v4000_1_1",
           "compileOptions": {
             "includePaths": [
               "include"
@@ -177,12 +174,13 @@
               "-DNEED_UNSAFE_CSHARP",
               "-fdeclspec",
               "-DUNITY_2021",
-              "-DHAS_CODEGEN"
+              "-DHAS_CODEGEN",
+              "-Wno-invalid-offsetof"
             ]
           }
         }
       },
-      "version": "3700.0.0"
+      "version": "4000.1.1"
     },
     {
       "dependency": {
@@ -202,15 +200,17 @@
     {
       "dependency": {
         "id": "beatsaber-hook",
-        "versionRange": "=5.1.9",
+        "versionRange": "=6.4.0",
         "additionalData": {
-          "soLink": "https://github.com/QuestPackageManager/beatsaber-hook/releases/download/v5.1.9/libbeatsaber-hook_5_1_9.so",
-          "debugSoLink": "https://github.com/QuestPackageManager/beatsaber-hook/releases/download/v5.1.9/debug_libbeatsaber-hook_5_1_9.so",
-          "branchName": "version/v5_1_9",
+          "soLink": "https://github.com/QuestPackageManager/beatsaber-hook/releases/download/v6.4.0/libbeatsaber-hook.so",
+          "debugSoLink": "https://github.com/QuestPackageManager/beatsaber-hook/releases/download/v6.4.0/debug_libbeatsaber-hook.so",
+          "overrideSoName": "libbeatsaber-hook.so",
+          "modLink": "https://github.com/QuestPackageManager/beatsaber-hook/releases/download/v6.4.0/beatsaber-hook.qmod",
+          "branchName": "version/v6_4_0",
           "cmake": true
         }
       },
-      "version": "5.1.9"
+      "version": "6.4.0"
     },
     {
       "dependency": {

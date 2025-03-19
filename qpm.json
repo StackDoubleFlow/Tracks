@@ -38,14 +38,14 @@
     },
     {
       "id": "bs-cordl",
-      "versionRange": "^3700.0.0",
+      "versionRange": "^4000.0.0",
       "additionalData": {
         "includeQmod": true
       }
     },
     {
       "id": "custom-json-data",
-      "versionRange": "^0.21.0",
+      "versionRange": "^0.22.0",
       "additionalData": {}
     },
     {
@@ -60,15 +60,10 @@
     },
     {
       "id": "custom-types",
-      "versionRange": "^0.17.0",
+      "versionRange": "^0.18.0",
       "additionalData": {
         "includeQmod": true
       }
-    },
-    {
-      "id": "paper",
-      "versionRange": "*",
-      "additionalData": {}
     },
     {
       "id": "songcore",
