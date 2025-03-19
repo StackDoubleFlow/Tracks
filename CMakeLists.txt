@@ -58,6 +58,8 @@ target_include_directories(${COMPILE_ID} PUBLIC ${SHARED_DIR})
 target_include_directories(${COMPILE_ID} PRIVATE ${EXTERN_DIR}/includes/${CODEGEN_ID}/include)
 
 target_link_libraries(${COMPILE_ID} PRIVATE -llog)
+target_link_directories(${COMPILE_ID} PUBLIC tracks_rs_link/target/aarch64-linux-android/release)
+target_link_libraries(${COMPILE_ID} PUBLIC tracks_rs_link)
 
 # add extern stuff like libs and other includes
 include(extern.cmake)

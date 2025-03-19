@@ -18,3 +18,4 @@ cbindgen = { version = "0.28.0", default-features = false }
 [profile.release]
 lto = "fat"
 opt-level = 3
+strip = "none"
