@@ -55,6 +55,11 @@ jobs:
         run: |
           qpm-rust collapse
 
+      - name: Setup Rust
+        run: |
+          rustup install nightly
+          rustup target add aarch64-linux-android
+
       - name: Build
         run: |
           cd ${GITHUB_WORKSPACE}

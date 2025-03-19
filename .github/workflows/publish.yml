@@ -67,6 +67,11 @@ jobs:
           # Name of qmod in release asset. Assumes exists, same as prior
           qpm_qmod: ${{env.qmodName}}.qmod
 
+      - name: Setup Rust
+        run: |
+          rustup install nightly
+          rustup target add aarch64-linux-android
+
       - name: Build
         run: |
           cd ${GITHUB_WORKSPACE}
