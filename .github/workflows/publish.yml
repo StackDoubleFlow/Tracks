@@ -61,6 +61,7 @@ jobs:
         run: |
           rustup install nightly
           rustup target add aarch64-linux-android
+          cargo install --locked --git https://github.com/bbqsrc/cargo-ndk.git cargo-ndk
 
       - name: Build
         run: |
