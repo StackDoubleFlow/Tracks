@@ -260,9 +260,9 @@ dependencies = [
 
 [[package]]
 name = "glam"
-version = "0.30.0"
+version = "0.30.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "17fcdf9683c406c2fc4d124afd29c0d595e22210d633cbdb8695ba9935ab1dc6"
+checksum = "bf3aa70d918d2b234126ff4f850f628f172542bf0603ded26b8ee36e5e22d5f9"
 
 [[package]]
 name = "hashbrown"
@@ -645,9 +645,9 @@ dependencies = [
 
 [[package]]
 name = "tempfile"
-version = "3.19.0"
+version = "3.19.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "488960f40a3fd53d72c2a29a58722561dee8afdd175bd88e3db4677d7b2ba600"
+checksum = "7437ac7763b9b123ccf33c338a5cc1bac6f69b45a136c19bdd8a65e3916435bf"
 dependencies = [
  "fastrand",
  "getrandom 0.3.2",
@@ -768,7 +768,7 @@ dependencies = [
 [[package]]
 name = "tracks_rs"
 version = "0.2.0"
-source = "git+https://github.com/Futuremappermydud/tracks-rs.git?branch=tracks#e1b1d00726b244ee5fbb25ef4443ad523ea18164"
+source = "git+https://github.com/Futuremappermydud/tracks-rs.git?branch=tracks#d3ab95490ff344078a76bb0cadad268a9f663b34"
 dependencies = [
  "ahash",
  "android_logger",

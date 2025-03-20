@@ -3,7 +3,7 @@
 #include <utility>
 #include <variant>
 
-#include "Vector.h"
+#include "../Vector.h"
 #include "beatsaber-hook/shared/config/rapidjson-utils.hpp"
 #include "Easings.h"
 #include "../Hash.h"
