@@ -91,31 +91,43 @@ struct PropertyW {
     return Tracks::ffi::property_get_value(property);
   }
 
-  [[nodiscard]] std::optional<NEVector::Quaternion> GetQuat() const {
+  [[nodiscard]] TimeUnit GetTime() const {
+    return Tracks::ffi::property_get_last_updated(property);
+  }
+
+  [[nodiscard]] std::optional<NEVector::Quaternion> GetQuat(TimeUnit lastCheckedTime = {}) const {
     auto value = GetValue();
     if (!value.value.has_value) return std::nullopt;
+    if (TimeUnit(value.last_updated) <= lastCheckedTime) return std::nullopt;
     if (value.value.value.ty != Tracks::ffi::WrapBaseValueType::Quat) return std::nullopt;
+
     auto v = value.value.value.value;
     return NEVector::Quaternion{ v.quat.x, v.quat.y, v.quat.z, v.quat.w };
   }
-  [[nodiscard]] std::optional<NEVector::Vector3> GetVec3() const {
+  [[nodiscard]] std::optional<NEVector::Vector3> GetVec3(TimeUnit lastCheckedTime = {}) const {
     auto value = GetValue();
     if (!value.value.has_value) return std::nullopt;
+    if (TimeUnit(value.last_updated) <= lastCheckedTime) return std::nullopt;
     if (value.value.value.ty != Tracks::ffi::WrapBaseValueType::Vec3) return std::nullopt;
+
     auto v = value.value.value.value;
     return NEVector::Vector3{ v.vec3.x, v.vec3.y, v.vec3.z };
   }
-  [[nodiscard]] std::optional<NEVector::Vector4> GetVec4() const {
+  [[nodiscard]] std::optional<NEVector::Vector4> GetVec4(TimeUnit lastCheckedTime = {}) const {
     auto value = GetValue();
     if (!value.value.has_value) return std::nullopt;
+    if (TimeUnit(value.last_updated) <= lastCheckedTime) return std::nullopt;
     if (value.value.value.ty != Tracks::ffi::WrapBaseValueType::Vec4) return std::nullopt;
     auto v = value.value.value.value;
+    
     return NEVector::Vector4{ v.vec4.x, v.vec4.y, v.vec4.z, v.vec4.w };
   }
-  [[nodiscard]] std::optional<float> GetFloat() const {
+  [[nodiscard]] std::optional<float> GetFloat(TimeUnit lastCheckedTime = {}) const {
     auto value = GetValue();
     if (!value.value.has_value) return std::nullopt;
+    if (TimeUnit(value.last_updated) <= lastCheckedTime) return std::nullopt;
     if (value.value.value.ty != Tracks::ffi::WrapBaseValueType::Float) return std::nullopt;
+
     return value.value.value.value.float_v;
   }
 };

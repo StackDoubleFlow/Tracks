@@ -156,7 +156,7 @@ GENERATE_PROPERTY_GETTERS(float, Float, ToFloat)
 #define GENERATE_ADD_FUNCTIONS(Type, TypeName)                                                     \
   [[nodiscard]]                                                                                   \
   constexpr static Type add##TypeName##s(std::span<Type const> values) {                          \
-    if (values.empty()) return Type{};                                                            \
+    if (values.empty()) return (Type){};                                                            \
     Type result = values[0];                                                                     \
     for (size_t i = 1; i < values.size(); ++i) {                                                 \
       result = result + values[i];                                                               \
@@ -168,7 +168,7 @@ GENERATE_PROPERTY_GETTERS(float, Float, ToFloat)
 #define GENERATE_MUL_FUNCTIONS(Type, TypeName)                                                     \
   [[nodiscard]]                                                                                   \
   constexpr static Type multiply##TypeName##s(std::span<Type const> values) {                     \
-    if (values.empty()) return Type{};                                                            \
+    if (values.empty()) return (Type){};                                                            \
     Type result = values[0];                                                                     \
     for (size_t i = 1; i < values.size(); ++i) {                                                 \
       result = result * values[i];                                                               \
