@@ -132,7 +132,7 @@ getPathProperties(std::span<TrackW const> tracks, PropertyNames name, Tracks::ff
                                                                                                                        \
   [[nodiscard]]                                                                                                        \
   constexpr static std::vector<ReturnType> getPathProperties##Suffix(                                                  \
-      std::span<TrackW const> tracks, PropertyNames name, Tracks::ffi::BaseProviderContext* context, uint64_t time) {  \
+      std::span<TrackW const> tracks, PropertyNames name, Tracks::ffi::BaseProviderContext* context, float time) {  \
     std::vector<ReturnType> properties;                                                                                \
     bool last = false;                                                                                                 \
     properties.reserve(tracks.size());                                                                                 \
