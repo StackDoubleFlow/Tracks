@@ -29,6 +29,16 @@ struct Vector4 : public UnityEngine::Vector4 {
   bool operator==(const Vector4& other) const {
     return x == other.x && y == other.y && z == other.z && w == other.w;
   }
+
+  constexpr Vector4 operator +(const Vector4& other) const {
+    return Vector4(x + other.x, y + other.y, z + other.z, w + other.w);
+  }
+  constexpr Vector4 operator *(const Vector4& other) const {
+    return Vector4(x * other.x, y * other.y, z * other.z, w * other.w);
+  }
+  constexpr Vector4 operator *(float other) const {
+    return Vector4(x * other, y * other, z * other, w * other);
+  }
 };
 
 struct Vector5 {

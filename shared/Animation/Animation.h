@@ -4,6 +4,14 @@
 #include "Track.h"
 #include "PointDefinition.h"
 
+#define TRACKS_LIST_OPERATE_MULTIPLE(target, list, op)                                                                 \
+  if (!list.empty()) {                                                                                                 \
+    target.emplace();                                                                                                  \
+    for (auto const& i : list) {                                                                                       \
+      target = *target op i;                                                                                           \
+    }                                                                                                                  \
+  }
+
 namespace GlobalNamespace {
 class BeatmapData;
 }
@@ -14,8 +22,13 @@ struct BeatmapAssociatedData;
 
 namespace Animation {
 
-PointDefinition* TryGetPointData(TracksAD::BeatmapAssociatedData& beatmapAD, PointDefinition*& anon,
-                                 rapidjson::Value const& customData, std::string_view pointName);
+[[nodiscard]]
+static auto getCurrentTime() {
+  return Tracks::ffi::get_time();
+}
+
+PointDefinitionW TryGetPointData(TracksAD::BeatmapAssociatedData& beatmapAD, rapidjson::Value const& customData,
+                                 std::string_view pointName, Tracks::ffi::WrapBaseValueType type);
 
 #pragma region track_utils
 
@@ -41,192 +54,148 @@ MirrorQuaternionNullable(std::optional<NEVector::Quaternion> const& quaternion) 
 
   return NEVector::Quaternion(modifiedVector.x, modifiedVector.y * -1, modifiedVector.z * -1, modifiedVector.w);
 }
+#pragma region property_utils
 
-// Ok Stack, why the hell does prop param nullptr in the method if track is null, but then if you null-check track in
-// the method it just works:tm: C++ compiler tomfoolery that's above my pay grade, that's what this is my most educated
-// guess is compiler inlining method magic
-template <typename T>
-[[nodiscard]] static constexpr std::optional<T> getPropertyNullable(Track const* track,
-                                                                    std::optional<PropertyValue> const& prop) {
-  static_assert(std::is_same_v<T, float> || std::is_same_v<T, NEVector::Vector3> ||
-                    std::is_same_v<T, NEVector::Vector4> || std::is_same_v<T, NEVector::Quaternion>,
-                "Not valid type");
-
-  if (!track) return std::nullopt;
-  if (!prop) return std::nullopt;
-
-  if constexpr (std::is_same_v<T, float>) {
-    return prop.value().linear;
-  } else if constexpr (std::is_same_v<T, NEVector::Vector3>) {
-    return prop.value().vector3;
-  } else if constexpr (std::is_same_v<T, NEVector::Vector4>) {
-    return prop.value().vector4;
-  } else if constexpr (std::is_same_v<T, NEVector::Quaternion>) {
-    return prop.value().quaternion;
-  }
-
-  return std::nullopt;
+// Conversion functions
+[[nodiscard]] constexpr static NEVector::Vector3 ToVector3(Tracks::ffi::WrapBaseValue const& val) {
+  if (val.ty != Tracks::ffi::WrapBaseValueType::Vec3) return {};
+  return { val.value.vec3.x, val.value.vec3.y, val.value.vec3.z };
 }
 
-// why not?
-template <typename T>
-[[nodiscard]] static constexpr std::optional<T> getPropertyNullable(Track const* track, Property const& prop) {
-  return getPropertyNullable<T>(track, prop.value);
+[[nodiscard]] constexpr static NEVector::Vector4 ToVector4(Tracks::ffi::WrapBaseValue const& val) {
+  if (val.ty != Tracks::ffi::WrapBaseValueType::Vec4) return {};
+  return { val.value.vec4.x, val.value.vec4.y, val.value.vec4.z, val.value.vec4.w };
 }
 
-template <typename T>
-[[nodiscard]] static constexpr std::optional<T>
-getPathPropertyNullable(Track const* track, std::optional<PointDefinitionInterpolation> const& prop, float time) {
-  static_assert(std::is_same_v<T, float> || std::is_same_v<T, NEVector::Vector3> ||
-                    std::is_same_v<T, NEVector::Vector4> || std::is_same_v<T, NEVector::Quaternion>,
-                "Not valid type");
-
-  if (!track) return std::nullopt;
-  if (!prop) return std::nullopt;
-
-  if constexpr (std::is_same_v<T, float>) {
-    return prop.value().InterpolateLinear(time);
-  } else if constexpr (std::is_same_v<T, NEVector::Vector3>) {
-    return prop.value().Interpolate(time);
-  } else if constexpr (std::is_same_v<T, NEVector::Vector4>) {
-    return prop.value().InterpolateVector4(time);
-  } else if constexpr (std::is_same_v<T, NEVector::Quaternion>) {
-    return prop.value().InterpolateQuaternion(time);
-  }
-
-  return std::nullopt;
+[[nodiscard]] constexpr static NEVector::Quaternion ToQuaternion(Tracks::ffi::WrapBaseValue const& val) {
+  if (val.ty != Tracks::ffi::WrapBaseValueType::Quat) return {};
+  return { val.value.quat.x, val.value.quat.y, val.value.quat.z, val.value.quat.w };
 }
 
-template <typename T, typename F>
-static std::optional<std::vector<T>> getPropertiesNullable(std::span<Track const* const> const tracks, F&& propFn,
-                                                           uint32_t lastCheckedTime) {
-  if (tracks.empty()) return std::nullopt;
-
-  std::vector<T> props;
-
-  for (auto t : tracks) {
-    if (!t) continue;
-    auto const& prop = propFn(t->properties);
-
-    if (lastCheckedTime != 0 && prop.lastUpdated != 0 && prop.lastUpdated < lastCheckedTime) continue;
-
-    auto val = Animation::getPropertyNullable<T>(t, prop.value);
-    if (val) props.template emplace_back(*val);
-  }
-
-  if (props.empty()) return std::nullopt;
-
-  return props;
+[[nodiscard]] constexpr static float ToFloat(Tracks::ffi::WrapBaseValue const& val) {
+  if (val.ty != Tracks::ffi::WrapBaseValueType::Float) return {};
+  return val.value.float_v;
 }
 
-using PathPropertyLambda = std::function<std::optional<PointDefinitionInterpolation>&(Track const*)>;
-using PropertyLambda = std::function<std::optional<PropertyValue> const&(Track const*)>;
-
-template <typename T, typename VectorExpression = PathPropertyLambda>
-[[nodiscard]] static std::optional<T> MultiTrackPathProps(std::span<Track const* const> tracks, T const& defaultT,
-                                                          float time, VectorExpression const& vectorExpression) {
-  if (tracks.empty()) return std::nullopt;
-
-  bool valid = false;
-  T total = defaultT;
-
+// Base versions that return WrapBaseValue
+[[nodiscard]]
+constexpr static std::vector<Tracks::ffi::WrapBaseValue> getProperties(std::span<TrackW const> tracks,
+                                                                       PropertyNames name, TimeUnit time) {
+  std::vector<Tracks::ffi::WrapBaseValue> properties;
+  properties.reserve(tracks.size());
   for (auto const& track : tracks) {
-    std::optional<PointDefinitionInterpolation> const& point = vectorExpression(track);
-    auto result = getPathPropertyNullable<T>(track, point, time);
-
-    if (result) {
-      total = result.value() * total;
-      valid = true;
-    }
+    auto property = track.GetPropertyNamed(name);
+    auto value = property.GetValue();
+    if (TimeUnit(value.last_updated) <= time) continue;
+    if (!value.value.has_value) continue;
+    properties.push_back(value.value.value);
   }
 
-  return valid ? std::make_optional(total) : std::nullopt;
+  return properties;
 }
 
-template <typename T, typename VectorExpression = PathPropertyLambda>
-[[nodiscard]] static std::optional<T> SumTrackPathProps(std::span<Track const* const> tracks, T const& defaultT,
-                                                        float time, VectorExpression const& vectorExpression) {
-  if (tracks.empty()) return std::nullopt;
+[[nodiscard]]
+constexpr static std::vector<Tracks::ffi::WrapBaseValue>
+getPathProperties(std::span<TrackW const> tracks, PropertyNames name, Tracks::ffi::BaseProviderContext* context,
+                  uint64_t time) {
+  std::vector<Tracks::ffi::WrapBaseValue> properties;
+  bool last = false;
 
-  bool valid = false;
-  T total = defaultT;
-
+  properties.reserve(tracks.size());
   for (auto const& track : tracks) {
-    std::optional<PointDefinitionInterpolation> const& point = vectorExpression(track);
-    auto result = getPathPropertyNullable<T>(track, point, time);
-
-    if (result) {
-      total = result.value() + total;
-      valid = true;
-    }
+    auto property = track.GetPathPropertyNamed(name);
+    bool tempLast;
+    auto value = property.Interpolate(time, tempLast, context);
+    last = last && tempLast;
+    properties.push_back(value);
   }
 
-  return valid ? std::make_optional(total) : std::nullopt;
+  return properties;
 }
 
-template <typename T, typename VectorExpression = PropertyLambda>
-[[nodiscard]] static std::optional<T> MultiTrackProps(std::span<Track const* const> tracks, T const& defaultT,
-                                                      VectorExpression const& vectorExpression) {
-
-  if (tracks.empty()) return std::nullopt;
-
-  bool valid = false;
-  T total = defaultT;
-
-  for (auto const& track : tracks) {
-    std::optional<PropertyValue> const& point = vectorExpression(track);
-    auto result = getPropertyNullable<T>(track, point);
-
-    if (result) {
-      total = result.value() * total;
-      valid = true;
-    }
+// Macro to generate type-specific property getters
+#define GENERATE_PROPERTY_GETTERS(ReturnType, Suffix, Conversion)                                                      \
+  [[nodiscard]]                                                                                                        \
+  constexpr static std::vector<ReturnType> getProperties##Suffix(std::span<TrackW const> tracks, PropertyNames name,   \
+                                                                 TimeUnit time) {                                      \
+    std::vector<ReturnType> properties;                                                                                \
+    properties.reserve(tracks.size());                                                                                 \
+    for (auto const& track : tracks) {                                                                                 \
+      auto property = track.GetPropertyNamed(name);                                                                    \
+      auto value = property.GetValue();                                                                                \
+      if (!value.value.has_value) continue;                                                                            \
+      if (TimeUnit(value.last_updated) <= time) continue;                                                              \
+      properties.push_back(Conversion(value.value.value));                                                             \
+    }                                                                                                                  \
+    return properties;                                                                                                 \
+  }                                                                                                                    \
+                                                                                                                       \
+  [[nodiscard]]                                                                                                        \
+  constexpr static std::vector<ReturnType> getPathProperties##Suffix(                                                  \
+      std::span<TrackW const> tracks, PropertyNames name, Tracks::ffi::BaseProviderContext* context, float time) {  \
+    std::vector<ReturnType> properties;                                                                                \
+    bool last = false;                                                                                                 \
+    properties.reserve(tracks.size());                                                                                 \
+    for (auto const& track : tracks) {                                                                                 \
+      auto property = track.GetPathPropertyNamed(name);                                                                \
+      bool tempLast;                                                                                                   \
+      auto value = property.Interpolate(time, tempLast, context);                                                      \
+      last = last && tempLast;                                                                                         \
+      properties.push_back(Conversion(value));                                                                         \
+    }                                                                                                                  \
+    return properties;                                                                                                 \
   }
 
-  return valid ? std::make_optional(total) : std::nullopt;
-}
+// Generate specialized versions for different types
+GENERATE_PROPERTY_GETTERS(NEVector::Vector3, Vec3, ToVector3)
+GENERATE_PROPERTY_GETTERS(NEVector::Vector4, Vec4, ToVector4)
+GENERATE_PROPERTY_GETTERS(NEVector::Quaternion, Quat, ToQuaternion)
+GENERATE_PROPERTY_GETTERS(float, Float, ToFloat)
 
-template <typename T, typename VectorExpression = PropertyLambda>
-[[nodiscard]] static std::optional<T> SumTrackProps(std::span<Track const* const> tracks, T const& defaultT,
-                                                    VectorExpression const& vectorExpression) {
-  if (tracks.empty()) return std::nullopt;
-
-  bool valid = false;
-  T total = defaultT;
-
-  for (auto const& track : tracks) {
-    std::optional<PropertyValue> const& point = vectorExpression(track);
-    auto result = getPropertyNullable<T>(track, point);
-
-    if (result) {
-      total = result.value() + total;
-      valid = true;
-    }
+// Macro to generate addition functions for spans
+#define GENERATE_ADD_FUNCTIONS(Type, TypeName)                                                     \
+  [[nodiscard]]                                                                                   \
+  constexpr static Type add##TypeName##s(std::span<Type const> values) {                          \
+    if (values.empty()) return (Type){};                                                            \
+    Type result = values[0];                                                                     \
+    for (size_t i = 1; i < values.size(); ++i) {                                                 \
+      result = result + values[i];                                                               \
+    }                                                                                             \
+    return result;                                                                               \
   }
 
-  return valid ? std::make_optional(total) : std::nullopt;
+// Macro to generate multiplication functions for spans
+#define GENERATE_MUL_FUNCTIONS(Type, TypeName)                                                     \
+  [[nodiscard]]                                                                                   \
+  constexpr static Type multiply##TypeName##s(std::span<Type const> values) {                     \
+    if (values.empty()) return (Type){};                                                            \
+    Type result = values[0];                                                                     \
+    for (size_t i = 1; i < values.size(); ++i) {                                                 \
+      result = result * values[i];                                                               \
+    }                                                                                             \
+    return result;                                                                               \
+  }
+
+// Generate addition functions for different types
+GENERATE_ADD_FUNCTIONS(NEVector::Vector3, Vector3)
+[[nodiscard]] constexpr static NEVector ::Vector4 addVector4s(std ::span<NEVector ::Vector4 const> values) {
+  if (values.empty()) return NEVector ::Vector4{};
+  NEVector ::Vector4 result = values[0];
+  for (size_t i = 1; i < values.size(); ++i) {
+    result = result + values[i];
+  }
+  return result;
 }
+// GENERATE_ADD_FUNCTIONS(NEVector::Vector4, Vector4)
+GENERATE_ADD_FUNCTIONS(float, Float)
 
-#define MSumTrackProps(tracks, defaultT, prop)                                                                         \
-  SumTrackProps(tracks, defaultT, [](Track const* track) -> std::optional<PropertyValue> const& {                      \
-    return track->properties.prop.value;                                                                               \
-  })
-#define MMultTrackProps(tracks, defaultT, prop)                                                                        \
-  MultiTrackProps(tracks, defaultT, [](Track const* track) -> std::optional<PropertyValue> const& {                    \
-    return track->properties.prop.value;                                                                               \
-  })
+// Generate multiplication functions for different types
+GENERATE_MUL_FUNCTIONS(NEVector::Vector3, Vector3)
+GENERATE_MUL_FUNCTIONS(NEVector::Vector4, Vector4)
+GENERATE_MUL_FUNCTIONS(NEVector::Quaternion, Quaternion)
+GENERATE_MUL_FUNCTIONS(float, Float)
 
-#define MSumTrackPathProps(tracks, defaultT, prop, time)                                                               \
-  SumTrackPathProps(tracks, defaultT, time,                                                                            \
-                    [](Track const* track) -> std::optional<PointDefinitionInterpolation> const& {                     \
-                      return track->pathProperties.prop.value;                                                         \
-                    })
-#define MMultTrackPathProps(tracks, defaultT, prop, time)                                                              \
-  MultiTrackPathProps(tracks, defaultT, time,                                                                          \
-                      [](Track const* track) -> std::optional<PointDefinitionInterpolation> const& {                   \
-                        return track->pathProperties.prop.value;                                                       \
-                      })
 
-#pragma endregion
+#pragma endregion // property_utils
 
 } // namespace Animation

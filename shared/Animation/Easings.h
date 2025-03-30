@@ -5,43 +5,10 @@
 
 #include <string>
 #include <cmath>
-#include <unordered_map>
 
-enum struct Functions {
-  easeLinear,
-  easeStep,
-  easeInQuad,
-  easeOutQuad,
-  easeInOutQuad,
-  easeInCubic,
-  easeOutCubic,
-  easeInOutCubic,
-  easeInQuart,
-  easeOutQuart,
-  easeInOutQuart,
-  easeInQuint,
-  easeOutQuint,
-  easeInOutQuint,
-  easeInSine,
-  easeOutSine,
-  easeInOutSine,
-  easeInCirc,
-  easeOutCirc,
-  easeInOutCirc,
-  easeInExpo,
-  easeOutExpo,
-  easeInOutExpo,
-  easeInElastic,
-  easeOutElastic,
-  easeInOutElastic,
-  easeInBack,
-  easeOutBack,
-  easeInOutBack,
-  easeInBounce,
-  easeOutBounce,
-  easeInOutBounce,
-};
+#include "../bindings.h"
 
+using Functions = Tracks::ffi::Functions;
 namespace Easings {
 
 constexpr static float EaseLinear(float p) {
@@ -236,69 +203,69 @@ constexpr static float Interpolate(float p, Functions function) {
 
   switch (function) {
   default:
-  case Functions::easeLinear:
+  case Functions::EaseLinear:
     return EaseLinear(p);
-  case Functions::easeStep:
+  case Functions::EaseStep:
     return EaseStep(p);
-  case Functions::easeOutQuad:
+  case Functions::EaseOutQuad:
     return EaseOutQuad(p);
-  case Functions::easeInQuad:
+  case Functions::EaseInQuad:
     return EaseInQuad(p);
-  case Functions::easeInOutQuad:
+  case Functions::EaseInOutQuad:
     return EaseInOutQuad(p);
-  case Functions::easeInCubic:
+  case Functions::EaseInCubic:
     return EaseInCubic(p);
-  case Functions::easeOutCubic:
+  case Functions::EaseOutCubic:
     return EaseOutCubic(p);
-  case Functions::easeInOutCubic:
+  case Functions::EaseInOutCubic:
     return EaseInOutCubic(p);
-  case Functions::easeInQuart:
+  case Functions::EaseInQuart:
     return EaseInQuart(p);
-  case Functions::easeOutQuart:
+  case Functions::EaseOutQuart:
     return EaseOutQuart(p);
-  case Functions::easeInOutQuart:
+  case Functions::EaseInOutQuart:
     return EaseInOutQuart(p);
-  case Functions::easeInQuint:
+  case Functions::EaseInQuint:
     return EaseInQuint(p);
-  case Functions::easeOutQuint:
+  case Functions::EaseOutQuint:
     return EaseOutQuint(p);
-  case Functions::easeInOutQuint:
+  case Functions::EaseInOutQuint:
     return EaseInOutQuint(p);
-  case Functions::easeInSine:
+  case Functions::EaseInSine:
     return EaseInSine(p);
-  case Functions::easeOutSine:
+  case Functions::EaseOutSine:
     return EaseOutSine(p);
-  case Functions::easeInOutSine:
+  case Functions::EaseInOutSine:
     return EaseInOutSine(p);
-  case Functions::easeInCirc:
+  case Functions::EaseInCirc:
     return EaseInCirc(p);
-  case Functions::easeOutCirc:
+  case Functions::EaseOutCirc:
     return EaseOutCirc(p);
-  case Functions::easeInOutCirc:
+  case Functions::EaseInOutCirc:
     return EaseInOutCirc(p);
-  case Functions::easeInExpo:
+  case Functions::EaseInExpo:
     return EaseInExpo(p);
-  case Functions::easeOutExpo:
+  case Functions::EaseOutExpo:
     return EaseOutExpo(p);
-  case Functions::easeInOutExpo:
+  case Functions::EaseInOutExpo:
     return EaseInOutExpo(p);
-  case Functions::easeInElastic:
+  case Functions::EaseInElastic:
     return EaseInElastic(p);
-  case Functions::easeOutElastic:
+  case Functions::EaseOutElastic:
     return EaseOutElastic(p);
-  case Functions::easeInOutElastic:
+  case Functions::EaseInOutElastic:
     return EaseInOutElastic(p);
-  case Functions::easeInBack:
+  case Functions::EaseInBack:
     return EaseInBack(p);
-  case Functions::easeOutBack:
+  case Functions::EaseOutBack:
     return EaseOutBack(p);
-  case Functions::easeInOutBack:
+  case Functions::EaseInOutBack:
     return EaseInOutBack(p);
-  case Functions::easeInBounce:
+  case Functions::EaseInBounce:
     return EaseInBounce(p);
-  case Functions::easeOutBounce:
+  case Functions::EaseOutBounce:
     return EaseOutBounce(p);
-  case Functions::easeInOutBounce:
+  case Functions::EaseInOutBounce:
     return EaseInOutBounce(p);
   }
 }

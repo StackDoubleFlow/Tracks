@@ -1,6 +1,7 @@
 #include "AssociatedData.h"
 #include "Animation/Animation.h"
 #include "Animation/PointDefinition.h"
+#include "Animation/Track.h"
 #include "custom-json-data/shared/CustomBeatmapData.h"
 #include "TLogger.h"
 
@@ -36,36 +37,35 @@ inline bool IsStringProperties(std::string_view n) {
          n != REPEAT;
 }
 
-AnimateTrackData::AnimateTrackData(BeatmapAssociatedData& beatmapAD, rapidjson::Value const& customData,
-                                   Properties& trackProperties) {
+AnimateTrackData::AnimateTrackData(BeatmapAssociatedData& beatmapAD, rapidjson::Value const& customData, TrackW track) {
   for (auto const& member : customData.GetObject()) {
     char const* name = member.name.GetString();
-    if (IsStringProperties(name)) {
-      Property* property = trackProperties.FindProperty(name);
-      if (property) {
-        PointDefinition* anonPointDef = nullptr;
-        auto pointData = Animation::TryGetPointData(beatmapAD, anonPointDef, customData, name);
+    if (!IsStringProperties(name)) {
+      continue;
+    }
+    auto property = track.GetProperty(name);
+    if (property) {
+      auto type = property.GetType();
 
-        if (anonPointDef) beatmapAD.anonPointDefinitions.emplace(anonPointDef);
+      auto pointData = Animation::TryGetPointData(beatmapAD, customData, name, type);
 
-        this->properties.emplace_back(property, pointData);
-      } else {
-        TLogger::Logger.warn("Could not find track property with name {}", name);
-      }
+      this->properties.emplace_back(property, pointData);
+    } else {
+      TLogger::Logger.warn("Could not find track property with name {}", name);
     }
   }
 }
 
 AssignPathAnimationData::AssignPathAnimationData(BeatmapAssociatedData& beatmapAD, rapidjson::Value const& customData,
-                                                 PathProperties& trackPathProperties) {
+                                                 TrackW track) {
   for (auto const& member : customData.GetObject()) {
     char const* name = member.name.GetString();
     if (IsStringProperties(name)) {
-      PathProperty* property = trackPathProperties.FindProperty(name);
+      auto property = track.GetPathProperty(name);
       if (property) {
-        PointDefinition* anonPointDef = nullptr;
-        auto pointData = Animation::TryGetPointData(beatmapAD, anonPointDef, customData, name);
-        if (anonPointDef) beatmapAD.anonPointDefinitions.emplace(anonPointDef);
+        auto type = property.GetType();
+
+        auto pointData = Animation::TryGetPointData(beatmapAD, customData, name, type);
 
         pathProperties.emplace_back(property, pointData);
       } else {
@@ -116,7 +116,7 @@ void LoadTrackEvent(CustomJSONData::CustomEventData const* customEventData, Trac
   auto const& trackJSON = eventData[(v2 ? TracksAD::Constants::V2_TRACK : TracksAD::Constants::TRACK).data()];
   unsigned int trackSize = trackJSON.IsArray() ? trackJSON.Size() : 1;
 
-  sbo::small_vector<Track*, 1> tracks;
+  sbo::small_vector<TrackW, 1> tracks;
   tracks.reserve(trackSize);
 
   if (trackJSON.IsArray()) {
@@ -145,19 +145,17 @@ void LoadTrackEvent(CustomJSONData::CustomEventData const* customEventData, Trac
   eventAD.duration = durationIt != eventData.MemberEnd() ? getFloat(durationIt->value) : 0;
   eventAD.repeat = eventAD.duration > 0 && repeatIt != eventData.MemberEnd() ? repeatIt->value.GetInt() : 0;
   eventAD.easing =
-      easingIt != eventData.MemberEnd() ? FunctionFromStr(easingIt->value.GetString()) : Functions::easeLinear;
+      easingIt != eventData.MemberEnd() ? FunctionFromStr(easingIt->value.GetString()) : Functions::EaseLinear;
 
   for (auto const& track : eventAD.tracks) {
-    auto& properties = track->properties;
-    auto& pathProperties = track->pathProperties;
 
     switch (eventAD.type) {
     case EventType::animateTrack: {
-      eventAD.animateTrackData.emplace_back(beatmapAD, eventData, properties);
+      eventAD.animateTrackData.emplace_back(beatmapAD, eventData, track);
       break;
     }
     case EventType::assignPathAnimation: {
-      eventAD.assignPathAnimation.emplace_back(beatmapAD, eventData, pathProperties);
+      eventAD.assignPathAnimation.emplace_back(beatmapAD, eventData, track);
       break;
     }
     default:
@@ -169,6 +167,7 @@ void LoadTrackEvent(CustomJSONData::CustomEventData const* customEventData, Trac
 void readBeatmapDataAD(CustomJSONData::CustomBeatmapData* beatmapData) {
   static auto* customObstacleDataClass = classof(CustomJSONData::CustomObstacleData*);
   static auto* customNoteDataClass = classof(CustomJSONData::CustomNoteData*);
+  static auto* customSliderDataClass = classof(CustomJSONData::CustomSliderData*);
 
   BeatmapAssociatedData& beatmapAD = getBeatmapAD(beatmapData->customData);
   bool v2 = beatmapData->v2orEarlier;
@@ -194,20 +193,18 @@ void readBeatmapDataAD(CustomJSONData::CustomBeatmapData* beatmapData) {
       for (rapidjson::Value::ConstValueIterator itr = pointDefinitions.Begin(); itr != pointDefinitions.End(); itr++) {
         if (v2) {
           std::string pointName = (*itr)[Constants::V2_NAME.data()].GetString();
-          PointDefinition pointData((*itr)[Constants::V2_POINTS.data()]);
-          CJDLogger::Logger.fmtLog<Paper::LogLevel::INF>("Constructed point {}", pointName);
-          pointDataManager.AddPoint(pointName, pointData);
+          CJDLogger::Logger.fmtLog<Paper::LogLevel::INF>("Added point {}", pointName);
+          pointDataManager.AddPoint(pointName, (*itr)[Constants::V2_POINTS.data()]);
         } else {
           for (auto const& [name, pointDataVal] : pointDefinitionsIt->value.GetObject()) {
-            PointDefinition pointData(pointDataVal);
-            CJDLogger::Logger.fmtLog<Paper::LogLevel::INF>("Constructed point {}", name.GetString());
-            pointDataManager.AddPoint(name.GetString(), pointData);
+            CJDLogger::Logger.fmtLog<Paper::LogLevel::INF>("Added point {}", name.GetString());
+            pointDataManager.AddPoint(name.GetString(), pointDataVal);
           }
         }
       }
     }
     TLogger::Logger.debug("Setting point definitions");
-    beatmapAD.pointDefinitions = pointDataManager.pointData;
+    beatmapAD.pointDefinitionsRaw = pointDataManager.pointData;
   }
 
   for (auto* beatmapObjectData : beatmapData->beatmapObjectDatas) {
@@ -220,6 +217,9 @@ void readBeatmapDataAD(CustomJSONData::CustomBeatmapData* beatmapData) {
     } else if (beatmapObjectData->klass == customNoteDataClass) {
       auto noteData = (CustomJSONData::CustomNoteData*)beatmapObjectData;
       customDataWrapper = noteData->customData;
+    } else if (beatmapObjectData->klass == customSliderDataClass) {
+      auto sliderData = (CustomJSONData::CustomSliderData*)beatmapObjectData;
+      customDataWrapper = sliderData->customData;
     } else {
       continue;
     }

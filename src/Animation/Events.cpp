@@ -31,129 +31,72 @@ using namespace TracksAD;
 BeatmapObjectSpawnController* spawnController;
 // BeatmapObjectSpawnController.cpp
 
-static std::vector<AnimateTrackContext> coroutines;
-static std::vector<AssignPathAnimationContext> pathCoroutines;
-
 MAKE_HOOK_MATCH(BeatmapObjectSpawnController_Start, &BeatmapObjectSpawnController::Start, void,
                 BeatmapObjectSpawnController* self) {
   spawnController = self;
-  coroutines.clear();
-  pathCoroutines.clear();
-  TLogger::Logger.debug("coroutines and pathCoroutines capacity: {} and {}", coroutines.capacity(),
-                             pathCoroutines.capacity());
   BeatmapObjectSpawnController_Start(self);
-}
-
-///
-/// \tparam skipToLast
-/// \param context
-/// \param songTime
-/// \return true if not finished. If false, this coroutine is finished
-template <bool skipToLast = false> bool UpdateCoroutine(AnimateTrackContext const& context, float songTime) {
-  float elapsedTime = songTime - context.startTime;
-
-  // Wait, the coroutine is too early
-  if (elapsedTime < 0) return true;
-
-  float normalizedTime = context.duration > 0 ? std::min(elapsedTime / context.duration, 1.0f) : 1;
-  float time = Easings::Interpolate(normalizedTime, context.easing);
-  bool changed = false;
-  if (!context.property->value.has_value()) {
-    context.property->value = { 0 };
-    changed = true;
-  }
-  bool last;
-
-  // I'm hoping the compiler will optimize this nicely
-  // short-circuiting
-  // skipping to the last point
-  if constexpr (skipToLast) {
-    time = 1;
-    last = true;
-  }
-
-  switch (context.property->type) {
-  case PropertyType::linear: {
-    auto val = context.points->InterpolateLinear(time, last);
-    changed = changed || !context.property->value || val != context.property->value->linear;
-    context.property->value->linear = val;
-    break;
-  }
-  case PropertyType::vector3: {
-    auto val = context.points->Interpolate(time, last);
-    changed = changed || !context.property->value || val != context.property->value->vector3;
-    context.property->value->vector3 = val;
-    break;
-  }
-  case PropertyType::vector4: {
-    auto val = context.points->InterpolateVector4(time, last);
-    changed |= !context.property->value || val != context.property->value->vector4;
-    context.property->value->vector4 = val;
-    break;
-  }
-  case PropertyType::quaternion: {
-    auto val = context.points->InterpolateQuaternion(time, last);
-    changed = changed || !context.property->value ||
-              NEVector::Quaternion::Dot(context.property->value->quaternion, val) < 1.0f;
-    context.property->value->quaternion = val;
-    break;
-  }
-  }
-  if (changed || context.property->lastUpdated == 0) {
-    context.property->lastUpdated = getCurrentTime();
-  }
-
-  bool finished = last || context.duration <= 0;
-
-  // continue only if not finished or if elapsedTime is less than duration
-  return !finished && elapsedTime < context.duration;
-}
-
-///
-/// \param context
-/// \param songTime
-/// \return true if continue. False to finish
-bool UpdatePathCoroutine(AssignPathAnimationContext const& context, float songTime) {
-  float elapsedTime = songTime - context.startTime;
-  if (elapsedTime < 0) return true;
-
-  context.property->value->time = Easings::Interpolate(std::min(elapsedTime / context.duration, 1.0f), context.easing);
-
-  return elapsedTime < context.duration;
 }
 
 void Events::UpdateCoroutines(BeatmapCallbacksController* callbackController) {
   auto songTime = callbackController->songTime;
-  for (auto it = coroutines.begin(); it != coroutines.end();) {
-    if (UpdateCoroutine(*it, songTime)) {
-      it++;
-    } else {
+  auto* customBeatmapData = (CustomJSONData::CustomBeatmapData*)callbackController->_beatmapData;
+  auto& beatmapAD = getBeatmapAD(customBeatmapData->customData);
 
-      if (it->repeat <= 0) {
-        it = coroutines.erase(it);
-      } else {
-        it->repeat--;
-        it->startTime += it->duration;
-      }
-    }
-  }
+  auto tracksContext = beatmapAD.internal_tracks_context;
 
-  for (auto it = pathCoroutines.begin(); it != pathCoroutines.end();) {
-    if (UpdatePathCoroutine(*it, songTime)) {
-      it++;
-    } else {
-      it->property->value->Finish();
-      if (it->repeat <= 0) {
-        it = pathCoroutines.erase(it);
-      } else {
-        it->repeat--;
-        it->startTime += it->duration;
-        it->property->value->Restart();
-      }
-    }
-  }
+  auto coroutine = tracksContext->GetCoroutineManager();
+  auto baseManager = tracksContext->GetBaseProviderContext();
+  Tracks::ffi::poll_events(coroutine, songTime, baseManager);
 }
 
+[[nodiscard]]
+Tracks::ffi::EventData* makeEvent(float eventTime, CustomEventAssociatedData const& eventAD,
+                                  TrackW track,
+                                  PathPropertyW pathProperty, PointDefinitionW pointData) {
+  auto eventType = Tracks::ffi::CEventType {
+                  .ty = Tracks::ffi::CEventTypeEnum::AssignPathAnimation,
+                  .data = {
+                    .path_property = pathProperty,
+                  },
+                };
+
+  Tracks::ffi::CEventData cEventData = {
+    .raw_duration = eventAD.duration,
+    .easing = eventAD.easing,
+    .repeat = eventAD.repeat,
+    .start_time = eventTime,
+    .event_type = eventType,
+    .track_ptr = track,
+    .point_data_ptr = pointData,
+  };
+  auto eventData = Tracks::ffi::event_data_to_rust(&cEventData);
+
+  return eventData;
+}
+[[nodiscard]]
+Tracks::ffi::EventData* makeEvent(float eventTime, CustomEventAssociatedData const& eventAD,
+                TrackW const& track, PropertyW const& property, PointDefinitionW const& pointData) {
+  auto eventType = Tracks::ffi::CEventType {
+                  .ty = Tracks::ffi::CEventTypeEnum::AnimateTrack,
+                  .data = {
+                    .property = property,
+                  },
+                };
+
+  Tracks::ffi::CEventData cEventData = {
+    .raw_duration = eventAD.duration,
+    .easing = eventAD.easing,
+    .repeat = eventAD.repeat,
+    .start_time = eventTime,
+    .event_type = eventType,
+    .track_ptr = track,
+    .point_data_ptr = pointData,
+  };
+
+  auto eventData = Tracks::ffi::event_data_to_rust(&cEventData);
+
+  return eventData;
+}
 void CustomEventCallback(BeatmapCallbacksController* callbackController,
                          CustomJSONData::CustomEventData* customEventData) {
   PAPER_IL2CPP_CATCH_HANDLER(
@@ -171,15 +114,15 @@ void CustomEventCallback(BeatmapCallbacksController* callbackController,
 
       CustomEventAssociatedData const& eventAD = getEventAD(customEventData);
 
+      auto* customBeatmapData = (CustomJSONData::CustomBeatmapData*)callbackController->_beatmapData;
+      TracksAD::BeatmapAssociatedData& beatmapAD = TracksAD::getBeatmapAD(customBeatmapData->customData);
+
       // fail safe, idek why this needs to be done smh
       // CJD you bugger
       if (!eventAD.parsed) {
         TLogger::Logger.debug("callbackController {}", fmt::ptr(callbackController));
         TLogger::Logger.debug("_beatmapData {}", fmt::ptr(callbackController->_beatmapData));
-        auto* customBeatmapData = (CustomJSONData::CustomBeatmapData*)callbackController->_beatmapData;
         TLogger::Logger.debug("customBeatmapData {}", fmt::ptr(customBeatmapData));
-
-        TracksAD::BeatmapAssociatedData& beatmapAD = TracksAD::getBeatmapAD(customBeatmapData->customData);
 
         if (!beatmapAD.valid) {
           TLogger::Logger.debug("Beatmap wasn't parsed when event is invoked, what?");
@@ -204,72 +147,41 @@ void CustomEventCallback(BeatmapCallbacksController* callbackController,
       bool noDuration = duration == 0 || customEventData->time + (duration * (repeat + 1)) <
                                              TracksStatic::bpmController->_beatmapCallbacksController->songTime;
 
-      switch (eventAD.type) {
+      auto tracksContext = beatmapAD.internal_tracks_context;
+
+      auto coroutineManager = tracksContext->GetCoroutineManager();
+      auto baseManager = tracksContext->GetBaseProviderContext();
+      auto eventTime = customEventData->time;
+      auto songTime = callbackController->_songTime;
+
+      for (auto const& track
+           : eventAD.tracks) {
+        switch (eventAD.type) {
         case EventType::animateTrack: {
-          auto const& animateTrackDataList = eventAD.animateTrackData;
-
-          for (auto const& animateTrackData : animateTrackDataList) {
-
+          for (auto const& animateTrackData : eventAD.animateTrackData) {
             for (auto const& [property, pointData] : animateTrackData.properties) {
-              for (auto it = coroutines.begin(); it != coroutines.end();) {
-                if (it->property == property) {
-                  it = coroutines.erase(it);
-                  break;
-                } else {
-                  it++;
-                }
-              }
 
-              if (!pointData) {
-                property->lastUpdated = 0;
-                property->value = std::nullopt;
-                continue;
-              }
-
-              bool skipCoroutine = pointData->isSingle() || noDuration;
-              Events::AnimateTrackContext context(pointData, property, duration, customEventData->time, easing, repeat);
-              if (!skipCoroutine) {
-                coroutines.emplace_back(context);
-              } else {
-                UpdateCoroutine<true>(context, customEventData->time + duration + bpm);
-              }
+              auto event = makeEvent(eventTime, eventAD, track, property, pointData);
+              Tracks::ffi::start_event_coroutine(coroutineManager, bpm, songTime, baseManager, event);
             }
           }
           break;
         }
         case EventType::assignPathAnimation: {
-          auto const& assignPathAnimationDataList = eventAD.assignPathAnimation;
-
-          for (auto const& assignPathAnimationData : assignPathAnimationDataList) {
-            for (auto const& [property, pointData] : assignPathAnimationData.pathProperties) {
-              for (auto it = pathCoroutines.begin(); it != pathCoroutines.end();) {
-                if (it->property == property) {
-                  it = pathCoroutines.erase(it);
-                  break;
-                } else {
-                  it++;
-                }
-              }
-
-              if (pointData) {
-                if (!property->value.has_value()) property->value = PointDefinitionInterpolation();
-
-                property->value->Init(pointData);
-                if (noDuration) {
-                  property->value->Finish();
-                } else {
-                  pathCoroutines.emplace_back(property, duration, customEventData->time, easing, repeat);
-                }
-              } else {
-                property->value = std::nullopt;
-              }
+          for (auto const& assignPathAnimationData : eventAD.assignPathAnimation) {
+            for (auto const& [pathProperty, pointData] : assignPathAnimationData.pathProperties) {
+              auto event = makeEvent(eventTime, eventAD, track, pathProperty, pointData);
+              Tracks::ffi::start_event_coroutine(coroutineManager, bpm, songTime, baseManager, event);
             }
           }
           break;
         }
         default:
           break;
-      })
+        }
+      }
+
+  )
 }
 
 void Events::AddEventCallbacks() {

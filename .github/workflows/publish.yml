@@ -22,16 +22,6 @@ jobs:
           lfs: true
 
       - uses: seanmiddleditch/gha-setup-ninja@v3
-
-      # Use canary NDK to avoid lesser known compile bugs
-      - name: Setup canary NDK
-        id: setup-ndk
-        uses: ./.github/actions/canary-ndk
-
-      - name: Create ndkpath.txt
-        run: |
-          echo ${{ steps.setup-ndk.outputs.ndk-path }} > ${GITHUB_WORKSPACE}/ndkpath.txt
-          cat ${GITHUB_WORKSPACE}/ndkpath.txt
       
       # - name: Create ndkpath.txt
       #   run: |
@@ -46,7 +36,7 @@ jobs:
           echo ::set-output name=VERSION::${GITHUB_REF#refs/tags/v}
 
       - name: QPM Rust Action
-        uses: Fernthedev/qpm-action@main
+        uses: Fernthedev/qpm-action@v1
         with:
           #required
           workflow_token: ${{secrets.GITHUB_TOKEN}}
@@ -54,7 +44,7 @@ jobs:
           restore: true # will run restore on download
           cache: true #will cache dependencies
 
-          publish: true
+          publish: "late"
           publish_token: ${{secrets.QPM_TOKEN}}
 
           version: ${{ steps.get_tag_version.outputs.VERSION }}
@@ -66,6 +56,12 @@ jobs:
 
           # Name of qmod in release asset. Assumes exists, same as prior
           qpm_qmod: ${{env.qmodName}}.qmod
+
+      - name: Setup Rust
+        run: |
+          rustup install nightly
+          rustup target add aarch64-linux-android --toolchain nightly
+          cargo install --locked --git https://github.com/bbqsrc/cargo-ndk.git cargo-ndk
 
       - name: Build
         run: |

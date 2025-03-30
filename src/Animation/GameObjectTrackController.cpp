@@ -14,16 +14,6 @@ DEFINE_TYPE(Tracks, GameObjectTrackController)
 
 using namespace Tracks;
 
-template <typename T>
-static constexpr std::optional<T> getPropertyNullable(Track const* track, Property const& prop,
-                                                      uint32_t lastCheckedTime) {
-  if (lastCheckedTime != 0 && prop.lastUpdated != 0 && prop.lastUpdated < lastCheckedTime) return std::nullopt;
-
-  auto ret = Animation::getPropertyNullable<T>(track, prop.value);
-
-  return ret;
-}
-
 // static NEVector::Quaternion QuatInverse(const NEVector::Quaternion &a) {
 //         NEVector::Quaternion conj = {-a.x, -a.y, -a.z, a.w};
 //          float norm2 = NEVector::Quaternion::Dot(a, a);
@@ -85,9 +75,8 @@ void GameObjectTrackController::UpdateData(bool force) {
 
     // Destroy the object if the data is never found
     if (attemptedTries > 100) {
-      CJDLogger::Logger.fmtLog<Paper::LogLevel::ERR>(
-          "Destroying object", fmt::ptr(this),
-          static_cast<std::string>(get_gameObject()->get_name()));
+      CJDLogger::Logger.fmtLog<Paper::LogLevel::ERR>("Destroying object", fmt::ptr(this),
+                                                     static_cast<std::string>(get_gameObject()->get_name()));
       Destroy(this);
       CJDLogger::Logger.Backtrace(10);
     } else {
@@ -97,9 +86,9 @@ void GameObjectTrackController::UpdateData(bool force) {
   }
 
   auto const _noteLinesDistance = 0.6f; // StaticBeatmapObjectSpawnMovementData.kNoteLinesDistance
-  auto const _track = data->_track;
+  auto const& tracks = data->_track;
 
-  if (_track.empty()) {
+  if (tracks.empty()) {
     CJDLogger::Logger.fmtLog<Paper::LogLevel::ERR>("Track is null! Should remove component or just early return? {} {}",
                                                    fmt::ptr(this),
                                                    static_cast<std::string>(get_gameObject()->get_name()));
@@ -107,7 +96,7 @@ void GameObjectTrackController::UpdateData(bool force) {
     return;
   }
   if (force) {
-    lastCheckedTime = 0;
+    lastCheckedTime = TimeUnit();
   }
 
   std::optional<NEVector::Quaternion> rotation;
@@ -116,46 +105,30 @@ void GameObjectTrackController::UpdateData(bool force) {
   std::optional<NEVector::Vector3> localPosition;
   std::optional<NEVector::Vector3> scale;
 
-  // I hate this
-  auto tracks = std::span<Track const*>(const_cast<Track const**>(&*_track.begin()), _track.size());
-
   if (tracks.size() == 1) {
     auto track = tracks.front();
-    auto const& properties = track->properties;
 
-    rotation = getPropertyNullable<NEVector::Quaternion>(track, properties.rotation, lastCheckedTime);
-    localRotation = getPropertyNullable<NEVector::Quaternion>(track, properties.localRotation, lastCheckedTime);
-    position = getPropertyNullable<NEVector::Vector3>(track, properties.position, lastCheckedTime);
-    localPosition = getPropertyNullable<NEVector::Vector3>(track, properties.localPosition, lastCheckedTime);
-    scale = getPropertyNullable<NEVector::Vector3>(track, properties.scale, lastCheckedTime);
+    // after
+    rotation = track.GetPropertyNamed(PropertyNames::Rotation).GetQuat(lastCheckedTime);
+    rotation = track.GetPropertyNamed(PropertyNames::LocalRotation).GetQuat(lastCheckedTime);
+    position = track.GetPropertyNamed(PropertyNames::Position).GetVec3(lastCheckedTime);
+    localPosition = track.GetPropertyNamed(PropertyNames::LocalPosition).GetVec3(lastCheckedTime);
+    scale = track.GetPropertyNamed(PropertyNames::Scale).GetVec3(lastCheckedTime);
 
   } else {
 
-#define combine(target, list, op)                                                                                      \
-  if (list)                                                                                                            \
-    for (auto const& i : *list) {                                                                                      \
-      if (!target)                                                                                                     \
-        target = i;                                                                                                    \
-      else                                                                                                             \
-        target = *target op i;                                                                                         \
-    }
+    // now
+    auto localRotations = Animation::getPropertiesQuat(tracks, PropertyNames::LocalRotation, lastCheckedTime);
+    auto rotations = Animation::getPropertiesQuat(tracks, PropertyNames::Rotation, lastCheckedTime);
+    auto positions = Animation::getPropertiesVec3(tracks, PropertyNames::Position, lastCheckedTime);
+    auto localPositions = Animation::getPropertiesVec3(tracks, PropertyNames::LocalPosition, lastCheckedTime);
+    auto scales = Animation::getPropertiesVec3(tracks, PropertyNames::Scale, lastCheckedTime);
 
-    auto localRotations = Animation::getPropertiesNullable<NEVector::Quaternion>(
-        tracks, [](Properties const& p) { return p.localRotation; }, lastCheckedTime);
-    auto rotations = Animation::getPropertiesNullable<NEVector::Quaternion>(
-        tracks, [](Properties const& p) { return p.rotation; }, lastCheckedTime);
-    auto positions = Animation::getPropertiesNullable<NEVector::Vector3>(
-        tracks, [](Properties const& p) { return p.position; }, lastCheckedTime);
-    auto localPositions = Animation::getPropertiesNullable<NEVector::Vector3>(
-        tracks, [](Properties const& p) { return p.localPosition; }, lastCheckedTime);
-    auto scales = Animation::getPropertiesNullable<NEVector::Vector3>(
-        tracks, [](Properties const& p) { return p.scale; }, lastCheckedTime);
-
-    combine(localRotation, localRotations, *);
-    combine(rotation, rotations, *);
-    combine(scale, scales, +);
-    combine(position, positions, +);
-    combine(localPosition, localPositions, +);
+    TRACKS_LIST_OPERATE_MULTIPLE(localRotation, localRotations, *);
+    TRACKS_LIST_OPERATE_MULTIPLE(rotation, rotations, *);
+    TRACKS_LIST_OPERATE_MULTIPLE(scale, scales, *);
+    TRACKS_LIST_OPERATE_MULTIPLE(position, positions, +);
+    TRACKS_LIST_OPERATE_MULTIPLE(localPosition, localPositions, +);
   }
 
   if (GameObjectTrackController::LeftHanded) {
@@ -208,11 +181,11 @@ void GameObjectTrackController::UpdateData(bool force) {
     data->ScaleUpdate.invoke();
   }
 
-  lastCheckedTime = getCurrentTime();
+  lastCheckedTime = Animation::getCurrentTime();
 }
 
 std::optional<GameObjectTrackController*>
-GameObjectTrackController::HandleTrackData(UnityEngine::GameObject* gameObject, std::vector<Track*> const& track,
+GameObjectTrackController::HandleTrackData(UnityEngine::GameObject* gameObject, std::span<TrackW const> track,
                                            float noteLinesDistance, bool v2, bool overwrite) {
   auto* existingTrackController = gameObject->GetComponent<GameObjectTrackController*>();
 
@@ -239,8 +212,8 @@ GameObjectTrackController::HandleTrackData(UnityEngine::GameObject* gameObject, 
   // cleaned up on OnDestroy
   trackController->data = new GameObjectTrackControllerData(track, v2);
 
-  for (auto* t : track) {
-    t->AddGameObject(gameObject);
+  for (auto t : track) {
+    t.RegisterGameObject(gameObject);
   }
 
   return trackController;

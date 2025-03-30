@@ -1,110 +1,111 @@
 #pragma once
+#include <cstddef>
 #include <utility>
+#include <variant>
 
+#include "../Vector.h"
 #include "beatsaber-hook/shared/config/rapidjson-utils.hpp"
 #include "Easings.h"
-#include "Track.h"
 #include "../Hash.h"
 #include "UnityEngine/Color.hpp"
+#include "beatsaber-hook/shared/rapidjson/include/rapidjson/document.h"
+#include "../bindings.h"
 
-struct PointData {
-  public:
-  sbo::small_vector<float, 5> pointDatas;
-  NEVector::Quaternion quat;
-  float time;
-  Functions easing = Functions::easeLinear;
-  bool smooth = false;
-  bool hsv = false;
+extern Tracks::ffi::FFIJsonValue const* convert_rapidjson(rapidjson::Value const& value);
 
-  PointData(std::span<float> point, float time, Functions easing = Functions::easeLinear, bool smooth = false)
-      : pointDatas(point.begin(), point.end()), time(time), easing{ easing }, smooth{ smooth } {
-    convertToQuaternion();
-  };
-  PointData(sbo::small_vector<float, 5> point, float time, Functions easing = Functions::easeLinear,
-            bool smooth = false)
-      : pointDatas(std::move(point)), time(time), easing{ easing }, smooth{ smooth } {
-    convertToQuaternion();
-  };
-
-  // Convert ahead of time
-  void convertToQuaternion() {
-    if (pointDatas.size() < 3) {
-      return;
-    }
-
-    quat = Sombrero::FastQuaternion::Euler(toVector3());
-  }
-
-  [[nodiscard]] NEVector::Vector4 toVector4() const {
-    // reaxt did a _color "_color":[[1,1,1,0]]
-    // when it should be "_color":[[1,1,1,0,0]]
-    if (pointDatas.size() >= 4) {
-      return { pointDatas[0], pointDatas[1], pointDatas[2], pointDatas[4] };
-    }
-
-    return {};
-  }
-  [[nodiscard]] UnityEngine::Color toColor() const {
-    auto v = toVector4();
-    return { v.x, v.y, v.z, v.w };
-  }
-
-  [[nodiscard]] constexpr NEVector::Vector3 toVector3() const {
-    if (pointDatas.size() >= 3) {
-      return { pointDatas[0], pointDatas[1], pointDatas[2] };
-    }
-
-    return {};
-  }
-
-  [[nodiscard]] constexpr float toFloat() const {
-    if (!pointDatas.empty()) {
-      return pointDatas[0];
-    }
-    
-    return {};
-  }
-
-  [[nodiscard]] constexpr NEVector::Quaternion toQuaternion() const {
-    return quat;
-  }
-};
-
-class PointDefinition {
+class PointDefinitionW {
 public:
-  explicit PointDefinition(rapidjson::Value const& value);
-  [[nodiscard]] NEVector::Vector3 Interpolate(float time, bool& last) const;
-  [[nodiscard]] NEVector::Quaternion InterpolateQuaternion(float time, bool& last) const;
-  [[nodiscard]] float InterpolateLinear(float time, bool& last) const;
-  [[nodiscard]] NEVector::Vector4 InterpolateVector4(float time, bool& last) const;
+  explicit PointDefinitionW(rapidjson::Value const& value, Tracks::ffi::WrapBaseValueType type,
+                            Tracks::ffi::BaseProviderContext* internal_tracks_context) {
+    auto* json = convert_rapidjson(value);
 
-  static PointDefinition const EMPTY_POINT;
+    internalPointDefinition = Tracks::ffi::tracks_make_base_point_definition(json, type, internal_tracks_context);
+    this->internal_tracks_context = internal_tracks_context;
+  }
 
-  [[nodiscard]] bool isSingle() const;
+  PointDefinitionW(Tracks::ffi::BasePointDefinition const* pointDefinition, Tracks::ffi::BaseProviderContext* context)
+      : internalPointDefinition(pointDefinition), internal_tracks_context(context) {}
+
+  PointDefinitionW(PointDefinitionW const& other) = default;
+  explicit PointDefinitionW(std::nullptr_t) : internalPointDefinition(nullptr) {};
+
+  Tracks::ffi::WrapBaseValue Interpolate(float time) const {
+    bool last;
+    return Interpolate(time, last);
+  }
+
+  Tracks::ffi::WrapBaseValue Interpolate(float time, bool& last) const {
+    auto result = Tracks::ffi::tracks_interpolate_base_point_definition(internalPointDefinition, time, &last,
+                                                                        internal_tracks_context);
+
+    return result;
+  }
+  NEVector::Vector3 InterpolateVec3(float time, bool& last) const {
+    auto result = Interpolate(time, last);
+    return { result.value.vec3.x, result.value.vec3.y, result.value.vec3.z };
+  }
+
+  NEVector::Quaternion InterpolateQuaternion(float time, bool& last) const {
+    auto result = Interpolate(time, last);
+    return { result.value.quat.x, result.value.quat.y, result.value.quat.z, result.value.quat.w };
+  }
+
+  float InterpolateLinear(float time, bool& last) const {
+    auto result = Interpolate(time, last);
+    return result.value.float_v;
+  }
+
+  NEVector::Vector4 InterpolateVector4(float time, bool& last) const {
+    auto result = Interpolate(time, last);
+    return { result.value.vec4.x, result.value.vec4.y, result.value.vec4.z, result.value.vec4.w };
+  }
+
+  NEVector::Vector3 InterpolateVec3(float time) const {
+    bool last;
+    return InterpolateVec3(time, last);
+  }
+
+  NEVector::Quaternion InterpolateQuaternion(float time) const {
+    bool last;
+    return InterpolateQuaternion(time, last);
+  }
+
+  float InterpolateLinear(float time) const {
+    bool last;
+    return InterpolateLinear(time, last);
+  }
+
+  NEVector::Vector4 InterpolateVector4(float time) const {
+    bool last;
+    return InterpolateVector4(time, last);
+  }
+
+  uintptr_t count() const {
+    return Tracks::ffi::tracks_base_point_definition_count(internalPointDefinition);
+  }
+
+  bool hasBaseProvider() const {
+    return Tracks::ffi::tracks_base_point_definition_has_base_provider(internalPointDefinition);
+  }
+
+  operator Tracks::ffi::BasePointDefinition const*() const {
+    return internalPointDefinition;
+  }
+
+  // operator Tracks::ffi::BasePointDefinition*() {
+  //   return internalPointDefinition;
+  // }
 
 private:
-  constexpr PointDefinition() = default;
+  constexpr PointDefinitionW() = default;
 
-  /// <summary>
-  /// Does most of the interpolation magic between points
-  /// </summary>
-  /// <param name="time">time.</param>
-  /// <param name="pointL">If returned false, will be the point with data and no interpolation. If true, will
-  /// interpolate to pointR in normalTime.</param> <param name="pointR">If returned true, will interpolate from pointL
-  /// to pointR in normalTime.</param> <param name="normalTime">interpolation time.</param> <param name="l">left value
-  /// index</param> <param name="r">right value index</param> <returns>True if not interpolating between two
-  /// values</returns>
-  bool InterpolateRaw(float time, PointData const*& pointL, PointData const*& pointR, float& normalTime, int& l, int& r,
-                      bool& last) const;
-
-  constexpr void SearchIndex(float time, int& l, int& r) const;
-  sbo::small_vector<PointData, 8> points;
+  Tracks::ffi::BasePointDefinition const* internalPointDefinition;
+  Tracks::ffi::BaseProviderContext* internal_tracks_context;
 };
 
 class PointDefinitionManager {
 public:
-  std::unordered_map<std::string, PointDefinition, TracksAD::string_hash, TracksAD::string_equal> pointData;
+  std::unordered_map<std::string, rapidjson::Value const*, TracksAD::string_hash, TracksAD::string_equal> pointData;
 
-  void AddPoint(std::string const& pointDataName, PointDefinition const& pointData);
-  void AddPoint(std::string const& pointDataName, PointDefinition&& pointData);
+  void AddPoint(std::string const& pointDataName, rapidjson::Value const& pointData);
 };

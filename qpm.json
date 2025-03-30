@@ -5,7 +5,7 @@
   "info": {
     "name": "Tracks",
     "id": "tracks",
-    "version": "1.0.0",
+    "version": "1.1.0",
     "url": "https://github.com/StackDoubleFlow/Tracks",
     "additionalData": {
       "overrideSoName": "libtracks.so",
@@ -18,6 +18,7 @@
         "pwsh ./build.ps1"
       ]
     },
+    "ndk": "^27.1.12297006",
     "qmodIncludeDirs": [
       "./build",
       "./extern/libs"
@@ -29,11 +30,13 @@
     {
       "id": "beatsaber-hook",
       "versionRange": "^6.1.7",
-      "additionalData": {}
+      "additionalData": {
+        "extraFiles": []
+      }
     },
     {
       "id": "bs-cordl",
-      "versionRange": "^4000.0.0",
+      "versionRange": "^4030.0.0",
       "additionalData": {
         "includeQmod": true
       }
@@ -51,7 +54,9 @@
     {
       "id": "scotland2",
       "versionRange": "*",
-      "additionalData": {}
+      "additionalData": {
+        "includeQmod": false
+      }
     },
     {
       "id": "custom-types",
@@ -67,7 +72,7 @@
     },
     {
       "id": "paper2_scotland2",
-      "versionRange": "^4.4.1",
+      "versionRange": "^4.6.1",
       "additionalData": {}
     }
   ]

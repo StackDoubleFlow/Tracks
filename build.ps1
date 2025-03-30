@@ -19,7 +19,11 @@ if (($clean.IsPresent) -or (-not (Test-Path -Path "build")))
     $out = new-item -Path build -ItemType Directory
 }
 
-cd build
+# build the rust code
+cd ./tracks_rs_link
+cargo ndk --bindgen --no-strip -t arm64-v8a -o build build --release
+
+cd ../build
 & cmake -G "Ninja" -DCMAKE_BUILD_TYPE="RelWithDebInfo" ../
 & cmake --build .
 cd ..

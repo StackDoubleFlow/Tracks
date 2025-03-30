@@ -1,143 +1,259 @@
 #pragma once
+#include <cstdint>
 #include <map>
+#include <optional>
 #include <string>
-#include "PointDefinitionInterpolation.h"
 #include "../Vector.h"
 #include "../sv/small_vector.h"
+#include "PointDefinition.h"
 #include "UnityEngine/GameObject.hpp"
 
 #include "beatsaber-hook/shared/utils/typedefs-wrappers.hpp"
 
 #include <chrono>
 
-inline auto getCurrentTime() {
-  return std::chrono::high_resolution_clock::now().time_since_epoch().count();
-}
+#include "../bindings.h"
 
 namespace Events {
 struct AnimateTrackContext;
 }
 
-enum struct PropertyType { vector3, vector4, quaternion, linear };
+struct PropertyW;
+struct PathPropertyW;
 
-union PropertyValue {
-  float linear;
-  NEVector::Vector3 vector3;
-  NEVector::Vector4 vector4;
-  NEVector::Quaternion quaternion;
+using PropertyNames = Tracks::ffi::PropertyNames;
+
+struct TimeUnit {
+  Tracks::ffi::CTimeUnit time;
+
+  constexpr TimeUnit(Tracks::ffi::CTimeUnit time) : time(time) {}
+  constexpr TimeUnit() = default;
+  constexpr TimeUnit(TimeUnit const&) = default;
+
+  [[nodiscard]] constexpr operator Tracks::ffi::CTimeUnit() const {
+    return time;
+  }
+
+  // get seconds
+  constexpr uint64_t get_seconds() const {
+    return time._0;
+  }
+
+  // get nanoseconds
+  constexpr uint64_t get_nanoseconds() const {
+    return time._1;
+  }
+
+  constexpr bool operator<(TimeUnit o) const {
+    return get_seconds() < o.get_seconds() ||
+           (o.get_seconds() == get_seconds() && get_nanoseconds() < o.get_nanoseconds());
+  }
+
+  constexpr bool operator>(TimeUnit o) const {
+    return get_seconds() > o.get_seconds() ||
+           (o.get_seconds() == get_seconds() && get_nanoseconds() > o.get_nanoseconds());
+  }
+
+  constexpr bool operator==(TimeUnit o) const {
+    return get_seconds() == o.get_seconds() && get_nanoseconds() == o.get_nanoseconds();
+  }
+
+  constexpr bool operator!=(TimeUnit o) const {
+    return get_seconds() != o.get_seconds() || get_nanoseconds() != o.get_nanoseconds();
+  }
+
+  constexpr bool operator<=(TimeUnit o) const {
+    return o == *this || *this < o;
+  }
+
+  constexpr bool operator>=(TimeUnit o) const {
+    return o == *this || *this > o;
+  }
 };
 
-struct Property {
-  Property(PropertyType t) : type{ t }, value{ std::nullopt } {};
-  PropertyType type;
-  std::optional<PropertyValue> value;
-  uint64_t lastUpdated; // set to 0 to force update
+struct PropertyW {
+  Tracks::ffi::ValueProperty const* property;
+
+  constexpr PropertyW() = default;
+  constexpr PropertyW(Tracks::ffi::ValueProperty const* property) : property(property) {}
+
+  operator Tracks::ffi::ValueProperty const*() const {
+    return property;
+  }
+  operator bool() const {
+    return property != nullptr;
+  }
+
+  [[nodiscard]] Tracks::ffi::WrapBaseValueType GetType() const {
+    return Tracks::ffi::property_get_type(property);
+  }
+  [[nodiscard]] Tracks::ffi::CValueProperty GetValue() const {
+    return Tracks::ffi::property_get_value(property);
+  }
+
+  [[nodiscard]] TimeUnit GetTime() const {
+    return Tracks::ffi::property_get_last_updated(property);
+  }
+
+  [[nodiscard]] std::optional<NEVector::Quaternion> GetQuat(TimeUnit lastCheckedTime = {}) const {
+    auto value = GetValue();
+    if (!value.value.has_value) return std::nullopt;
+    if (TimeUnit(value.last_updated) <= lastCheckedTime) return std::nullopt;
+    if (value.value.value.ty != Tracks::ffi::WrapBaseValueType::Quat) return std::nullopt;
+
+    auto v = value.value.value.value;
+    return NEVector::Quaternion{ v.quat.x, v.quat.y, v.quat.z, v.quat.w };
+  }
+  [[nodiscard]] std::optional<NEVector::Vector3> GetVec3(TimeUnit lastCheckedTime = {}) const {
+    auto value = GetValue();
+    if (!value.value.has_value) return std::nullopt;
+    if (TimeUnit(value.last_updated) <= lastCheckedTime) return std::nullopt;
+    if (value.value.value.ty != Tracks::ffi::WrapBaseValueType::Vec3) return std::nullopt;
+
+    auto v = value.value.value.value;
+    return NEVector::Vector3{ v.vec3.x, v.vec3.y, v.vec3.z };
+  }
+  [[nodiscard]] std::optional<NEVector::Vector4> GetVec4(TimeUnit lastCheckedTime = {}) const {
+    auto value = GetValue();
+    if (!value.value.has_value) return std::nullopt;
+    if (TimeUnit(value.last_updated) <= lastCheckedTime) return std::nullopt;
+    if (value.value.value.ty != Tracks::ffi::WrapBaseValueType::Vec4) return std::nullopt;
+    auto v = value.value.value.value;
+    
+    return NEVector::Vector4{ v.vec4.x, v.vec4.y, v.vec4.z, v.vec4.w };
+  }
+  [[nodiscard]] std::optional<float> GetFloat(TimeUnit lastCheckedTime = {}) const {
+    auto value = GetValue();
+    if (!value.value.has_value) return std::nullopt;
+    if (TimeUnit(value.last_updated) <= lastCheckedTime) return std::nullopt;
+    if (value.value.value.ty != Tracks::ffi::WrapBaseValueType::Float) return std::nullopt;
+
+    return value.value.value.value.float_v;
+  }
 };
 
-struct PathProperty {
-  PathProperty(PropertyType t) : type{ t }, value{ std::nullopt } {};
-  PropertyType type;
-  std::optional<PointDefinitionInterpolation> value;
+struct PathPropertyW {
+  Tracks::ffi::PathProperty* property;
+
+  constexpr PathPropertyW() = default;
+  constexpr PathPropertyW(Tracks::ffi::PathProperty* property) : property(property) {}
+  operator Tracks::ffi::PathProperty*() const {
+    return property;
+  }
+  operator Tracks::ffi::PathProperty const*() const {
+    return property;
+  }
+  operator bool() const {
+    return property != nullptr;
+  }
+
+  Tracks::ffi::WrapBaseValue Interpolate(float time, bool& last, Tracks::ffi::BaseProviderContext* context) const {
+    auto result = Tracks::ffi::path_property_interpolate(property, time, context);
+    last = result.has_value;
+    return result.value;
+  }
+  NEVector::Vector3 InterpolateVec3(float time, bool& last, Tracks::ffi::BaseProviderContext* context) const {
+    auto result = Interpolate(time, last, context);
+    return { result.value.vec3.x, result.value.vec3.y, result.value.vec3.z };
+  }
+  NEVector::Vector4 InterpolateVec4(float time, bool& last, Tracks::ffi::BaseProviderContext* context) const {
+    auto result = Interpolate(time, last, context);
+    return { result.value.vec4.x, result.value.vec4.y, result.value.vec4.z, result.value.vec4.w };
+  }
+  NEVector::Quaternion InterpolateQuat(float time, bool& last, Tracks::ffi::BaseProviderContext* context) const {
+    auto result = Interpolate(time, last, context);
+    return { result.value.quat.x, result.value.quat.y, result.value.quat.z, result.value.quat.w };
+  }
+
+  float InterpolateLinear(float time, bool& last, Tracks::ffi::BaseProviderContext* context) const {
+    auto result = Interpolate(time, last, context);
+    return result.value.float_v;
+  }
+
+  [[nodiscard]] Tracks::ffi::WrapBaseValueType GetType() const {
+    return Tracks::ffi::path_property_get_type(property);
+  }
+
+  [[nodiscard]] float GetTime() const {
+    return Tracks::ffi::path_property_get_time(property);
+  }
+
+  void SetTime(float time) const {
+    Tracks::ffi::path_property_set_time(property, time);
+  }
+
+  void Finish() const {
+    Tracks::ffi::path_property_finish(property);
+  }
+
+  void Init(std::optional<PointDefinitionW> newPointData) const {
+    Tracks::ffi::path_property_init(property, newPointData.value_or(PointDefinitionW(nullptr)));
+  }
 };
 
-using PropertiesMap = std::unordered_map<std::string_view, Property>;
-using PathPropertiesMap = std::unordered_map<std::string_view, PathProperty>;
-
-class Properties {
-public:
-  Properties(bool v2)
-      : v2(v2), position{ Property(PropertyType::vector3) }, rotation{ Property(PropertyType::quaternion) },
-        scale{ Property(PropertyType::vector3) }, localRotation{ Property(PropertyType::quaternion) },
-        localPosition{ Property(PropertyType::vector3) }, dissolve{ Property(PropertyType::linear) },
-        dissolveArrow{ Property(PropertyType::linear) }, time{ Property(PropertyType::linear) },
-        cuttable{ Property(PropertyType::linear) }, color{ Property(PropertyType::vector4) } {};
-  Property* FindProperty(std::string_view name);
-
+struct TrackW {
+  Tracks::ffi::Track* track;
   bool v2;
 
-  // Noodle
-  Property position;
-  Property rotation;
-  Property scale;
-  Property localRotation;
-  Property localPosition;
-  Property dissolve;
-  Property dissolveArrow;
-  Property time;
-  Property cuttable;
+  constexpr TrackW() = default;
+  constexpr TrackW(Tracks::ffi::Track* track, bool v2) : track(track), v2(v2) {}
 
-  // Chroma
-  Property color;
-  Property attentuation{ PropertyType::linear };
-  Property fogOffset{ PropertyType::linear };
-  Property heightFogStartY{ PropertyType::linear };
-  Property heightFogHeight{ PropertyType::linear };
-  PropertiesMap extraProperties;
-};
-
-class PathProperties {
-public:
-  PathProperties(bool v2)
-      : v2(v2), position{ PropertyType::vector3 }, rotation{ PropertyType::quaternion }, scale{ PropertyType::vector3 },
-        localRotation{ PropertyType::quaternion }, localPosition{ PropertyType::vector3 },
-        definitePosition{ PropertyType::vector3 }, dissolve{ PropertyType::linear },
-        dissolveArrow{ PropertyType::linear }, cuttable{ PropertyType::linear }, color{ PropertyType::vector4 } {};
-  bool v2;
-  PathProperty* FindProperty(std::string_view name);
-
-  PathProperty position;
-  PathProperty rotation;
-  PathProperty scale;
-  PathProperty localRotation;
-  PathProperty localPosition;
-  PathProperty definitePosition;
-  PathProperty dissolve;
-  PathProperty dissolveArrow;
-  PathProperty cuttable;
-  PathProperty color;
-  PathPropertiesMap extraProperties;
-};
-namespace TrackRegister {
-void BuildPropertyCallback(std::optional<std::function<PropertiesMap(bool v2)>> const& propertyBuilder,
-                           std::optional<std::function<PathPropertiesMap(bool v2)>> const& pathPropertyBuilder);
-
-void BuildProperties(Properties& properties, bool v2);
-
-void BuildPathProperties(PathProperties& properties, bool v2);
-} // namespace TrackRegister
-
-struct Track {
-  bool const v2;
-  const std::string_view name;
-
-  Track(bool v2, std::string_view name) : v2(v2), properties(v2), pathProperties(v2), name(name) {
-    TrackRegister::BuildProperties(properties, v2);
-    TrackRegister::BuildPathProperties(pathProperties, v2);
-
-    gameObjects = {};
-    gameObjectModificationEvent = {};
+  operator Tracks::ffi::Track*() const {
+    return track;
   }
 
-  Properties properties;
-  PathProperties pathProperties;
-  sbo::small_vector<UnityEngine::GameObject*> gameObjects;
-  // bool is true if removed
-  UnorderedEventCallback<Track*, UnityEngine::GameObject*, bool> gameObjectModificationEvent;
-
-  void AddGameObject(UnityEngine::GameObject* go) {
-    gameObjects.push_back(go);
-
-    gameObjectModificationEvent.invoke(this, go, false);
+  operator bool() const {
+    return track != nullptr;
   }
 
-  void RemoveGameObject(UnityEngine::GameObject* go) {
-    auto it = std::find(gameObjects.begin(), gameObjects.end(), go);
-
-    if (it != gameObjects.end()) {
-      gameObjects.erase(it);
-      gameObjectModificationEvent.invoke(this, go, true);
-    }
+  [[nodiscard]] PropertyW GetProperty(std::string_view name) const {
+    auto prop = Tracks::ffi::track_get_property(track, name.data());
+    return PropertyW(prop);
+  }
+  [[nodiscard]] PropertyW GetPropertyNamed(Tracks::ffi::PropertyNames name) const {
+    auto prop = Tracks::ffi::track_get_property_by_name(track, name);
+    return PropertyW(prop);
   }
 
-  void ResetVariables();
+  [[nodiscard]] PathPropertyW GetPathProperty(std::string_view name) const {
+    auto prop = Tracks::ffi::track_get_path_property(track, name.data());
+    return PathPropertyW(prop);
+  }
+  [[nodiscard]] PathPropertyW GetPathPropertyNamed(Tracks::ffi::PropertyNames name) const {
+    auto prop = Tracks::ffi::track_get_path_property_by_name(track, name);
+    return PathPropertyW(prop);
+  }
+
+  void RegisterGameObject(UnityEngine::GameObject* gameObject) const {
+    Tracks::ffi::track_register_game_object(track, Tracks::ffi::GameObject{ .ptr = gameObject });
+  }
+
+  void RegisterProperty(std::string_view id, PropertyW property) {
+    Tracks::ffi::track_register_property(track, id.data(), const_cast<Tracks::ffi::ValueProperty*>(property.property));
+  }
+  void RegisterPathProperty(std::string_view id, PathPropertyW property) const {
+    Tracks::ffi::track_register_path_property(track, id.data(), property);
+  }
+
+  [[nodiscard]] Tracks::ffi::CPropertiesMap GetPropertiesMap() const {
+    return Tracks::ffi::track_get_properties_map(track);
+  }
+
+  [[nodiscard]] Tracks::ffi::CPathPropertiesMap GetPathPropertiesMap() const {
+    return Tracks::ffi::track_get_path_properties_map(track);
+  }
+
+  [[nodiscard]] std::string GetName() const {
+    return Tracks::ffi::track_get_name(track);
+  }
+
+  [[nodiscard]] std::span<UnityEngine::GameObject* const> GetGameObjects() const {
+    static_assert(sizeof(UnityEngine::GameObject*) == sizeof(Tracks::ffi::GameObject),
+                  "Tracks wrapper and GameObject pointer do not match size!");
+    std::size_t count = 0;
+    auto const* ptr = Tracks::ffi::track_get_game_objects(track, &count);
+    const auto *castedPtr = reinterpret_cast<UnityEngine::GameObject *const*>(ptr);
+
+    return std::span<UnityEngine::GameObject* const>(castedPtr, count);
+  }
 };
