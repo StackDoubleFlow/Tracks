@@ -84,6 +84,8 @@ enum class EventType { animateTrack, assignPathAnimation, unknown };
 
 class TracksContext {
 public:
+  Tracks::ffi::TracksContext* internal_tracks_context = nullptr;
+
   TracksContext() {
     internal_tracks_context = Tracks::ffi::tracks_context_create();
   }
@@ -99,7 +101,6 @@ public:
     Tracks::ffi::tracks_context_destroy(internal_tracks_context);
   }
 
-  Tracks::ffi::TracksContext* internal_tracks_context = nullptr;
   operator Tracks::ffi::TracksContext const*() const {
     return internal_tracks_context;
   }
@@ -108,15 +109,24 @@ public:
   }
 
   [[nodiscard]] Tracks::ffi::CoroutineManager* GetCoroutineManager() const {
+    if (!internal_tracks_context) {
+      throw std::runtime_error("TracksContext is null");
+    }
     return Tracks::ffi::tracks_context_get_coroutine_manager(internal_tracks_context);
   }
 
   [[nodiscard]] Tracks::ffi::BaseProviderContext* GetBaseProviderContext() const {
+    if (!internal_tracks_context) {
+      throw std::runtime_error("TracksContext is null");
+    }
     return Tracks::ffi::tracks_context_get_base_provider_context(internal_tracks_context);
   }
 
   PointDefinitionW AddPointDefinition(std::optional<std::string_view> id,
                                       Tracks::ffi::BasePointDefinition* pointDefinition) const {
+    if (!internal_tracks_context) {
+      throw std::runtime_error("TracksContext is null");
+    }
     auto ptr = Tracks::ffi::tracks_context_add_point_definition(internal_tracks_context, id.value_or("").data(),
                                                                 pointDefinition);
 
@@ -125,6 +135,9 @@ public:
 
   [[nodiscard]] std::optional<PointDefinitionW> GetPointDefinition(std::string_view name,
                                                                    Tracks::ffi::WrapBaseValueType ty) const {
+    if (!internal_tracks_context) {
+      throw std::runtime_error("TracksContext is null");
+    }
     auto pointDefinition = Tracks::ffi::tracks_context_get_point_definition(internal_tracks_context, name.data(), ty);
     if (!pointDefinition) {
       return std::nullopt;
@@ -134,6 +147,9 @@ public:
   }
 
   TrackW AddTrack(TrackW track) const {
+    if (!internal_tracks_context) {
+      throw std::runtime_error("TracksContext is null");
+    }
     auto ptr = Tracks::ffi::tracks_context_add_track(internal_tracks_context, track);
 
     return TrackW(const_cast<Tracks::ffi::Track*>(ptr), track.v2);
@@ -142,7 +158,9 @@ public:
 
 class BeatmapAssociatedData {
 public:
-  BeatmapAssociatedData() = default;
+  BeatmapAssociatedData() {
+    internal_tracks_context = std::make_shared<TracksContext>();
+  }
   ~BeatmapAssociatedData() = default;
 
   [[deprecated("Don't copy this!")]] BeatmapAssociatedData(BeatmapAssociatedData const&) = default;
@@ -156,7 +174,7 @@ public:
   // TODO: Use this to cache instead of Animation::TryGetPointData
   std::unordered_map<std::string, PointDefinitionW, string_hash, string_equal> pointDefinitions;
 
-  std::shared_ptr<TracksContext> internal_tracks_context = nullptr;
+  std::shared_ptr<TracksContext> internal_tracks_context;
 
   inline PointDefinitionW getPointDefinition(rapidjson::Value const& val, std::string_view key,
                                              Tracks::ffi::WrapBaseValueType type) {
