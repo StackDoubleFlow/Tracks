@@ -4,6 +4,9 @@ version = "0.1.0"
 edition = "2024"
 
 [dependencies]
+android_logger = "0.15.0"
+ctor = "0.4.1"
+log = "0.4.27"
 # todo: use version
 tracks_rs = { git = "https://github.com/Futuremappermydud/tracks-rs.git", branch = "tracks", features = [
     "ffi",
