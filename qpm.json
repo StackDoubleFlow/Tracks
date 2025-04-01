@@ -29,21 +29,21 @@
   "dependencies": [
     {
       "id": "beatsaber-hook",
-      "versionRange": "^6.1.7",
+      "versionRange": "^6.4.1",
       "additionalData": {
         "extraFiles": []
       }
     },
     {
       "id": "bs-cordl",
-      "versionRange": "^4030.0.0",
+      "versionRange": "^4004.0.0",
       "additionalData": {
         "includeQmod": true
       }
     },
     {
       "id": "custom-json-data",
-      "versionRange": "^0.22.0",
+      "versionRange": "^0.22.2",
       "additionalData": {}
     },
     {
@@ -60,14 +60,14 @@
     },
     {
       "id": "custom-types",
-      "versionRange": "^0.18.0",
+      "versionRange": "^0.18.2",
       "additionalData": {
         "includeQmod": true
       }
     },
     {
       "id": "songcore",
-      "versionRange": "^1.1.0",
+      "versionRange": "^1.1.20",
       "additionalData": {}
     },
     {
