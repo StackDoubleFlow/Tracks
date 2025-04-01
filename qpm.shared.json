@@ -1,4 +1,5 @@
 {
+  "$schema": "https://raw.githubusercontent.com/QuestPackageManager/QPM.Package/refs/heads/main/qpm.shared.schema.json",
   "config": {
     "version": "0.4.0",
     "sharedDir": "shared",
@@ -30,21 +31,21 @@
     "dependencies": [
       {
         "id": "beatsaber-hook",
-        "versionRange": "^6.1.7",
+        "versionRange": "^6.4.1",
         "additionalData": {
           "extraFiles": []
         }
       },
       {
         "id": "bs-cordl",
-        "versionRange": "^4030.0.0",
+        "versionRange": "^4004.0.0",
         "additionalData": {
           "includeQmod": true
         }
       },
       {
         "id": "custom-json-data",
-        "versionRange": "^0.22.0",
+        "versionRange": "^0.22.2",
         "additionalData": {}
       },
       {
@@ -61,14 +62,14 @@
       },
       {
         "id": "custom-types",
-        "versionRange": "^0.18.0",
+        "versionRange": "^0.18.2",
         "additionalData": {
           "includeQmod": true
         }
       },
       {
         "id": "songcore",
-        "versionRange": "^1.1.0",
+        "versionRange": "^1.1.20",
         "additionalData": {}
       },
       {
@@ -148,13 +149,9 @@
     {
       "dependency": {
         "id": "custom-json-data",
-        "versionRange": "=0.22.0",
+        "versionRange": "=0.22.2",
         "additionalData": {
-          "soLink": "https://github.com/StackDoubleFlow/CustomJSONData/releases/download/v0.22.0/libcustom-json-data.so",
-          "debugSoLink": "https://github.com/StackDoubleFlow/CustomJSONData/releases/download/v0.22.0/debug_libcustom-json-data.so",
           "overrideSoName": "libcustom-json-data.so",
-          "modLink": "https://github.com/StackDoubleFlow/CustomJSONData/releases/download/v0.22.0/custom-json-data.qmod",
-          "branchName": "version/v0_22_0",
           "compileOptions": {
             "cppFlags": [
               "-DRAPIDJSON_NEON"
@@ -163,15 +160,15 @@
           "cmake": true
         }
       },
-      "version": "0.22.0"
+      "version": "0.22.2"
     },
     {
       "dependency": {
         "id": "bs-cordl",
-        "versionRange": "=4030.0.0",
+        "versionRange": "=4004.0.0",
         "additionalData": {
           "headersOnly": true,
-          "branchName": "version/v4030_0_0",
+          "branchName": "version/v4004_0_0",
           "compileOptions": {
             "includePaths": [
               "include"
@@ -187,22 +184,18 @@
           }
         }
       },
-      "version": "4030.0.0"
+      "version": "4004.0.0"
     },
     {
       "dependency": {
         "id": "songcore",
-        "versionRange": "=1.1.19",
+        "versionRange": "=1.1.20",
         "additionalData": {
-          "soLink": "https://github.com/raineaeternal/Quest-SongCore/releases/download/v1.1.19/libsongcore.so",
-          "debugSoLink": "https://github.com/raineaeternal/Quest-SongCore/releases/download/v1.1.19/debug_libsongcore.so",
           "overrideSoName": "libsongcore.so",
-          "modLink": "https://github.com/raineaeternal/Quest-SongCore/releases/download/v1.1.19/SongCore.qmod",
-          "branchName": "version/v1_1_19",
           "cmake": true
         }
       },
-      "version": "1.1.19"
+      "version": "1.1.20"
     },
     {
       "dependency": {
