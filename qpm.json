@@ -36,7 +36,7 @@
     },
     {
       "id": "bs-cordl",
-      "versionRange": "^4030.0.0",
+      "versionRange": "^4004.0.0",
       "additionalData": {
         "includeQmod": true
       }
@@ -48,12 +48,12 @@
     },
     {
       "id": "sombrero",
-      "versionRange": "*",
+      "versionRange": "^0.1.43",
       "additionalData": {}
     },
     {
       "id": "scotland2",
-      "versionRange": "*",
+      "versionRange": "^0.1.6",
       "additionalData": {
         "includeQmod": false
       }
@@ -67,7 +67,7 @@
     },
     {
       "id": "songcore",
-      "versionRange": "^1.1.0",
+      "versionRange": "^1.1.20",
       "additionalData": {}
     },
     {
