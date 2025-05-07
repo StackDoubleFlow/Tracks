@@ -6,7 +6,7 @@
     "info": {
       "name": "Tracks",
       "id": "tracks",
-      "version": "2.1.0",
+      "version": "1.1.0",
       "url": "https://github.com/StackDoubleFlow/Tracks",
       "additionalData": {
         "overrideSoName": "libtracks.so",
@@ -44,7 +44,7 @@
       },
       {
         "id": "custom-json-data",
-        "versionRange": "^0.22.0",
+        "versionRange": "^0.23.0",
         "additionalData": {}
       },
       {
@@ -148,9 +148,13 @@
     {
       "dependency": {
         "id": "custom-json-data",
-        "versionRange": "=0.22.0",
+        "versionRange": "=0.23.0",
         "additionalData": {
+          "soLink": "https://github.com/StackDoubleFlow/CustomJSONData/releases/download/v0.23.0/libcustom-json-data.so",
+          "debugSoLink": "https://github.com/StackDoubleFlow/CustomJSONData/releases/download/v0.23.0/debug_libcustom-json-data.so",
           "overrideSoName": "libcustom-json-data.so",
+          "modLink": "https://github.com/StackDoubleFlow/CustomJSONData/releases/download/v0.23.0/custom-json-data.qmod",
+          "branchName": "version/v0_23_0",
           "compileOptions": {
             "cppFlags": [
               "-DRAPIDJSON_NEON"
@@ -159,7 +163,7 @@
           "cmake": true
         }
       },
-      "version": "0.22.0"
+      "version": "0.23.0"
     },
     {
       "dependency": {
