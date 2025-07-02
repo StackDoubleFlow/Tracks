@@ -16,9 +16,10 @@ tracks_rs = { git = "https://github.com/Futuremappermydud/tracks-rs.git", branch
 crate-type = ["staticlib"]
 
 [build-dependencies]
-cbindgen = { version = "0.28.0", default-features = false }
+cbindgen = { version = "0.29.0", default-features = false }
 
 [profile.release]
 lto = "fat"
 opt-level = 3
 strip = "none"
+panic = "abort"
