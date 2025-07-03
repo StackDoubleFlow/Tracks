@@ -28,7 +28,10 @@ MAKE_HOOK_MATCH(GameplayCoreInstaller_InstallBindings, &GlobalNamespace::Gamepla
   GameplayCoreInstaller_InstallBindings(self);
   auto colorScheme = self->_sceneSetupData->colorScheme;
   auto beatmap = self->_sceneSetupData->get_transformedBeatmapData();
-  auto customBeatmap = tempCustomBeatmap = il2cpp_utils::cast<CustomJSONData::CustomBeatmapData>(beatmap);
+  auto customBeatmapOpt = il2cpp_utils::try_cast<CustomJSONData::CustomBeatmapData>(beatmap);
+
+  if (!customBeatmapOpt.has_value()) return;
+  auto customBeatmap = tempCustomBeatmap = customBeatmapOpt.value();
   auto const& beatmapAD = TracksAD::getBeatmapAD(customBeatmap->customData);
 
   auto const& context = beatmapAD.internal_tracks_context;
