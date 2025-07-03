@@ -277,6 +277,8 @@ typedef struct CPathPropertiesMap {
   PathProperty *color;
 } CPathPropertiesMap;
 
+typedef void (*CGameObjectCallback)(struct GameObject, bool, void*);
+
 
 
 #ifdef __cplusplus
@@ -528,6 +530,13 @@ PathProperty *track_get_path_property(struct Track *track, const char *id);
 struct CPropertiesMap track_get_properties_map(const struct Track *track);
 
 struct CPathPropertiesMap track_get_path_properties_map(struct Track *track);
+
+void (**track_register_game_object_callback(struct Track *track,
+                                            CGameObjectCallback callback,
+                                            void *user_data))(struct GameObject, bool);
+
+void track_remove_game_object_callback(struct Track *track, void (**callback)(struct GameObject,
+                                                                              bool));
 
 struct CTimeUnit get_time(void);
 

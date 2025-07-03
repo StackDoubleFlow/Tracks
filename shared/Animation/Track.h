@@ -119,7 +119,7 @@ struct PropertyW {
     if (TimeUnit(value.last_updated) <= lastCheckedTime) return std::nullopt;
     if (value.value.value.ty != Tracks::ffi::WrapBaseValueType::Vec4) return std::nullopt;
     auto v = value.value.value.value;
-    
+
     return NEVector::Vector4{ v.vec4.x, v.vec4.y, v.vec4.z, v.vec4.w };
   }
   [[nodiscard]] std::optional<float> GetFloat(TimeUnit lastCheckedTime = {}) const {
@@ -228,6 +228,35 @@ struct TrackW {
     Tracks::ffi::track_register_game_object(track, Tracks::ffi::GameObject{ .ptr = gameObject });
   }
 
+  // very nasty
+  void* RegisterGameObjectCallback(std::function<void(UnityEngine::GameObject*, bool)> callback) const {
+    if (!callback) {
+      return nullptr;
+    }
+
+    // leaks memory, oh well
+    auto* callbackPtr = new std::function<void(UnityEngine::GameObject*, bool)>(std::move(callback));
+
+    // wrap the callback to a function pointer
+    // this is a C-style function pointer that can be used in the FFI
+    auto wrapper = +[](Tracks::ffi::GameObject gameObjectWrapper, bool isNew, void* userData) {
+      auto* cb = reinterpret_cast<std::function<void(UnityEngine::GameObject*, bool)>*>(userData);
+      auto gameObject = reinterpret_cast<UnityEngine::GameObject*>(const_cast<void*>(gameObjectWrapper.ptr));
+
+      (*cb)(gameObject, isNew);
+    };
+    return Tracks::ffi::track_register_game_object_callback(track, wrapper, callbackPtr);
+  }
+
+  void RemoveGameObjectCallback(void* callbackPtr) const {
+    if (!callbackPtr) {
+      return;
+    }
+
+    auto* callback = reinterpret_cast<void (**)(Tracks::ffi::GameObject, bool)>(callbackPtr);
+    Tracks::ffi::track_remove_game_object_callback(track, callback);
+  }
+
   void RegisterProperty(std::string_view id, PropertyW property) {
     Tracks::ffi::track_register_property(track, id.data(), const_cast<Tracks::ffi::ValueProperty*>(property.property));
   }
@@ -252,7 +281,7 @@ struct TrackW {
                   "Tracks wrapper and GameObject pointer do not match size!");
     std::size_t count = 0;
     auto const* ptr = Tracks::ffi::track_get_game_objects(track, &count);
-    const auto *castedPtr = reinterpret_cast<UnityEngine::GameObject *const*>(ptr);
+    auto const* castedPtr = reinterpret_cast<UnityEngine::GameObject* const*>(ptr);
 
     return std::span<UnityEngine::GameObject* const>(castedPtr, count);
   }
