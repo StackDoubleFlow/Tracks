@@ -19,8 +19,8 @@ struct GameObjectTrackControllerData {
   GameObjectTrackControllerData(GameObjectTrackControllerData const&) = delete;
   GameObjectTrackControllerData(std::span<TrackW const> track, bool v2) : _track(track.begin(), track.end()), v2(v2) {}
 
-  std::vector<TrackW> const _track;
-  bool const v2;
+  std::vector<TrackW> _track;
+  bool v2;
 
   UnorderedEventCallback<> PositionUpdate;
   UnorderedEventCallback<> ScaleUpdate;

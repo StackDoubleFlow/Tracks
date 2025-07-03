@@ -193,12 +193,13 @@ GameObjectTrackController::HandleTrackData(UnityEngine::GameObject* gameObject, 
     if (overwrite) {
       CJDLogger::Logger.fmtLog<Paper::LogLevel::INF>("Overwriting existing TransformController on {}...",
                                                      std::string(gameObject->get_name()));
-      UnityEngine::Object::Destroy(existingTrackController);
+      existingTrackController->data->_track = std::vector(track.begin(), track.end());
+      existingTrackController->data->v2 = v2;
     } else {
       CJDLogger::Logger.fmtLog<Paper::LogLevel::INF>("Could not create TransformController, {} already has one.",
                                                      std::string(gameObject->get_name()));
-      return existingTrackController;
     }
+    return existingTrackController;
   }
 
   if (track.empty()) {
