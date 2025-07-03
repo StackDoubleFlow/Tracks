@@ -44,10 +44,12 @@ MAKE_HOOK_MATCH(BeatmapObjectCallbackController_Start, &BeatmapCallbacksControll
         auto& tracksBeatmapAD = TracksAD::getBeatmapAD(customBeatmap.value()->customData);
         Tracks::GameObjectTrackController::LeftHanded = tracksBeatmapAD.leftHanded;
       }
+
+      UnityEngine::Resources::FindObjectsOfTypeAll<BeatmapCallbacksUpdater*>().get(0)->StartCoroutine(
+          custom_types::Helpers::CoroutineHelper::New(updateCoroutines(self)));
     }
 
-    UnityEngine::Resources::FindObjectsOfTypeAll<BeatmapCallbacksUpdater*>().get(0)->StartCoroutine(
-        custom_types::Helpers::CoroutineHelper::New(updateCoroutines(self)));
+
   }
 }
 
